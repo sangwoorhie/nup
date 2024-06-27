@@ -14,11 +14,22 @@ import { ApiLogsModule } from './tables/api_logs/api_logs.module';
 import { ApiKeyIpModule } from './tables/api_key_ip/api_key_ip.module';
 import { RefreshTokenModule } from './tables/refresh_token/refresh_token.module';
 import { LoggingMiddleware } from './middleware/logging.middleware';
-import ConfigModule from './config';
+import ConfigModule from './config/index';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
     ConfigModule(),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: '1234',
+      database: 'postgres',
+      entities: [__dirname + '/**/*.entity.{.ts,.js}'],
+      // synchronize: false,
+    }),
     // Tables
     UsersModule,
     CorporatesModule,
