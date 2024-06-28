@@ -1,6 +1,16 @@
-npm run generate:resource name
+테이블 생성 : npm run generate:resource name
+DB 생성 : npm 
+개발환경 : npm run start:dev
 
-개발환경
-npm run start:dev
+npm run migration:create // DB 있어도 새롭게 생성
+npm run migration:generate // DB의 변경된 사항을 찾아 변경점 반영
+npm run migration:run // 마이그레이션 수행
+npm run migration:revert // 변경전 마이그레이션으로 원복
+
+변경사항 있는 경우
+1. npm run migration:generate
+2. npm run migration:run
 
 swagger : http://localhost:3000/api
+
+https://fastcampus.co.kr/classroom/215333
