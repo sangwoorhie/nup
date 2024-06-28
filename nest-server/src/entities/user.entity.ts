@@ -10,12 +10,15 @@ import { PaymentRecord } from './payment_record.entity';
 import { RefreshToken } from './refresh_token.entity';
 import { RefundRequest } from './refund_request.entity';
 import { Corporate } from './corporate.entity';
-import { ApiKeyIp } from './api_key.entity';
+import { ApiKeys } from './api_key.entity';
 import { Image } from './image.entity';
+import { CouponTemplate } from './coupon_template.entity';
 import { UserType1, UserType2, UserType3 } from './../enums/enums';
 
+// 사용자
 @Entity('Users')
 export class User {
+  // 기본 ID
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -83,14 +86,17 @@ export class User {
   @Column({ type: 'boolean', default: false })
   banned: boolean;
 
+  // 유저 생성 시각
   @Column({ type: 'date' })
   created_at: Date;
 
+  // 유저 정보수정 시각
   @Column({ type: 'date' })
   updated_at: Date;
 
+  // 유저 계정정지 시각
   @Column({ type: 'date' })
-  deleted_at: Date;
+  banned_at: Date;
 
   // User : Corporate = 1 : 1 관계
   @OneToOne(() => Corporate, (corporate) => corporate.user)
@@ -113,10 +119,14 @@ export class User {
   refund_requests: RefundRequest[];
 
   // User : ApiKeyIp = 1 : N 관계
-  @OneToMany(() => ApiKeyIp, (apiKey) => apiKey.user)
-  api_keys: ApiKeyIp[];
+  @OneToMany(() => ApiKeys, (api_keys) => api_keys.user)
+  api_keys: ApiKeys[];
 
   // User : Image = 1 : N 관계
   @OneToMany(() => Image, (image) => image.user)
   images: Image[];
+
+  // User : CouponTemplate = 1 : N 관계
+  @OneToMany(() => CouponTemplate, (coupon_templates) => coupon_templates.user)
+  coupon_templates: CouponTemplate[];
 }

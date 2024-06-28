@@ -1,8 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { User } from './user.entity';
 
+// 환불 신청
 @Entity('Refund_request')
 export class RefundRequest {
+  // 기본 ID
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -22,11 +24,11 @@ export class RefundRequest {
   @Column({ type: 'varchar', length: 255 })
   bank_account_copy: string;
 
-  // 환불 신청 날짜
+  // 환불 신청 시각
   @Column({ type: 'date' })
   requested_at: Date;
 
-  // 환불신청 취소날짜
+  // 환불신청 취소 시각
   @Column({ type: 'date' })
   cancelled_at: Date;
 

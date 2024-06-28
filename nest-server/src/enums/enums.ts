@@ -31,3 +31,17 @@ export enum ChargeType {
   PAYPAL = 'paypal', // 페이팔 충전
   COUPON = 'coupon', // 쿠폰 충전
 }
+
+// 이미지 분석상태
+export enum ImageStatus {
+  NOT_DETECTED = 'not_detected', // 분석안됨, 분석하기 전
+  DETECTING = 'detecting', // 분석중
+  DETECT_SUCCEED = 'detect_succeed', // 분석완료 (분석성공)
+  DETECT_FAILED = 'detect_failed', //  분석실패
+}
+
+// 모델 타입
+export enum ModelType {
+  NIGHTLY = 'nightly', //nightly 모델
+  STABLE = 'stable', // stable 모델
+}
