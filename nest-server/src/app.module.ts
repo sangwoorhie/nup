@@ -16,6 +16,7 @@ import { RefreshTokenModule } from './routes/refresh_token/refresh_token.module'
 import { LoggingMiddleware } from './middleware/logging.middleware';
 import ConfigModule from './config/index';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ApiLogsModule,
     ApiKeyIpModule,
     RefreshTokenModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
