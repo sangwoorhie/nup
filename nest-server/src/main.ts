@@ -9,7 +9,9 @@ import { HttpExceptionFilter } from './common/exceptions/http.exceptions';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { TransformInterceptor } from './interceptor/transform.interceptor';
 import { WinstonModule, utilities } from 'nest-winston';
+import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
+import * as basicAuth from 'express-basic-auth';
 
 async function bootstrap() {
   const PORT = 3000;
@@ -27,22 +29,38 @@ async function bootstrap() {
     }),
   });
 
+  const configService = app.get(ConfigService);
+  const stage = configService.get('STAGE');
+
   // Swagger
-  const config = new DocumentBuilder()
-    .setTitle('N-UP-NVidia-Inspection')
-    .setDescription('N-UP-NVidia-Inspection API description')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+  const SWAGGER_ENV = ['local', 'dev'];
+  if (SWAGGER_ENV.includes(stage)) {
+    app.use(
+      ['/docs', '/docs-json'],
+      basicAuth({
+        challenge: true,
+        users: {
+          [configService.get('swagger.user')]:
+            configService.get('swagger.password'),
+        },
+      }),
+    );
+    const config = new DocumentBuilder()
+      .setTitle('N-UP-NVidia-Inspection')
+      .setDescription('N-UP-NVidia-Inspection API description')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-  const customOptions: SwaggerCustomOptions = {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-  };
+    const customOptions: SwaggerCustomOptions = {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    };
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document, customOptions);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, document, customOptions);
+  }
 
   // ValidationPipe 전역 적용
   app.useGlobalPipes(

@@ -13,24 +13,26 @@ import { validateOrReject } from 'class-validator';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/entities/refresh_token.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { UserType } from 'src/enums/enums';
+import { User } from 'src/entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private dataSource: DataSource,
     private usersService: UsersService,
     private jwtService: JwtService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    return null;
-  }
-
   // 개인 회원가입
   async IndisignUp(indiSignUpReqDto: IndiSignUpReqDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     const {
       email,
       password,
@@ -41,23 +43,47 @@ export class AuthService {
       profile_image,
     } = indiSignUpReqDto;
 
+    let error;
     try {
       await validateOrReject(indiSignUpReqDto); // 유효성 검사
 
       if (password !== confirmPassword) throw new BadRequestException();
       const user = await this.usersService.findOneByEmail(email);
       if (user) throw new BadRequestException();
-      const newUser = await this.usersService.createIndiUser(
+
+      const saltRounds = 10;
+      const hash = await bcrypt.hash(password, saltRounds);
+
+      const userEntity = queryRunner.manager.create(User, {
+        user_type: UserType.INDIVIDUAL,
         email,
-        password,
+        password: hash,
         username,
         phone,
         emergency_phone,
         profile_image,
-      );
-      return newUser;
-    } catch (errors) {
-      throw new BadRequestException(errors);
+      });
+      await queryRunner.manager.save(userEntity);
+
+      const accessToken = this.generateAccessToken(userEntity.id);
+      const refreshToken = this.generateRefreshToken(userEntity.id);
+      const refreshTokenEntity = queryRunner.manager.create(RefreshToken, {
+        user: { id: userEntity.id },
+        token: refreshToken,
+      });
+      await queryRunner.manager.save(refreshTokenEntity);
+      await queryRunner.commitTransaction();
+      return {
+        id: userEntity.id,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
     }
   }
 
@@ -69,11 +95,7 @@ export class AuthService {
   // 로그인
   async signIn(signInReqDto: SignInReqDto) {
     const { email, password } = signInReqDto;
-    const user = await this.usersService.findOneByEmail(email);
-    if (!user) throw new UnauthorizedException();
-
-    const isMatch = password == user.password;
-    if (!isMatch) throw new UnauthorizedException();
+    const user = await this.validateUser(email, password);
 
     const refreshToken = this.generateRefreshToken(user.id);
     await this.createRefreshTokenUsingUser(user.id, refreshToken);
@@ -124,5 +146,15 @@ export class AuthService {
       });
     }
     await this.refreshTokenRepository.save(refreshTokenEntity);
+  }
+
+  private async validateUser(email: string, password: string): Promise<User> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) throw new UnauthorizedException();
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) throw new UnauthorizedException();
+
+    return user;
   }
 }

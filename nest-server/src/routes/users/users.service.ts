@@ -19,28 +19,6 @@ export class UsersService {
     });
   }
 
-  // 개인 회원가입
-  async createIndiUser(
-    email: string,
-    password: string,
-    username: string,
-    phone: number,
-    emergency_phone: number,
-    profile_image: string,
-  ) {
-    const user = this.userRepository.create({
-      user_type: UserType.INDIVIDUAL,
-      email,
-      password,
-      username,
-      phone,
-      emergency_phone,
-      profile_image,
-    });
-    await this.userRepository.save(user);
-    return user;
-  }
-
   // 이메일로 회원찾기
   async findOneByEmail(email: string) {
     return await this.userRepository.findOneBy({ email });

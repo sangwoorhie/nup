@@ -12,11 +12,7 @@ import {
   CorpSignUpReqDto,
   SignInReqDto,
 } from './dto/req.dto';
-import {
-  IndividualSignUpResDto,
-  RefreshResDto,
-  SigninResDto,
-} from './dto/res.dto';
+import { IndiSignUpResDto, RefreshResDto, SigninResDto } from './dto/res.dto';
 import { ApiPostResponse } from 'src/decorators/swagger.decorators';
 import { Public } from 'src/decorators/public.decorators';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
@@ -27,17 +23,20 @@ import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // 개인 회원가입 [POST : localhost:3000/auth/indisignup]
-  @Post('indisignup')
+  // 개인 회원가입 [POST : localhost:3000/auth/signup1]
+  @Post('signup1')
   @Public()
   @ApiPostResponse(IndiSignUpReqDto)
-  async IndisignUp(@Body() indiSignUpReqDto: IndiSignUpReqDto) {
-    const { id } = await this.authService.IndisignUp(indiSignUpReqDto);
-    return { id };
+  async IndisignUp(
+    @Body() indiSignUpReqDto: IndiSignUpReqDto,
+  ): Promise<IndiSignUpResDto> {
+    const { id, accessToken, refreshToken } =
+      await this.authService.IndisignUp(indiSignUpReqDto);
+    return { id, accessToken, refreshToken };
   }
 
-  // 사업자 회원가입 [POST : localhost:3000/auth/corpsignup]
-  @Post('corpsignup')
+  // 사업자 회원가입 [POST : localhost:3000/auth/signup2]
+  @Post('signup2')
   @Public()
   @ApiPostResponse(IndiSignUpReqDto)
   async CorpsignUp(@Body() corpSignUpReqDto: CorpSignUpReqDto) {

@@ -37,7 +37,7 @@ export class User {
 
   // 이메일
   @ApiProperty({ description: '이메일' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
   // 비밀번호

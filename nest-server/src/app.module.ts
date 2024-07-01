@@ -19,12 +19,13 @@ import { AuthModule } from './routes/auth/auth.module';
 import postgresConfig from './config/postgres.config';
 import jwtConfig from './config/jwt.config';
 import { Logger } from 'winston';
+import swaggerConfig from './config/swagger.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [postgresConfig, jwtConfig],
+      load: [postgresConfig, jwtConfig, swaggerConfig],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -38,6 +39,7 @@ import { Logger } from 'winston';
           password: configService.get('postgres.password'),
           autoLoadEntities: true,
         };
+
         // Local 환경에서만 개발 편의성을 위해 활용
         if (configService.get('STAGE') === 'local') {
           obj = Object.assign(obj, {
