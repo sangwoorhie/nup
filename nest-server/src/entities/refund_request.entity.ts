@@ -13,8 +13,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Refund_request' })
 export class RefundRequest {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 환불 요청 포인트
   @ApiProperty({ description: '환불신청 포인트' })

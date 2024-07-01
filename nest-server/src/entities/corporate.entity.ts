@@ -13,8 +13,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Corporates' })
 export class Corporate {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 기업명
   @ApiProperty({ description: '기업 명' })

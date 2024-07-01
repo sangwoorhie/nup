@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -9,11 +7,29 @@ import { Repository } from 'typeorm';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   // 회원가입
-  async signUp() {}
+  async createIndiUser(
+    email: string,
+    password: string,
+    username: string,
+    phone: number,
+    emergency_phone: number,
+    profile_image: string,
+  ) {
+    const user = this.userRepository.create({
+      email,
+      password,
+      username,
+      phone,
+      emergency_phone,
+      profile_image,
+    });
+    await this.userRepository.save(user);
+    return user;
+  }
 
   // 로그인
   async signIn() {}
@@ -40,5 +56,10 @@ export class UsersService {
         },
       },
     });
+  }
+
+  // 이메일로 회원찾기
+  async findOneByEmail(email: string) {
+    return await this.userRepository.findOneBy({ email });
   }
 }

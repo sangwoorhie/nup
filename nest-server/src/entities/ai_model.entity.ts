@@ -8,8 +8,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Ai_models' })
 export class AiModel {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 모델 타입
   @ApiProperty({ description: '모델 타입' })

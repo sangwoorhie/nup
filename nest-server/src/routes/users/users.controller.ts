@@ -6,27 +6,40 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiBearerAuth, ApiExtraModels, ApiTags } from '@nestjs/swagger';
+import { FindUserReqDto } from './dto/req.dto';
+import { PageReqDto } from 'src/common/dto/req.dto';
+import {
+  ApiGetItemsResponse,
+  ApiGetResponse,
+} from 'src/common/decorators/swagger.decorators';
+import { FindUserResDto } from './dto/res.dto';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { User, UserAfterAuth } from 'src/common/decorators/user.decorators';
 
+@ApiTags('User')
+@ApiExtraModels(FindUserResDto) // DTO들 입력
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // 회원가입
-  async signUp() {}
-
-  // 로그인
-  async signIn() {}
-
-  // 내정보 조회
-  async me() {}
-
-  // 회원목록 조회
+  // 유저 전체조회
   @Get()
-  async getUsers() {
-    return await this.usersService.getUsers();
+  @ApiGetItemsResponse(FindUserResDto)
+  @UseGuards(JwtAuthGuard)
+  findAll(@Query() { page, size }: PageReqDto, @User() user: UserAfterAuth) {
+    console.log(user);
+    return this.usersService.findAll();
+  }
+
+  // 단일유저 조회
+  @Get(':id')
+  @ApiGetResponse(FindUserResDto)
+  findOne(@Param() { id }: FindUserReqDto) {
+    return this.usersService.findOne(id);
   }
 }

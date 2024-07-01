@@ -23,8 +23,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Users' })
 export class User {
   // 기본 ID
-  @PrimaryGeneratedColumn({ name: 'id' })
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 회원유형1 (일반회원/관리자회원)
   @ApiProperty({ description: '회원유형1 (일반회원/관리자회원)' })

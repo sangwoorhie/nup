@@ -16,8 +16,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Coupons' })
 export class Coupon {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 쿠폰 코드
   @ApiProperty({ description: '쿠폰 코드' })

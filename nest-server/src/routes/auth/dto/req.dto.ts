@@ -7,60 +7,121 @@ import {
   Matches,
   IsNumber,
   IsNotEmpty,
+  IsStrongPassword,
+  IsOptional,
+  IsBoolean,
+  IsEnum,
 } from 'class-validator';
 
-// 회원가입 DTO
-export class SignUpReqDto {
-  @ApiProperty({ required: true })
+// 개인 회원가입 요청 DTO
+export class IndiSignUpReqDto {
+  @ApiProperty({ required: true, description: '이메일' })
+  @IsEmail()
+  @MaxLength(30)
+  @IsNotEmpty()
+  readonly email: string;
+
+  @ApiProperty({ required: true, description: '비밀번호' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(20)
+  @IsStrongPassword() // 8-20자, 숫자 한 개, 대문자 한 개, 소문자 한 개, 특수 문자 한 개를 포함
+  readonly password: string;
+
+  @ApiProperty({ required: true, description: '비밀번호 확인' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(20)
+  @IsStrongPassword()
+  readonly confirmPassword: string;
+
+  @ApiProperty({ required: true, description: '회원이름' })
+  @IsString()
+  @IsNotEmpty()
+  readonly username: string;
+
+  @ApiProperty({ required: true, description: '연락처' })
+  @IsNumber()
+  @IsNotEmpty()
+  readonly phone: number;
+
+  @ApiProperty({ required: false, description: '비상연락처' })
+  @IsNumber()
+  @IsOptional()
+  readonly emergency_phone?: number;
+
+  @ApiProperty({ required: false, description: '프로필 이미지' })
+  @IsString()
+  @IsOptional()
+  readonly profile_image?: string;
+}
+
+// 사업자 회원가입 요청 DTO
+export class CorpSignUpReqDto {
+  @ApiProperty({ required: true, description: '이메일' })
+  @IsEmail()
+  @MaxLength(30)
+  @IsNotEmpty()
+  readonly email: string;
+
+  @ApiProperty({ required: true, description: '비밀번호' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(20)
+  @IsStrongPassword() // 8-20자, 숫자 한 개, 대문자 한 개, 소문자 한 개, 특수 문자 한 개를 포함
+  readonly password: string;
+
+  @ApiProperty({ required: true, description: '비밀번호 확인' })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(20)
+  @IsStrongPassword()
+  readonly confirmPassword: string;
+
+  @ApiProperty({ required: true, description: '회원이름' })
+  @IsString()
+  @IsNotEmpty()
+  readonly username: string;
+
+  @ApiProperty({ required: true, description: '연락처' })
+  @IsNumber()
+  @IsNotEmpty()
+  readonly phone: number;
+
+  @ApiProperty({ required: false, description: '비상연락처' })
+  @IsNumber()
+  @IsOptional()
+  readonly emergency_phone?: number;
+
+  @ApiProperty({ required: false, description: '프로필 이미지' })
+  @IsString()
+  @IsOptional()
+  readonly profile_image?: string;
+
+  @ApiProperty({ required: false, description: '부서 (사업자회원만 해당)' })
+  @IsString()
+  @IsOptional()
+  readonly department?: string;
+
+  @ApiProperty({ required: false, description: '직위 (사업자회원만 해당)' })
+  @IsString()
+  @IsOptional()
+  readonly position?: string;
+}
+
+// 로그인 요청 DTO
+export class SignInReqDto {
+  @ApiProperty({ required: true, description: '이메일' })
   @IsEmail()
   @IsNotEmpty()
   readonly email: string;
+
+  @ApiProperty({ required: true, description: '비밀번호' })
+  @IsString()
+  @IsNotEmpty()
+  readonly password: string;
 }
-
-// import { BadRequestException } from '@nestjs/common';
-// import { Transform } from 'class-transformer';
-// import {
-//   IsString,
-//   MinLength,
-//   MaxLength,
-//   IsEmail,
-//   Matches,
-//   IsNumber,
-//   IsNotEmpty,
-// } from 'class-validator';
-// import * as bcrypt from 'bcrypt';
-
-// export class UserCreateDto {
-//   @Transform(({ value, obj }) => {
-//     if (obj.password.includes(obj.name.trim())) {
-//       throw new BadRequestException(
-//         '비밀번호는 이름과 같은 문자열을 포함할 수 없습니다.',
-//       );
-//     }
-//     return value.trim();
-//   })
-//   @IsString()
-//   @MinLength(1)
-//   @MaxLength(30)
-//   readonly name: string;
-
-//   @IsString()
-//   @IsEmail()
-//   @MaxLength(60)
-//   readonly email: string;
-
-//   @IsNumber()
-//   @IsNotEmpty()
-//   readonly verifyNumberInput: number;
-
-//   @IsString()
-//   readonly birthday?: string;
-
-//   @IsString()
-//   @Matches(/^[A-Za-z\d!@#$%^&*()]{8,30}/)
-//   @Transform(({ value }) => bcrypt.hashSync(value, 10))
-//   readonly password: string;
-
-//   @IsString()
-//   readonly gender?: string;
-// }

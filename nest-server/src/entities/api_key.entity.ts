@@ -16,8 +16,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Api_keys' })
 export class ApiKeys {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 발급된 API Key
   @ApiProperty({ description: 'API Key' })

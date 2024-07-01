@@ -15,8 +15,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Payment_records' })
 export class PaymentRecord {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 거래유형 (포인트충전/ 포인트사용)
   @ApiProperty({ description: '거래유형 (포인트충전/ 포인트사용)' })

@@ -13,8 +13,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Api_key_ips' })
 export class ApiKeyIp {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // IP 주소
   @ApiProperty({ description: 'IP 주소' })

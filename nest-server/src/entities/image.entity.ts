@@ -14,8 +14,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Images' })
 export class Image {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 이미지 경로
   @ApiProperty({ description: '이미지 경로' })

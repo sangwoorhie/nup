@@ -13,8 +13,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Refresh_token' })
 export class RefreshToken {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 토큰 값
   @ApiProperty({ description: '토큰 값' })

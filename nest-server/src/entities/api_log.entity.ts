@@ -12,8 +12,8 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({ name: 'Api_logs' })
 export class ApiLog {
   // 기본 ID
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   // 요청 IP 주소
   @ApiProperty({ description: '요청 IP주소' })
