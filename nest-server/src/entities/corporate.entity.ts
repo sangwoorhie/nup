@@ -63,6 +63,6 @@ export class Corporate {
 
   // Corporate : User = 1 : 1 관계
   @ApiProperty({ description: '회원' })
-  @OneToOne(() => User, (user) => user.corporates)
+  @OneToOne(() => User, (user) => user.corporate)
   user: User;
 }

@@ -5,12 +5,27 @@ import {
   SwaggerCustomOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
-import { HttpExceptionFilter } from './exceptions/http.exceptions';
-import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './common/exceptions/http.exceptions';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { TransformInterceptor } from './interceptor/transform.interceptor';
+import { WinstonModule, utilities } from 'nest-winston';
+import * as winston from 'winston';
 
 async function bootstrap() {
   const PORT = 3000;
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger({
+      transports: [
+        new winston.transports.Console({
+          level: process.env.STAGE === 'prod' ? 'info' : 'debug',
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            utilities.format.nestLike('NestJS', { prettyPrint: true }),
+          ),
+        }),
+      ],
+    }),
+  });
 
   // Swagger
   const config = new DocumentBuilder()
@@ -37,8 +52,9 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(PORT);
-  console.info(`listening on port ${PORT}`);
+  app.useGlobalInterceptors(new TransformInterceptor());
+  Logger.log(`Listening on port ${PORT}`);
+  Logger.log(`STAGE: ${process.env.STATE}`);
 }
 
 bootstrap();

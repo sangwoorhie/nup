@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
+import { UserType } from 'src/enums/enums';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -10,7 +11,15 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // 회원가입
+  // 유저 전체조회
+  async findAll(page: number, size: number) {
+    return this.userRepository.find({
+      skip: (page - 1) * size,
+      take: size,
+    });
+  }
+
+  // 개인 회원가입
   async createIndiUser(
     email: string,
     password: string,
@@ -20,6 +29,7 @@ export class UsersService {
     profile_image: string,
   ) {
     const user = this.userRepository.create({
+      user_type: UserType.INDIVIDUAL,
       email,
       password,
       username,
@@ -31,35 +41,14 @@ export class UsersService {
     return user;
   }
 
-  // 로그인
-  async signIn() {}
-
-  // 내정보 조회
-  async me() {}
-
-  // 회원목록 조회
-  async getUsers() {
-    return this.userRepository.find({
-      relations: {
-        corporates: true,
-      },
-      select: {
-        corporates: {
-          id: true,
-          corporate_name: true,
-          industry_code: true,
-          business_type: true,
-          business_conditions: true,
-          business_registration_number: true,
-          business_license: true,
-          address: true,
-        },
-      },
-    });
-  }
-
   // 이메일로 회원찾기
   async findOneByEmail(email: string) {
     return await this.userRepository.findOneBy({ email });
+  }
+
+  // 관리자 회원 검증
+  async checkUserIsAdmin(id: string) {
+    const user = await this.userRepository.findOneBy({ id });
+    return user.user_type === UserType.ADMIN;
   }
 }

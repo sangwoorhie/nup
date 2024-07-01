@@ -19,4 +19,16 @@ export class CorporateSignUpResDto {
 export class SigninResDto {
   @ApiProperty({ required: true })
   readonly accessToken: string;
+
+  @ApiProperty({ required: true })
+  readonly refreshToken: string;
+}
+
+// 리프레시토큰 응답 DTO
+export class RefreshResDto {
+  @ApiProperty({ required: true })
+  readonly accessToken: string;
+
+  @ApiProperty({ required: true })
+  readonly refreshToken: string;
 }

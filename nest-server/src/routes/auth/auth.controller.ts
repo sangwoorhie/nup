@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Request } from '@nestjs/common';
+import { Body, Controller, Headers, Post, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   ApiBearerAuth,
@@ -12,9 +12,14 @@ import {
   CorpSignUpReqDto,
   SignInReqDto,
 } from './dto/req.dto';
-import { IndividualSignUpResDto, SigninResDto } from './dto/res.dto';
-import { ApiPostResponse } from 'src/common/decorators/swagger.decorators';
-import { Public } from 'src/common/decorators/public.decorators';
+import {
+  IndividualSignUpResDto,
+  RefreshResDto,
+  SigninResDto,
+} from './dto/res.dto';
+import { ApiPostResponse } from 'src/decorators/swagger.decorators';
+import { Public } from 'src/decorators/public.decorators';
+import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 
 @ApiTags('Auth')
 @ApiExtraModels(IndiSignUpReqDto, SigninResDto) // DTO들 입력
@@ -31,7 +36,14 @@ export class AuthController {
     return { id };
   }
 
-  // 사업자 회원가입
+  // 사업자 회원가입 [POST : localhost:3000/auth/corpsignup]
+  @Post('corpsignup')
+  @Public()
+  @ApiPostResponse(IndiSignUpReqDto)
+  async CorpsignUp(@Body() corpSignUpReqDto: CorpSignUpReqDto) {
+    // const { id } = await this.authService.CorpsignUp(corpSignUpReqDto);
+    // return { id };
+  }
 
   // 로그인 [POST : localhost:3000/auth/signin]
   @Post('signin')
@@ -39,6 +51,21 @@ export class AuthController {
   @ApiPostResponse(SigninResDto)
   async signIn(@Body() signInReqDto: SignInReqDto) {
     return this.authService.signIn(signInReqDto);
+  }
+
+  // 리프레시토큰 발급 [POST : localhost:3000/auth/refresh]
+  @Post('refresh')
+  @ApiPostResponse(RefreshResDto)
+  async refresh(
+    @Headers('authorization') authorization,
+    @User() user: UserAfterAuth,
+  ) {
+    const token = /Bearer\s(.+)/.exec(authorization)[1];
+    const { accessToken, refreshToken } = await this.authService.refresh(
+      token,
+      user.id,
+    );
+    return { accessToken, refreshToken };
   }
 }
 

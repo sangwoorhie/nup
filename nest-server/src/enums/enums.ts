@@ -1,21 +1,10 @@
 // user.enums.ts
 
 // 회원유형 1
-export enum UserType1 {
-  NORMAL = 'normal', // 일반 회원
-  ADMIN = 'admin', // 관리자 회원
-}
-
-// 회원유형 2
-export enum UserType2 {
+export enum UserType {
   INDIVIDUAL = 'individual', // 개인 회원
   CORPORATE = 'corporate', // 사업자 회원
-}
-
-// 회원유형 3
-export enum UserType3 {
-  WEB = 'web', // WEB 회원
-  API = 'api', // API 회원
+  ADMIN = 'admin', // 관리자 회원
 }
 
 // 거래유형

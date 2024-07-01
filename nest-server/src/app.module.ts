@@ -12,13 +12,13 @@ import { ApiKeysModule } from './routes/api_keys/api_keys.module';
 import { ImagesModule } from './routes/images/images.module';
 import { ApiLogsModule } from './routes/api_logs/api_logs.module';
 import { ApiKeyIpModule } from './routes/api_key_ip/api_key_ip.module';
-import { RefreshTokenModule } from './routes/refresh_token/refresh_token.module';
-import { LoggingMiddleware } from './middleware/logging.middleware';
+import { LoggerMiddleware } from './middleware/logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthModule } from './routes/auth/auth.module';
 import postgresConfig from './config/postgres.config';
 import jwtConfig from './config/jwt.config';
+import { Logger } from 'winston';
 
 @Module({
   imports: [
@@ -38,8 +38,8 @@ import jwtConfig from './config/jwt.config';
           password: configService.get('postgres.password'),
           autoLoadEntities: true,
         };
+        // Local 환경에서만 개발 편의성을 위해 활용
         if (configService.get('STAGE') === 'local') {
-          console.info('Sync postgres');
           obj = Object.assign(obj, {
             synchronize: true,
             logging: true,
@@ -60,14 +60,13 @@ import jwtConfig from './config/jwt.config';
     ImagesModule,
     ApiLogsModule,
     ApiKeyIpModule,
-    RefreshTokenModule,
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, Logger],
 })
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggingMiddleware).forRoutes('*');
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

@@ -16,10 +16,12 @@ import { PageReqDto } from 'src/common/dto/req.dto';
 import {
   ApiGetItemsResponse,
   ApiGetResponse,
-} from 'src/common/decorators/swagger.decorators';
+} from 'src/decorators/swagger.decorators';
 import { FindUserResDto } from './dto/res.dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { User, UserAfterAuth } from 'src/common/decorators/user.decorators';
+import { User, UserAfterAuth } from 'src/decorators/user.decorators';
+import { Usertype } from 'src/decorators/usertype.decorators';
+import { UserType } from 'src/enums/enums';
 
 @ApiTags('User')
 @ApiExtraModels(FindUserResDto) // DTO들 입력
@@ -27,19 +29,24 @@ import { User, UserAfterAuth } from 'src/common/decorators/user.decorators';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // 유저 전체조회
+  // 유저 전체조회 (관리자만)
   @Get()
   @ApiGetItemsResponse(FindUserResDto)
-  @UseGuards(JwtAuthGuard)
-  findAll(@Query() { page, size }: PageReqDto, @User() user: UserAfterAuth) {
-    console.log(user);
-    return this.usersService.findAll();
+  @Usertype(UserType.ADMIN)
+  // @UseGuards(JwtAuthGuard)
+  async findAll(
+    @Query() { page, size }: PageReqDto,
+  ): Promise<FindUserResDto[]> {
+    const users = await this.usersService.findAll(page, size);
+    return users.map(({ id, email, created_at }) => {
+      return { id, email, created_at: created_at };
+    });
   }
 
   // 단일유저 조회
   @Get(':id')
   @ApiGetResponse(FindUserResDto)
   findOne(@Param() { id }: FindUserReqDto) {
-    return this.usersService.findOne(id);
+    // return this.usersService.findOne(id);
   }
 }

@@ -16,7 +16,7 @@ import { Corporate } from './corporate.entity';
 import { ApiKeys } from './api_key.entity';
 import { Image } from './image.entity';
 import { CouponTemplate } from './coupon_template.entity';
-import { UserType1, UserType2, UserType3 } from './../enums/enums';
+import { UserType } from './../enums/enums';
 import { ApiProperty } from '@nestjs/swagger';
 
 // 사용자
@@ -26,32 +26,14 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // 회원유형1 (일반회원/관리자회원)
-  @ApiProperty({ description: '회원유형1 (일반회원/관리자회원)' })
+  // 회원유형
+  @ApiProperty({ description: '회원유형' })
   @Column({
     type: 'enum',
-    enum: UserType1,
-    default: UserType1.NORMAL,
+    enum: UserType,
+    default: UserType.INDIVIDUAL,
   })
-  user_type_1: UserType1;
-
-  // 회원유형2 (개인회원/사업자회원)
-  @ApiProperty({ description: '회원유형2 (개인회원/사업자회원)' })
-  @Column({
-    type: 'enum',
-    enum: UserType2,
-    default: UserType2.INDIVIDUAL,
-  })
-  user_type_2: UserType2;
-
-  // 회원유형3 (WEB회원/API회원)
-  @ApiProperty({ description: '회원유형3 (WEB회원/API회원)' })
-  @Column({
-    type: 'enum',
-    enum: UserType3,
-    default: UserType3.WEB,
-  })
-  user_type_3: UserType3;
+  user_type: UserType;
 
   // 이메일
   @ApiProperty({ description: '이메일' })
@@ -75,7 +57,7 @@ export class User {
 
   // 비상연락처
   @ApiProperty({ description: '비상연락처' })
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   emergency_phone: number;
 
   // 포인트
@@ -85,17 +67,17 @@ export class User {
 
   // 프로필 이미지
   @ApiProperty({ description: '프로필 이미지' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', nullable: true })
   profile_image: string;
 
   // 부서 (사업자회원만 해당)
   @ApiProperty({ description: '부서 (사업자회원만 해당)' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', nullable: true })
   department: string;
 
   // 직위 (사업자회원만 해당)
   @ApiProperty({ description: '직위 (사업자회원만 해당)' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', nullable: true })
   position: string;
 
   // 계정정지 여부
@@ -121,7 +103,7 @@ export class User {
   // User : Corporate = 1 : 1 관계
   @ApiProperty({ description: '사업자 정보' })
   @OneToOne(() => Corporate, (corporate) => corporate.user)
-  corporates: Corporate;
+  corporate: Corporate;
 
   // User : RefreshToken = 1 : 1 관계
   @ApiProperty({ description: '토큰' })

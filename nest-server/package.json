@@ -9,7 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "STAGE=local nest start --watch",
+    "start:dev": "cross-env STAGE=local nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --dataSource ./src/database/data-source.ts",
@@ -41,6 +41,7 @@
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "nest-winston": "^1.10.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -49,7 +50,8 @@
     "rxjs": "^7.8.1",
     "seed": "^0.4.4",
     "typeorm": "^0.3.20",
-    "typeorm-extension": "^3.5.1"
+    "typeorm-extension": "^3.5.1",
+    "winston": "^3.13.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
