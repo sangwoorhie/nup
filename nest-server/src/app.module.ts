@@ -14,22 +14,39 @@ import { ApiLogsModule } from './routes/api_logs/api_logs.module';
 import { ApiKeyIpModule } from './routes/api_key_ip/api_key_ip.module';
 import { RefreshTokenModule } from './routes/refresh_token/refresh_token.module';
 import { LoggingMiddleware } from './middleware/logging.middleware';
-import ConfigModule from './config/index';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthModule } from './routes/auth/auth.module';
+import postgresConfig from './config/postgres.config';
+import jwtConfig from './config/jwt.config';
 
 @Module({
   imports: [
-    ConfigModule(),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [postgresConfig, jwtConfig],
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        let obj: TypeOrmModuleOptions = {
+          type: 'postgres',
+          host: configService.get('postgres.host'),
+          port: configService.get('postgres.port'),
+          database: configService.get('postgres.database'),
+          username: configService.get('postgres.username'),
+          password: configService.get('postgres.password'),
+          autoLoadEntities: true,
+        };
+        if (configService.get('STAGE') === 'local') {
+          console.info('Sync postgres');
+          obj = Object.assign(obj, {
+            synchronize: true,
+            logging: true,
+          });
+        }
+        return obj;
+      },
     }),
     // Tables
     UsersModule,
