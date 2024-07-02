@@ -1,14 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { CouponTemplatesService } from './coupon_templates.service';
-import { CreateCouponTemplateDto } from './dto/create-coupon_template.dto';
-import { UpdateCouponTemplateDto } from './dto/update-coupon_template.dto';
+import { CreateCouponReqDto } from './dto/req.dto';
+import { CreateCouponResDto } from './dto/res.dto';
 
 @Controller('coupon-templates')
 export class CouponTemplatesController {
-  constructor(private readonly couponTemplatesService: CouponTemplatesService) {}
+  constructor(
+    private readonly couponTemplatesService: CouponTemplatesService,
+  ) {}
 
   @Post()
-  create(@Body() createCouponTemplateDto: CreateCouponTemplateDto) {
+  create(@Body() createCouponTemplateDto: CreateCouponReqDto) {
     return this.couponTemplatesService.create(createCouponTemplateDto);
   }
 
@@ -23,7 +33,10 @@ export class CouponTemplatesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCouponTemplateDto: UpdateCouponTemplateDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateCouponTemplateDto: CreateCouponResDto,
+  ) {
     return this.couponTemplatesService.update(+id, updateCouponTemplateDto);
   }
 

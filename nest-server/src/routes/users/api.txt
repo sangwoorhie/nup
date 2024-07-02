@@ -1,3 +1,5 @@
+// User
+
 1. 개인회원 본인정보 조회
 메소드: GET
 URL: localhost:3000/users/me/indi
@@ -6,7 +8,7 @@ Authorization: Bearer [JWT 토큰]
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "email": "example@example.com",
   "username": "exampleUser",
@@ -14,6 +16,7 @@ json
   "emergency_phone": 987654321,
   "profile_image": "image_url"
 }
+
 
 
 2. 사업자회원 본인정보 조회
@@ -24,7 +27,7 @@ Authorization: Bearer [JWT 토큰]
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "email": "example@example.com",
   "username": "exampleUser",
@@ -52,7 +55,7 @@ URL: localhost:3000/users/me/indi
 Authorization: Bearer [JWT 토큰]
 요청 바디:
 json
-코드 복사
+-
 {
   "username": "newUserName",
   "phone": 123456789,
@@ -62,7 +65,7 @@ json
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "email": "example@example.com",
   "username": "newUserName",
@@ -80,7 +83,7 @@ URL: localhost:3000/users/me/corp
 Authorization: Bearer [JWT 토큰]
 요청 바디:
 json
-코드 복사
+-
 {
   "username": "newUserName",
   "phone": 123456789,
@@ -99,7 +102,7 @@ json
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "email": "example@example.com",
   "username": "newUserName",
@@ -127,7 +130,7 @@ URL: localhost:3000/users/me/password
 Authorization: Bearer [JWT 토큰]
 요청 바디:
 json
-코드 복사
+-
 {
   "currentPassword": "current_password",
   "newPassword": "new_password",
@@ -136,7 +139,7 @@ json
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "message": "비밀번호가 변경되었습니다."
 }
@@ -150,14 +153,14 @@ URL: localhost:3000/users/me
 Authorization: Bearer [JWT 토큰]
 요청 바디:
 json
-코드 복사
+-
 {
   "password": "current_password"
 }
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "message": "회원 탈퇴되었습니다."
 }
@@ -175,7 +178,7 @@ size: 페이지 당 데이터 개수 (기본값: 20)
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "page": 1,
   "size": 20,
@@ -203,7 +206,7 @@ URL: localhost:3000/users/admin/indi/find
 Authorization: Bearer [JWT 토큰]
 요청 바디:
 json
-코드 복사
+-
 {
   "criteria": "email",
   "email": "example@example.com"
@@ -211,7 +214,7 @@ json
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "id": "user_id",
   "email": "example@example.com",
@@ -235,7 +238,7 @@ size: 페이지 당 데이터 개수 (기본값: 20)
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "page": 1,
   "size": 20,
@@ -272,7 +275,7 @@ URL: localhost:3000/users/admin/corp/find
 Authorization: Bearer [JWT 토큰]
 요청 바디:
 json
-코드 복사
+-
 {
   "criteria": "corporate_name",
   "corporate_name": "Example Corp"
@@ -280,7 +283,7 @@ json
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "id": "corporate_id",
   "corporate_name": "Example Corp",
@@ -311,14 +314,14 @@ Authorization: Bearer [JWT 토큰]
 userId: 정지할 회원의 ID
 요청 바디:
 json
-코드 복사
+-
 {
   "reason": "Violation of terms"
 }
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "message": "계정이 정지되었습니다."
 }
@@ -335,7 +338,7 @@ userId: 계정정지를 해제할 회원의 ID
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "message": "계정 정지가 해제되었습니다."
 }
@@ -352,7 +355,7 @@ userId: 관리자 계정으로 변경할 회원의 ID
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "message": "회원이 관리자 계정으로 변경되었습니다."
 }
@@ -369,7 +372,7 @@ corporateId: 사업자등록증을 확인처리할 사업자회원의 ID
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "message": "사업자등록증이 확인처리 되었습니다."
 }
@@ -385,14 +388,14 @@ Authorization: Bearer [JWT 토큰]
 userId: 포인트를 충전/차감할 회원의 ID
 요청 바디:
 json
-코드 복사
+-
 {
   "points": 100
 }
 응답 상태코드: 200
 응답 바디:
 json
-코드 복사
+-
 {
   "message": "포인트가 업데이트되었습니다."
 }

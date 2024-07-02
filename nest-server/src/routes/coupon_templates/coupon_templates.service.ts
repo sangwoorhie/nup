@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCouponTemplateDto } from './dto/create-coupon_template.dto';
-import { UpdateCouponTemplateDto } from './dto/update-coupon_template.dto';
+import { CreateCouponReqDto } from './dto/req.dto';
+import { CreateCouponResDto } from './dto/res.dto';
 
 @Injectable()
 export class CouponTemplatesService {
-  create(createCouponTemplateDto: CreateCouponTemplateDto) {
+  create(createCouponTemplateDto: CreateCouponReqDto) {
     return 'This action adds a new couponTemplate';
   }
 
@@ -16,7 +16,7 @@ export class CouponTemplatesService {
     return `This action returns a #${id} couponTemplate`;
   }
 
-  update(id: number, updateCouponTemplateDto: UpdateCouponTemplateDto) {
+  update(id: number, updateCouponTemplateDto: CreateCouponResDto) {
     return `This action updates a #${id} couponTemplate`;
   }
 

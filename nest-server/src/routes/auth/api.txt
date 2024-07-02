@@ -1,0 +1,114 @@
+// Auth
+
+1. 회원가입 (개인회원)
+HTTP Method: POST
+URL: localhost:3000/auth/signup1
+Description: 개인회원 가입을 위한 API
+Request Body:
+json
+-
+{
+  "email": "string",
+  "password": "string",
+  "confirmPassword": "string",
+  "username": "string",
+  "phone": number,
+  "emergency_phone": number (optional),
+  "profile_image": "string" (optional)
+}
+Response:
+Status Code: 201
+Body:
+json
+-
+{
+  "id": "string",
+  "accessToken": "string",
+  "refreshToken": "string"
+}
+
+
+
+2. 회원가입 (사업자회원)
+HTTP Method: POST
+URL: localhost:3000/auth/signup2
+Description: 사업자회원 가입을 위한 API
+Request Body:
+json
+-
+{
+  "email": "string",
+  "password": "string",
+  "confirmPassword": "string",
+  "username": "string",
+  "phone": number,
+  "emergency_phone": number (optional),
+  "profile_image": "string" (optional),
+  "department": "string" (optional),
+  "position": "string" (optional),
+  "corporate_name": "string",
+  "industry_code": number,
+  "business_type": "string",
+  "business_conditions": "string",
+  "business_registration_number": number,
+  "business_license": "string",
+  "address": "string"
+}
+Response:
+Status Code: 201
+Body:
+json
+-
+{
+  "id": "string",
+  "accessToken": "string",
+  "refreshToken": "string"
+}
+
+
+
+3. 로그인
+HTTP Method: POST
+URL: localhost:3000/auth/signin
+Description: 로그인 API
+Request Body:
+json
+-
+{
+  "email": "string",
+  "password": "string"
+}
+Response:
+Status Code: 200
+Body:
+json
+-
+{
+  "accessToken": "string",
+  "refreshToken": "string"
+}
+
+
+
+4. 리프레시토큰 발급
+HTTP Method: POST
+URL: localhost:3000/auth/refresh
+Description: 리프레시토큰 발급을 위한 API
+Request Headers:
+Authorization: Bearer {refreshToken}
+Request Body:
+json
+-
+{
+  "accessToken": "string",
+  "refreshToken": "string"
+}
+Response:
+Status Code: 200
+Body:
+json
+-
+{
+  "accessToken": "string",
+  "refreshToken": "string"
+}

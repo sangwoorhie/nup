@@ -20,8 +20,8 @@ export class CouponTemplate {
 
   // 쿠폰명
   @ApiProperty({ description: '쿠폰명' })
-  @Column({ type: 'bigint' })
-  coupon_name: number;
+  @Column({ type: 'varchar' })
+  coupon_name: string;
 
   // 쿠폰 발행수량
   @ApiProperty({ description: '쿠폰 발행수량' })
