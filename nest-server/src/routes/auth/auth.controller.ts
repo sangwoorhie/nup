@@ -23,7 +23,7 @@ import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // 개인 회원가입 [POST : localhost:3000/auth/signup1]
+  // 1. 개인 회원가입 [POST : localhost:3000/auth/signup1]
   @Post('signup1')
   @Public()
   @ApiPostResponse(IndiSignUpReqDto)
@@ -35,16 +35,17 @@ export class AuthController {
     return { id, accessToken, refreshToken };
   }
 
-  // 사업자 회원가입 [POST : localhost:3000/auth/signup2]
+  // 2. 사업자 회원가입 [POST : localhost:3000/auth/signup2]
   @Post('signup2')
   @Public()
-  @ApiPostResponse(IndiSignUpReqDto)
+  @ApiPostResponse(CorpSignUpReqDto)
   async CorpsignUp(@Body() corpSignUpReqDto: CorpSignUpReqDto) {
-    // const { id } = await this.authService.CorpsignUp(corpSignUpReqDto);
-    // return { id };
+    const { id, accessToken, refreshToken } =
+      await this.authService.CorpsignUp(corpSignUpReqDto);
+    return { id, accessToken, refreshToken };
   }
 
-  // 로그인 [POST : localhost:3000/auth/signin]
+  // 3. 로그인 [POST : localhost:3000/auth/signin]
   @Post('signin')
   @Public()
   @ApiPostResponse(SigninResDto)
@@ -52,7 +53,7 @@ export class AuthController {
     return this.authService.signIn(signInReqDto);
   }
 
-  // 리프레시토큰 발급 [POST : localhost:3000/auth/refresh]
+  // 4. 리프레시토큰 발급 [POST : localhost:3000/auth/refresh]
   @Post('refresh')
   @ApiPostResponse(RefreshResDto)
   async refresh(

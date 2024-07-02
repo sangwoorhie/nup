@@ -49,7 +49,7 @@ export class Corporate {
   // 주소
   @ApiProperty({ description: '주소' })
   @Column({ type: 'bigint' })
-  address: number;
+  address: string;
 
   // 사업자 생성 시각
   @ApiProperty({ description: '사업자 생성시각' })

@@ -111,6 +111,41 @@ export class CorpSignUpReqDto {
   @IsString()
   @IsOptional()
   readonly position?: string;
+
+  @ApiProperty({ required: true, description: '기업 명' })
+  @IsString()
+  @IsNotEmpty()
+  readonly corporate_name: string;
+
+  @ApiProperty({ required: true, description: '업종 코드' })
+  @IsNumber()
+  @IsNotEmpty()
+  readonly industry_code: number;
+
+  @ApiProperty({ required: true, description: '업종 명' })
+  @IsString()
+  @IsNotEmpty()
+  readonly business_type: string;
+
+  @ApiProperty({ required: true, description: '업태 명' })
+  @IsString()
+  @IsNotEmpty()
+  readonly business_conditions: string;
+
+  @ApiProperty({ required: true, description: '사업자 등록번호' })
+  @IsNumber()
+  @IsNotEmpty()
+  readonly business_registration_number: number;
+
+  @ApiProperty({ required: true, description: '사업자 등록증 사본' })
+  @IsString()
+  @IsNotEmpty()
+  readonly business_license: string;
+
+  @ApiProperty({ required: true, description: '주소' })
+  @IsString()
+  @IsNotEmpty()
+  readonly address: string;
 }
 
 // 로그인 요청 DTO

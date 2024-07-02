@@ -1,3 +1,5 @@
+import { config } from 'dotenv';
+config();
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {
@@ -72,7 +74,7 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new TransformInterceptor());
   Logger.log(`Listening on port ${PORT}`);
-  Logger.log(`STAGE: ${process.env.STATE}`);
+  Logger.log(`STAGE: ${process.env.STAGE}`);
 }
 
 bootstrap();

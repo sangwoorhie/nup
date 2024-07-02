@@ -6,7 +6,7 @@ export const User = createParamDecorator(
     return request.user;
   },
 );
-
+// 인증받고 난 뒤의 유저상태
 export interface UserAfterAuth {
   id: string;
 }

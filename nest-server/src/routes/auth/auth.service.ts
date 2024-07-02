@@ -16,6 +16,7 @@ import { RefreshToken } from 'src/entities/refresh_token.entity';
 import { Repository, DataSource } from 'typeorm';
 import { UserType } from 'src/enums/enums';
 import { User } from 'src/entities/user.entity';
+import { Corporate } from 'src/entities/corporate.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -26,9 +27,11 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(Corporate)
+    private corporateRepository: Repository<Corporate>,
   ) {}
 
-  // 개인 회원가입
+  // 1. 개인 회원가입
   async IndisignUp(indiSignUpReqDto: IndiSignUpReqDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -87,12 +90,86 @@ export class AuthService {
     }
   }
 
-  // 사업자 회원가입
+  // 2. 사업자 회원가입
   async CorpsignUp(corpSignUpReqDto: CorpSignUpReqDto) {
-    // return { id };
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const {
+      email,
+      password,
+      confirmPassword,
+      username,
+      phone,
+      emergency_phone,
+      profile_image,
+      corporate_name,
+      industry_code,
+      business_type,
+      business_conditions,
+      business_registration_number,
+      business_license,
+      address,
+    } = corpSignUpReqDto;
+
+    let error;
+    try {
+      await validateOrReject(corpSignUpReqDto); // 유효성 검사
+
+      if (password !== confirmPassword) throw new BadRequestException();
+      const user = await this.usersService.findOneByEmail(email);
+      if (user) throw new BadRequestException();
+
+      const saltRounds = 10;
+      const hash = await bcrypt.hash(password, saltRounds);
+
+      const userEntity = queryRunner.manager.create(User, {
+        user_type: UserType.CORPORATE,
+        email,
+        password: hash,
+        username,
+        phone,
+        emergency_phone,
+        profile_image,
+      });
+      await queryRunner.manager.save(userEntity);
+
+      const corporateEntity = queryRunner.manager.create(Corporate, {
+        corporate_name,
+        industry_code,
+        business_type,
+        business_conditions,
+        business_registration_number,
+        business_license,
+        address,
+        user: userEntity,
+      });
+      await queryRunner.manager.save(corporateEntity);
+
+      const accessToken = this.generateAccessToken(userEntity.id);
+      const refreshToken = this.generateRefreshToken(userEntity.id);
+      const refreshTokenEntity = queryRunner.manager.create(RefreshToken, {
+        user: { id: userEntity.id },
+        token: refreshToken,
+      });
+      await queryRunner.manager.save(refreshTokenEntity);
+      await queryRunner.commitTransaction();
+      return {
+        id: userEntity.id,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
   }
 
-  // 로그인
+  // 3. 로그인
   async signIn(signInReqDto: SignInReqDto) {
     const { email, password } = signInReqDto;
     const user = await this.validateUser(email, password);
@@ -105,7 +182,7 @@ export class AuthService {
     };
   }
 
-  // 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
+  // 4. 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
   async refresh(token: string, userId: string) {
     const refreshTokenEntity = await this.refreshTokenRepository.findOneBy({
       token,
@@ -130,6 +207,15 @@ export class AuthService {
     return this.jwtService.sign(payload, { expiresIn: '30d' });
   }
 
+  /**
+   * 사용자 ID와 리프레시 토큰을 사용하여 RefreshToken 엔티티를 생성하거나 업데이트함.
+   * 만약 사용자에 대한 RefreshToken 엔티티가 이미 존재하면 토큰 값을 업데이트하고,
+   * 존재하지 않으면 새로운 RefreshToken 엔티티를 생성함.
+   *
+   * @param userId - 사용자 ID
+   * @param refreshToken - 새로 생성된 리프레시 토큰
+   */
+
   private async createRefreshTokenUsingUser(
     userId: string,
     refreshToken: string,
@@ -148,6 +234,7 @@ export class AuthService {
     await this.refreshTokenRepository.save(refreshTokenEntity);
   }
 
+  // 유저 유효성 검사
   private async validateUser(email: string, password: string): Promise<User> {
     const user = await this.usersService.findOneByEmail(email);
     if (!user) throw new UnauthorizedException();

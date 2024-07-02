@@ -1,4 +1,6 @@
 import { registerAs } from '@nestjs/config';
+import { config } from 'dotenv';
+config();
 
 export default registerAs('postgres', () => ({
   host: process.env.DB_HOST || 'localhost',

@@ -11,6 +11,8 @@ import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/entities/refresh_token.entity';
 import { Logger } from 'winston';
+import { Corporate } from 'src/entities/corporate.entity';
+import { CorporatesModule } from '../corporates/corporates.module';
 
 @Module({
   imports: [
@@ -26,7 +28,8 @@ import { Logger } from 'winston';
         };
       },
     }),
-    TypeOrmModule.forFeature([RefreshToken]),
+    TypeOrmModule.forFeature([RefreshToken, Corporate]),
+    CorporatesModule,
   ],
   providers: [
     AuthService,

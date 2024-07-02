@@ -20,6 +20,9 @@ import postgresConfig from './config/postgres.config';
 import jwtConfig from './config/jwt.config';
 import { Logger } from 'winston';
 import swaggerConfig from './config/swagger.config';
+import { config } from 'dotenv';
+import { HealthModule } from './routes/health/health.module';
+config();
 
 @Module({
   imports: [
@@ -63,6 +66,7 @@ import swaggerConfig from './config/swagger.config';
     ApiLogsModule,
     ApiKeyIpModule,
     AuthModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
