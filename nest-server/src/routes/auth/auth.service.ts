@@ -31,7 +31,7 @@ export class AuthService {
     private corporateRepository: Repository<Corporate>,
   ) {}
 
-  // 1. 개인 회원가입
+  // 1. 회원가입 (개인회원)
   async IndisignUp(indiSignUpReqDto: IndiSignUpReqDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -90,7 +90,7 @@ export class AuthService {
     }
   }
 
-  // 2. 사업자 회원가입
+  // 2. 회원가입 (사업자회원)
   async CorpsignUp(corpSignUpReqDto: CorpSignUpReqDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

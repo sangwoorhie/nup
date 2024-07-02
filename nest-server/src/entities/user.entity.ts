@@ -85,6 +85,11 @@ export class User {
   @Column({ type: 'boolean', default: false })
   banned: boolean;
 
+  // 계정정지 사유
+  @ApiProperty({ description: '계정정지 사유' })
+  @Column({ type: 'varchar', nullable: true })
+  banned_reason: string;
+
   // 유저 생성 시각
   @ApiProperty({ description: '유저 생성시각' })
   @CreateDateColumn({ type: 'date' })

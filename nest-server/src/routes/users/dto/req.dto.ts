@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -10,11 +12,44 @@ import {
   MinLength,
 } from 'class-validator';
 
-// 단일유저 조회 요청 DTO
-export class FindUserReqDto {
-  @ApiProperty({ required: true, description: '유저 아이디' })
-  @IsUUID()
-  readonly id: string;
+// 개인회원 단일조회 요청 DTO
+export class FindIndiUserReqDto {
+  @ApiProperty({
+    description: '조회 기준 (이메일 또는 유저이름)',
+    enum: ['email', 'username'],
+  })
+  @IsEnum(['email', 'username'])
+  readonly criteria: 'email' | 'username';
+
+  @ApiProperty({ required: false, description: '유저 이메일' })
+  @IsEmail()
+  @IsOptional()
+  readonly email?: string;
+
+  @ApiProperty({ required: false, description: '유저 이름' })
+  @IsString()
+  @IsOptional()
+  readonly username?: string;
+}
+
+// 사업자회원 단일조회 요청 DTO
+export class FindCorpUserReqDto {
+  @ApiProperty({
+    description: '조회 기준 (기업명 또는 사업자등록번호)',
+    enum: ['corporate_name', 'business_registration_number'],
+  })
+  @IsEnum(['corporate_name', 'business_registration_number'])
+  readonly criteria: 'corporate_name' | 'business_registration_number';
+
+  @ApiProperty({ required: false, description: '기업명' })
+  @IsString()
+  @IsOptional()
+  readonly corporate_name?: string;
+
+  @ApiProperty({ required: false, description: '사업자등록번호' })
+  @IsNumber()
+  @IsOptional()
+  readonly business_registration_number?: number;
 }
 
 // 개인회원 정보수정 요청 DTO
@@ -108,7 +143,7 @@ export class UpdateCorpUserReqDto {
   readonly address?: string;
 }
 
-// 비밀번호 변경 DTO
+// 비밀번호 변경 요청 DTO
 export class ChangePasswordReqDto {
   @ApiProperty({ required: true, description: '현재 비밀번호' })
   @IsString()
@@ -135,7 +170,7 @@ export class ChangePasswordReqDto {
   readonly newPasswordConfirm: string;
 }
 
-// 회원탈퇴 DTO
+// 회원탈퇴 요청 DTO
 export class DeleteUserReqDto {
   @ApiProperty({ required: true, description: '비밀번호' })
   @IsString()
@@ -144,4 +179,22 @@ export class DeleteUserReqDto {
   @MaxLength(20)
   @IsStrongPassword()
   readonly password: string;
+}
+
+// 회원 계정정지 요청 DTO
+export class BanUserReqDto {
+  @ApiProperty({ required: true, description: '계정정지 사유' })
+  @IsString()
+  @IsNotEmpty()
+  readonly reason: string;
+}
+
+// 포인트 충전/차감 요청 DTO
+export class UpdatePointsReqDto {
+  @ApiProperty({
+    required: true,
+    description: '포인트 값 (양수: 충전, 음수: 차감)',
+  })
+  @IsNumber()
+  readonly points: number;
 }

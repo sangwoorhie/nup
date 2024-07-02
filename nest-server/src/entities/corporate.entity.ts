@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean } from 'class-validator';
 
 // 사업자 정보
 @Entity({ name: 'Corporates' })
@@ -45,6 +46,11 @@ export class Corporate {
   @ApiProperty({ description: '사업자 등록증 사본' })
   @Column({ type: 'varchar', length: 255 })
   business_license: string;
+
+  // 사업자등록증 관리자 확인여부
+  @ApiProperty({ description: '사업자등록증 관리자 확인여부' })
+  @Column({ type: 'boolean', default: false })
+  business_license_verified: boolean;
 
   // 주소
   @ApiProperty({ description: '주소' })

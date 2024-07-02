@@ -1,0 +1,398 @@
+1. 개인회원 본인정보 조회
+메소드: GET
+URL: localhost:3000/users/me/indi
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "email": "example@example.com",
+  "username": "exampleUser",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "profile_image": "image_url"
+}
+
+
+2. 사업자회원 본인정보 조회
+메소드: GET
+URL: localhost:3000/users/me/corp
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "email": "example@example.com",
+  "username": "exampleUser",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "profile_image": "image_url",
+  "department": "Sales",
+  "position": "Manager",
+  "corporate_name": "Example Corp",
+  "industry_code": 1234,
+  "business_type": "Retail",
+  "business_conditions": "Good",
+  "business_registration_number": 567890,
+  "business_license": "license_url",
+  "business_license_verified": false,
+  "address": "123 Street, City"
+}
+
+
+
+3. 개인회원 본인정보 수정
+메소드: PATCH
+URL: localhost:3000/users/me/indi
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+코드 복사
+{
+  "username": "newUserName",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "profile_image": "new_image_url"
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "email": "example@example.com",
+  "username": "newUserName",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "profile_image": "new_image_url"
+}
+
+
+
+4. 사업자회원 본인정보 수정
+메소드: PATCH
+URL: localhost:3000/users/me/corp
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+코드 복사
+{
+  "username": "newUserName",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "profile_image": "new_image_url",
+  "department": "Marketing",
+  "position": "Executive",
+  "corporate_name": "New Corp Name",
+  "industry_code": 5678,
+  "business_type": "Wholesale",
+  "business_conditions": "Excellent",
+  "business_registration_number": 987654,
+  "business_license": "new_license_url",
+  "address": "456 Street, City"
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "email": "example@example.com",
+  "username": "newUserName",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "profile_image": "new_image_url",
+  "department": "Marketing",
+  "position": "Executive",
+  "corporate_name": "New Corp Name",
+  "industry_code": 5678,
+  "business_type": "Wholesale",
+  "business_conditions": "Excellent",
+  "business_registration_number": 987654,
+  "business_license": "new_license_url",
+  "business_license_verified": false,
+  "address": "456 Street, City"
+}
+
+
+
+5. 비밀번호 변경
+메소드: PATCH
+URL: localhost:3000/users/me/password
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+코드 복사
+{
+  "currentPassword": "current_password",
+  "newPassword": "new_password",
+  "newPasswordConfirm": "new_password"
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "message": "비밀번호가 변경되었습니다."
+}
+
+
+
+6. 회원 탈퇴
+메소드: DELETE
+URL: localhost:3000/users/me
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+코드 복사
+{
+  "password": "current_password"
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "message": "회원 탈퇴되었습니다."
+}
+
+
+
+7. 개인회원 전체조회 (관리자)
+메소드: GET
+URL: localhost:3000/users/admin/indi
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+page: 페이지 번호 (기본값: 1)
+size: 페이지 당 데이터 개수 (기본값: 20)
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "page": 1,
+  "size": 20,
+  "total": 100,
+  "items": [
+    {
+      "id": "user_id",
+      "email": "example@example.com",
+      "username": "exampleUser",
+      "phone": 123456789,
+      "emergency_phone": 987654321,
+      "point": 100,
+      "created_at": "2023-01-01T00:00:00Z"
+    },
+    ...
+  ]
+}
+
+
+
+8. 개인회원 단일조회 (관리자)
+메소드: POST
+URL: localhost:3000/users/admin/indi/find
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+코드 복사
+{
+  "criteria": "email",
+  "email": "example@example.com"
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "id": "user_id",
+  "email": "example@example.com",
+  "username": "exampleUser",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "point": 100,
+  "created_at": "2023-01-01T00:00:00Z"
+}
+
+
+
+9. 사업자회원 전체조회 (관리자)
+메소드: GET
+URL: localhost:3000/users/admin/corp
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+page: 페이지 번호 (기본값: 1)
+size: 페이지 당 데이터 개수 (기본값: 20)
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "page": 1,
+  "size": 20,
+  "total": 100,
+  "items": [
+    {
+      "id": "corporate_id",
+      "corporate_name": "Example Corp",
+      "industry_code": 1234,
+      "business_type": "Retail",
+      "business_conditions": "Good",
+      "business_registration_number": 567890,
+      "business_license": "license_url",
+      "address": "123 Street, City",
+      "business_license_verified": false,
+      "username": "exampleUser",
+      "department": "Sales",
+      "position": "Manager",
+      "email": "example@example.com",
+      "phone": 123456789,
+      "emergency_phone": 987654321,
+      "created_at": "2023-01-01T00:00:00Z"
+    },
+    ...
+  ]
+}
+
+
+
+10. 사업자회원 단일조회 (관리자)
+메소드: POST
+URL: localhost:3000/users/admin/corp/find
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+코드 복사
+{
+  "criteria": "corporate_name",
+  "corporate_name": "Example Corp"
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "id": "corporate_id",
+  "corporate_name": "Example Corp",
+  "industry_code": 1234,
+  "business_type": "Retail",
+  "business_conditions": "Good",
+  "business_registration_number": 567890,
+  "business_license": "license_url",
+  "address": "123 Street, City",
+  "business_license_verified": false,
+  "username": "exampleUser",
+  "department": "Sales",
+  "position": "Manager",
+  "email": "example@example.com",
+  "phone": 123456789,
+  "emergency_phone": 987654321,
+  "created_at": "2023-01-01T00:00:00Z"
+}
+
+
+
+11. 회원 계정정지 (관리자)
+메소드: PATCH
+URL: localhost:3000/users/admin/ban
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+userId: 정지할 회원의 ID
+요청 바디:
+json
+코드 복사
+{
+  "reason": "Violation of terms"
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "message": "계정이 정지되었습니다."
+}
+
+
+
+12. 회원 계정정지 취소 (관리자)
+메소드: PATCH
+URL: localhost:3000/users/admin/unban
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+userId: 계정정지를 해제할 회원의 ID
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "message": "계정 정지가 해제되었습니다."
+}
+
+
+
+13. 관리자회원으로 변경 (관리자)
+메소드: PATCH
+URL: localhost:3000/users/admin/promote
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+userId: 관리자 계정으로 변경할 회원의 ID
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "message": "회원이 관리자 계정으로 변경되었습니다."
+}
+
+
+
+14. 사업자등록증 확인처리 (관리자)
+메소드: PATCH
+URL: localhost:3000/users/admin/corp/verify
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+corporateId: 사업자등록증을 확인처리할 사업자회원의 ID
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "message": "사업자등록증이 확인처리 되었습니다."
+}
+
+
+
+15. 포인트 충전/차감 (관리자)
+메소드: PATCH
+URL: localhost:3000/users/admin/points
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+userId: 포인트를 충전/차감할 회원의 ID
+요청 바디:
+json
+코드 복사
+{
+  "points": 100
+}
+응답 상태코드: 200
+응답 바디:
+json
+코드 복사
+{
+  "message": "포인트가 업데이트되었습니다."
+}

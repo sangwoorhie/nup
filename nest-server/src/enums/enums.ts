@@ -1,6 +1,6 @@
 // user.enums.ts
 
-// 회원유형 1
+// 회원유형
 export enum UserType {
   INDIVIDUAL = 'individual', // 개인 회원
   CORPORATE = 'corporate', // 사업자 회원
@@ -33,4 +33,16 @@ export enum ImageStatus {
 export enum ModelType {
   NIGHTLY = 'nightly', //nightly 모델
   STABLE = 'stable', // stable 모델
+}
+
+// 개인회원 단일 조회
+export enum IndiUserType {
+  EMAIL = 'email', // 이메일
+  NAME = 'name', // 이름
+}
+
+// 사업자회원 단일 조회
+export enum CorpUserType {
+  CORPNAME = 'corporate_name', // 기업명
+  BUSN_NUM = 'business_registration_number', // 사업자 등록번호
 }

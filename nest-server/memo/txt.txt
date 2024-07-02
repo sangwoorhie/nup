@@ -11,12 +11,12 @@ npm run migration:revert // 변경전 마이그레이션으로 원복
 1. npm run migration:generate
 2. npm run migration:run
 
-swagger : http://localhost:3000/api  http://localhost:3000/docs
+swagger : http://localhost:3000/docs
 
-https://fastcampus.co.kr/classroom/215333
 
 .env.local
 ENVIRONMENT=development
+STAGE=local
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres

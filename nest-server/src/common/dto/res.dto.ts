@@ -11,5 +11,10 @@ export class PageResDto<TData> {
   @IsInt()
   readonly size?: number;
 
+  @ApiProperty({ required: true })
+  @IsInt()
+  readonly total: number;
+
+  @ApiProperty({ type: 'array', items: { type: 'object' } })
   readonly items: TData[];
 }
