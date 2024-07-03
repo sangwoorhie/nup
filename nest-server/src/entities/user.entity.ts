@@ -16,7 +16,7 @@ import { Corporate } from './corporate.entity';
 import { ApiKeys } from './api_key.entity';
 import { Image } from './image.entity';
 import { CouponTemplate } from './coupon_template.entity';
-import { UserType } from './../enums/enums';
+import { UserType } from '../enums/enums';
 import { ApiProperty } from '@nestjs/swagger';
 
 // 사용자

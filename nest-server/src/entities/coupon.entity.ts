@@ -31,7 +31,7 @@ export class Coupon {
 
   // 쿠폰 사용시각 (쿠폰을 사용한 경우)
   @ApiProperty({ description: '쿠폰 사용시각' })
-  @Column({ type: 'date' })
+  @Column({ type: 'date', nullable: true })
   used_at: Date;
 
   // 쿠폰 생성 시각
