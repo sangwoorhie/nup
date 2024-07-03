@@ -23,3 +23,5 @@ AI 모델을 자동 업데이트 하여 Nightly, Stable build로 나눠 API endp
 - ERD : [ERD - DrawSQL](https://drawsql.app/teams/jake-7/diagrams/n-up)
 
 - Mind-Map : [N-UP & NVidia Inspection - Mindmap](https://www.figma.com/board/lVRt02lyTok5Dv44sCf81a/N-UP-Mindmap?node-id=0-1&t=7bFZz96lggcDAPlT-1)
+
+- API Docs : [API Swagger](http://localhost:3000/docs)

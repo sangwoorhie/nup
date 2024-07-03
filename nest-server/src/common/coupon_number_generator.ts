@@ -1,3 +1,4 @@
+//  쿠폰 코드 랜덤생성
 function generateRandomCouponCode(): string {
   const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
   const segments = [4, 4, 4, 4, 4, 4, 4];

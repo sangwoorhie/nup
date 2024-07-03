@@ -1,34 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiKeysService } from './api_keys.service';
-import { CreateApiKeyDto } from './dto/create-api_key.dto';
-import { UpdateApiKeyDto } from './dto/update-api_key.dto';
+import { CreateApiKeyDto } from './dto/req.dto';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('API Key')
 @Controller('api-keys')
 export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
 
-  @Post()
-  create(@Body() createApiKeyDto: CreateApiKeyDto) {
-    return this.apiKeysService.create(createApiKeyDto);
+  // 1. API Key 생성
+  @Post('create')
+  @ApiOperation({ summary: 'API Key 생성' })
+  @ApiResponse({ status: 201, description: 'API Key가 생성되었습니다.' })
+  async createApiKey(@Body() createApiKeyDto: CreateApiKeyDto) {
+    return this.apiKeysService.createApiKey(createApiKeyDto);
   }
 
-  @Get()
-  findAll() {
-    return this.apiKeysService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.apiKeysService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateApiKeyDto: UpdateApiKeyDto) {
-    return this.apiKeysService.update(+id, updateApiKeyDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.apiKeysService.remove(+id);
+  // 2. API Key 목록조회
+  @Get('list')
+  @ApiOperation({ summary: 'API Key 목록 조회' })
+  @ApiResponse({ status: 200, description: 'API Key 목록을 반환합니다.' })
+  async listApiKeys() {
+    return this.apiKeysService.listApiKeys();
   }
 }
