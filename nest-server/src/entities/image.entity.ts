@@ -19,7 +19,7 @@ export class Image {
 
   // 이미지 경로
   @ApiProperty({ description: '이미지 경로' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   image_path: string;
 
   // 이미지 분석상태
@@ -43,7 +43,7 @@ export class Image {
 
   // 이미지가 분석된 시각
   @ApiProperty({ description: '이미지가 분석된 시각' })
-  @Column({ type: 'date' })
+  @Column({ type: 'date', nullable: true })
   detected_at: Date;
 
   // Image : User = N : 1 관계

@@ -51,7 +51,7 @@ async function bootstrap() {
 
 bootstrap();
 
-// Nest-Winston을 활용한 로깅
+// Nest-Winston을 활용한 로깅 (지우지 말것)
 // async function bootstrap() {
 //   const PORT = 3000;
 //   const app = await NestFactory.create(AppModule, {

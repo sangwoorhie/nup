@@ -17,27 +17,27 @@ export class ApiLog {
 
   // 요청 IP 주소
   @ApiProperty({ description: '요청 IP주소' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   requested_ip: string;
 
   // 호출된 엔드포인트 주소
   @ApiProperty({ description: '호출된 엔드포인트 주소' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   endpoint: string;
 
   // HTTP 매서드 (GET, POST 등)
   @ApiProperty({ description: 'HTTP 매서드' })
-  @Column({ type: 'bigint' })
+  @Column({ type: 'int' })
   method: number;
 
   // 응답 상태코드
   @ApiProperty({ description: '응답 상태코드' })
-  @Column({ type: 'bigint' })
+  @Column({ type: 'int' })
   status_code: number;
 
   // 사용된 토큰 수
   @ApiProperty({ description: '사용된 토큰 수' })
-  @Column({ type: 'bigint' })
+  @Column({ type: 'int' })
   tokens_used: number;
 
   // 요청 시각

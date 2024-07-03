@@ -278,11 +278,7 @@ export class UsersService {
   }
 
   // 8. 개인회원 단일조회 (관리자)
-  async findIndiUser(
-    page: number,
-    size: number,
-    findIndiUserReqDto: FindIndiUserReqDto,
-  ) {
+  async findIndiUser(findIndiUserReqDto: FindIndiUserReqDto) {
     const { criteria: searchCriteria, email, username } = findIndiUserReqDto;
 
     if (searchCriteria === 'email' && email) {
@@ -358,8 +354,6 @@ export class UsersService {
 
   // 10. 사업자회원 단일조회 (관리자)
   async findCorporateUser(
-    page: number,
-    size: number,
     findCorpUserReqDto: FindCorpUserReqDto,
   ): Promise<FindCorpUserResDto> {
     const { criteria, corporate_name, business_registration_number } =

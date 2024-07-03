@@ -22,12 +22,12 @@ export class AiModel {
 
   // 모델 버전
   @ApiProperty({ description: '모델 버전' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   version: string;
 
   // 모델 경로
   @ApiProperty({ description: '모델 경로' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   file_path: string;
 
   // 생성 시각

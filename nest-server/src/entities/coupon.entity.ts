@@ -21,7 +21,7 @@ export class Coupon {
 
   // 쿠폰 코드
   @ApiProperty({ description: '쿠폰 코드' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   code: string;
 
   // 쿠폰 사용여부

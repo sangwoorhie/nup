@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
@@ -15,10 +16,11 @@ import {
 // 개인회원 단일조회 요청 DTO
 export class FindIndiUserReqDto {
   @ApiProperty({
-    description: '조회 기준 (이메일 또는 유저이름)',
+    description: '조회 기준 (`이메일` 또는 `유저이름`)',
     enum: ['email', 'username'],
   })
   @IsEnum(['email', 'username'])
+  @Transform(({ value }) => value ?? 'email')
   readonly criteria: 'email' | 'username';
 
   @ApiProperty({ required: false, description: '유저 이메일' })
@@ -35,10 +37,11 @@ export class FindIndiUserReqDto {
 // 사업자회원 단일조회 요청 DTO
 export class FindCorpUserReqDto {
   @ApiProperty({
-    description: '조회 기준 (기업명 또는 사업자등록번호)',
+    description: '조회 기준 (`기업명` 또는 `사업자등록번호`)',
     enum: ['corporate_name', 'business_registration_number'],
   })
   @IsEnum(['corporate_name', 'business_registration_number'])
+  @Transform(({ value }) => value ?? 'corporate_name')
   readonly criteria: 'corporate_name' | 'business_registration_number';
 
   @ApiProperty({ required: false, description: '기업명' })

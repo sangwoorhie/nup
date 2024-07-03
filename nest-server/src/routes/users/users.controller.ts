@@ -155,16 +155,11 @@ export class UsersController {
   //  GET : localhost:3000/users/admin/indi/find
   @Post('admin/indi/find')
   @ApiOperation({ summary: '개인회원 단일조회 (관리자)' })
-  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
-  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiBody({ type: FindIndiUserReqDto })
   @ApiGetResponse(FindIndiUserResDto)
   @Usertype(UserType.ADMIN)
-  async findIndiUser(
-    @Query() { page, size }: PageReqDto,
-    @Body() findIndiUserReqDto: FindIndiUserReqDto,
-  ) {
-    return await this.usersService.findIndiUser(page, size, findIndiUserReqDto);
+  async findIndiUser(@Body() findIndiUserReqDto: FindIndiUserReqDto) {
+    return await this.usersService.findIndiUser(findIndiUserReqDto);
   }
 
   // 9. 사업자회원 전체조회 (관리자)
@@ -185,20 +180,11 @@ export class UsersController {
   // POST : localhost:3000/users/admin/corp/find
   @Post('admin/corp/find')
   @ApiOperation({ summary: '사업자회원 단일조회 (관리자)' })
-  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
-  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiBody({ type: FindCorpUserReqDto })
   @ApiGetResponse(FindCorpUserResDto)
   @Usertype(UserType.ADMIN)
-  async findCorporateUser(
-    @Query() { page, size }: PageReqDto,
-    @Body() findCorpUserReqDto: FindCorpUserReqDto,
-  ) {
-    return await this.usersService.findCorporateUser(
-      page,
-      size,
-      findCorpUserReqDto,
-    );
+  async findCorporateUser(@Body() findCorpUserReqDto: FindCorpUserReqDto) {
+    return await this.usersService.findCorporateUser(findCorpUserReqDto);
   }
 
   // 11. 회원 계정정지 (관리자)

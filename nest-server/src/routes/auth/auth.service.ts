@@ -1,6 +1,7 @@
 import { UsersService } from './../users/users.service';
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -173,7 +174,9 @@ export class AuthService {
   async signIn(signInReqDto: SignInReqDto) {
     const { email, password } = signInReqDto;
     const user = await this.validateUser(email, password);
-
+    if (user.banned) {
+      throw new ForbiddenException('해당 계정은 정지되었습니다.');
+    }
     const refreshToken = this.generateRefreshToken(user.id);
     await this.createRefreshTokenUsingUser(user.id, refreshToken);
     return {
@@ -193,6 +196,12 @@ export class AuthService {
     refreshTokenEntity.token = refreshToken;
     await this.refreshTokenRepository.save(refreshTokenEntity);
     return { accessToken, refreshToken };
+  }
+
+  // 5. 로그아웃
+  async signOut(userId: string) {
+    await this.refreshTokenRepository.delete({ user: { id: userId } });
+    return { message: '로그아웃 되었습니다.' };
   }
 
   // 액세스 토큰 생성

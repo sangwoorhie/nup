@@ -18,7 +18,7 @@ export class ApiKeyIp {
 
   // IP 주소
   @ApiProperty({ description: 'IP 주소' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   ip: string;
 
   // IP 주소의 활성화 상태 (활성/정지)

@@ -7,11 +7,11 @@ import {
   Matches,
   IsNumber,
   IsNotEmpty,
-  IsStrongPassword,
   IsOptional,
   IsBoolean,
   IsEnum,
 } from 'class-validator';
+import { IsStrongPassword } from 'src/decorators/strong-password.decorator';
 
 // 개인 회원가입 요청 DTO
 export class IndiSignUpReqDto {

@@ -19,3 +19,30 @@ export class CreateCouponResDto {
   @IsDate()
   readonly expiration_date: Date;
 }
+
+// 쿠폰 조회 응답 DTO
+export class FindCouponTemplateResDto {
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly id: string;
+
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly coupon_name: string;
+
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly quantity: number;
+
+  @ApiProperty({ required: true })
+  @IsNumber()
+  readonly point: number;
+
+  @ApiProperty({ required: true })
+  @IsDate()
+  readonly created_at: Date;
+
+  @ApiProperty({ required: true })
+  @IsDate()
+  readonly expiration_date: Date;
+}

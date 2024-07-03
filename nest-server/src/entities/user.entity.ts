@@ -37,17 +37,17 @@ export class User {
 
   // 이메일
   @ApiProperty({ description: '이메일' })
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
   // 비밀번호
   @ApiProperty({ description: '비밀번호' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   password: string;
 
   // 회원 이름
   @ApiProperty({ description: '회원이름' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   username: string;
 
   // 연락처
@@ -62,7 +62,7 @@ export class User {
 
   // 포인트
   @ApiProperty({ description: '회원 포인트' })
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   point: number;
 
   // 프로필 이미지
@@ -102,7 +102,7 @@ export class User {
 
   // 유저 삭제 시각
   @ApiProperty({ description: '유저 삭제시각' })
-  @DeleteDateColumn({ type: 'date' })
+  @DeleteDateColumn({ type: 'date', nullable: true })
   deleted_at: Date;
 
   // User : Corporate = 1 : 1 관계

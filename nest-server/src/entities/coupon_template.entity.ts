@@ -30,7 +30,7 @@ export class CouponTemplate {
 
   // 쿠폰 포인트
   @ApiProperty({ description: '쿠폰 포인트' })
-  @Column({ type: 'bigint' })
+  @Column({ type: 'int' })
   point: number;
 
   // 쿠폰 만료 시각

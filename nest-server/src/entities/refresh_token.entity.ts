@@ -19,7 +19,7 @@ export class RefreshToken {
 
   // 토큰 값
   @ApiProperty({ description: '토큰 값' })
-  @Column({ type: 'int' })
+  @Column({ type: 'varchar' })
   token: string;
 
   // 토큰 생성 시각
@@ -35,6 +35,6 @@ export class RefreshToken {
   // RefreshToken : User = 1 : 1 관계
   @ApiProperty({ description: '회원' })
   @OneToOne(() => User, (user) => user.refresh_tokens)
-  // @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 }

@@ -38,7 +38,7 @@ export class PaymentRecord {
 
   // 계좌주 이름
   @ApiProperty({ description: '계좌주 이름' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   account_holder_name: string;
 
   // 거래 포인트 (충전은 양수, 사용은 음수)

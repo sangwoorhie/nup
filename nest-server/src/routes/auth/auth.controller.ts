@@ -1,4 +1,11 @@
-import { Body, Controller, Headers, Post, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Headers,
+  Post,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   ApiBearerAuth,
@@ -108,6 +115,15 @@ export class AuthController {
       user.id,
     );
     return { accessToken, refreshToken };
+  }
+
+  // 5. 로그아웃
+  // DELETE : localhost:3000/auth/signout
+  @Delete('signout')
+  @ApiOperation({ summary: '로그아웃' })
+  @ApiResponse({ status: 200, description: '로그아웃 성공' })
+  async signOut(@User() user: UserAfterAuth) {
+    return this.authService.signOut(user.id);
   }
 }
 

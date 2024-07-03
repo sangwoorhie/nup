@@ -19,7 +19,7 @@ export class Corporate {
 
   // 기업명
   @ApiProperty({ description: '기업 명' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   corporate_name: string;
 
   // 업종 코드
@@ -29,12 +29,12 @@ export class Corporate {
 
   // 업종 명
   @ApiProperty({ description: '업종 명' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   business_type: string;
 
   // 업태 명
   @ApiProperty({ description: '업태 명' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   business_conditions: string;
 
   // 사업자 등록번호
@@ -44,7 +44,7 @@ export class Corporate {
 
   // 사업자등록증 사본
   @ApiProperty({ description: '사업자 등록증 사본' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   business_license: string;
 
   // 사업자등록증 관리자 확인여부
@@ -54,7 +54,7 @@ export class Corporate {
 
   // 주소
   @ApiProperty({ description: '주소' })
-  @Column({ type: 'bigint' })
+  @Column({ type: 'varchar' })
   address: string;
 
   // 사업자 생성 시각

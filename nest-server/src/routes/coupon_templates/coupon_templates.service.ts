@@ -1,3 +1,4 @@
+import { PageResDto } from 'src/common/dto/res.dto';
 import {
   BadRequestException,
   Injectable,
@@ -6,13 +7,24 @@ import {
 import {
   CreateCouponReqDto,
   DateReqDto,
+  FindCouponReqDto1,
+  FindCouponReqDto2,
   UpdateCouponReqDto,
 } from './dto/req.dto';
-import { CreateCouponResDto } from './dto/res.dto';
+import { CreateCouponResDto, FindCouponTemplateResDto } from './dto/res.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CouponTemplate } from 'src/entities/coupon_template.entity';
-import { Between, DeepPartial, LessThan, MoreThan, Repository } from 'typeorm';
+import {
+  Between,
+  DataSource,
+  DeepPartial,
+  FindOperator,
+  LessThan,
+  MoreThan,
+  Repository,
+} from 'typeorm';
 import { Coupon } from 'src/entities/coupon.entity';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class CouponTemplatesService {
@@ -21,74 +33,168 @@ export class CouponTemplatesService {
     private readonly couponTemplateRepository: Repository<CouponTemplate>,
     @InjectRepository(Coupon)
     private readonly couponRepository: Repository<Coupon>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly dataSource: DataSource,
   ) {}
 
   // 1. 쿠폰 템플릿 생성
   async createCouponTemplate(
     createCouponReqDto: CreateCouponReqDto,
+    userId: string,
   ): Promise<CreateCouponResDto> {
-    const { coupon_name, quantity, point, expiration_date } =
-      createCouponReqDto;
-    if (!coupon_name || !quantity || !point || !expiration_date) {
-      throw new BadRequestException('모든 내용을 입력해주세요.');
-    }
-    const couponTemplate =
-      this.couponTemplateRepository.create(createCouponReqDto);
-    await this.couponTemplateRepository.save(couponTemplate);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const couponCodes = generateMultipleCouponCodes(quantity);
-    const coupons = couponCodes.map((code) => {
-      return this.couponRepository.create({
-        code,
-        expiration_date,
-        point,
-        coupon_template: couponTemplate,
-      } as DeepPartial<Coupon>); // 여기서 타입 지정
-    });
-    await this.couponRepository.save(coupons);
+    try {
+      const { coupon_name, quantity, point, expiration_date } =
+        createCouponReqDto;
+      if (!coupon_name || !quantity || !point || !expiration_date) {
+        throw new BadRequestException('모든 내용을 입력해주세요.');
+      }
+
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: userId },
+      });
+      const couponTemplate = queryRunner.manager.create(CouponTemplate, {
+        ...createCouponReqDto,
+        user,
+      });
+      await queryRunner.manager.save(couponTemplate);
+
+      const couponCodes = generateMultipleCouponCodes(quantity);
+      const coupons = couponCodes.map((code) => {
+        return queryRunner.manager.create(Coupon, {
+          code,
+          expiration_date,
+          point,
+          coupon_template: couponTemplate,
+        } as DeepPartial<Coupon>);
+      });
+      await queryRunner.manager.save(coupons);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        ...couponTemplate,
+        quantity: createCouponReqDto.quantity,
+      };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  // 2. 쿠폰 템플릿 전체조회
+  async findCouponTemplates(
+    criteria: 'all' | 'non-expired' | 'expired',
+    page: number,
+    size: number,
+  ): Promise<PageResDto<FindCouponTemplateResDto>> {
+    let whereCondition: { expiration_date?: FindOperator<Date> };
+
+    if (criteria === 'non-expired') {
+      whereCondition = {
+        expiration_date: MoreThan(new Date()),
+      };
+    } else if (criteria === 'expired') {
+      whereCondition = {
+        expiration_date: LessThan(new Date()),
+      };
+    } else {
+      whereCondition = {};
+    }
+
+    const [couponTemplates, total] =
+      await this.couponTemplateRepository.findAndCount({
+        where: whereCondition,
+        skip: (page - 1) * size,
+        take: size,
+      });
+
+    const items = couponTemplates.map((template) => ({
+      id: template.id,
+      coupon_name: template.coupon_name,
+      quantity: template.quantity,
+      point: template.point,
+      created_at: template.created_at,
+      expiration_date: template.expiration_date,
+    }));
 
     return {
-      ...couponTemplate,
-      quantity: createCouponReqDto.quantity,
+      page,
+      size,
+      total,
+      items,
     };
   }
-
-  // 2. 쿠폰 템플릿 전체조회 (목록조회)
-  async findAllCouponTemplates(): Promise<CouponTemplate[]> {
-    return this.couponTemplateRepository.find();
+  // 3. 쿠폰명으로 쿠폰 템플릿 조회
+  async findCouponTemplateByName(
+    coupon_name: string,
+  ): Promise<FindCouponTemplateResDto[]> {
+    const couponTemplates = await this.couponTemplateRepository.find({
+      where: { coupon_name },
+      relations: ['user'],
+    });
+    return couponTemplates.map((couponTemplate) => ({
+      id: couponTemplate.id,
+      coupon_name: couponTemplate.coupon_name,
+      quantity: couponTemplate.quantity,
+      point: couponTemplate.point,
+      created_at: couponTemplate.created_at,
+      expiration_date: couponTemplate.expiration_date,
+      username: couponTemplate.user.username,
+    }));
   }
 
-  // 3. 쿠폰 템플릿 발행수량 추가
+  // 4. 쿠폰 템플릿 발행수량 추가
   async updateCouponTemplate(
     id: string,
     updateCouponReqDto: UpdateCouponReqDto,
   ): Promise<CouponTemplate> {
-    const couponTemplate = await this.couponTemplateRepository.findOne({
-      where: { id },
-    });
-    if (!couponTemplate) {
-      throw new NotFoundException(`CouponTemplate with ID ${id} not found`);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const couponTemplate = await queryRunner.manager.findOne(CouponTemplate, {
+        where: { id },
+      });
+      if (!couponTemplate) {
+        throw new NotFoundException(`CouponTemplate with ID ${id} not found`);
+      }
+
+      const additionalQuantity = updateCouponReqDto.quantity;
+      const newTotalQuantity = couponTemplate.quantity + additionalQuantity;
+
+      const couponCodes = generateMultipleCouponCodes(additionalQuantity);
+      const coupons = couponCodes.map((code) => {
+        return queryRunner.manager.create(Coupon, {
+          code,
+          expiration_date: couponTemplate.expiration_date,
+          point: couponTemplate.point,
+          coupon_template: couponTemplate,
+        } as DeepPartial<Coupon>);
+      });
+      await queryRunner.manager.save(coupons);
+
+      couponTemplate.quantity = newTotalQuantity;
+      await queryRunner.manager.save(couponTemplate);
+
+      await queryRunner.commitTransaction();
+
+      return couponTemplate;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-
-    const additionalQuantity = updateCouponReqDto.quantity;
-    const newTotalQuantity = couponTemplate.quantity + additionalQuantity;
-
-    const couponCodes = generateMultipleCouponCodes(additionalQuantity);
-    const coupons = couponCodes.map((code) => {
-      return this.couponRepository.create({
-        code,
-        expiration_date: couponTemplate.expiration_date,
-        point: couponTemplate.point,
-        coupon_template: couponTemplate,
-      } as DeepPartial<Coupon>);
-    });
-    await this.couponRepository.save(coupons);
-
-    couponTemplate.quantity = newTotalQuantity;
-    return this.couponTemplateRepository.save(couponTemplate);
   }
 
-  // 4. 쿠폰 템플릿 삭제
+  // 5. 쿠폰 템플릿 삭제
   async removeCouponTemplate(id: string): Promise<void> {
     const couponTemplate = await this.couponTemplateRepository.findOne({
       where: { id },
@@ -100,45 +206,121 @@ export class CouponTemplatesService {
     await this.couponTemplateRepository.remove(couponTemplate);
   }
 
-  // 5. 쿠폰 만료시각(유효일자)가 지난 쿠폰 탬플릿만 조회하기
-  async findExpiredCouponTemplates(): Promise<CouponTemplate[]> {
-    return this.couponTemplateRepository.find({
-      where: {
-        expiration_date: LessThan(new Date()),
-      },
-    });
-  }
-
-  // 6. 쿠폰 만료시각(유효일자)가 아직 지나지 않은 쿠폰 템플릿만 조회하기
-  async findNonExpiredCouponTemplates(): Promise<CouponTemplate[]> {
-    return this.couponTemplateRepository.find({
-      where: {
-        expiration_date: MoreThan(new Date()),
-      },
-    });
-  }
-
-  // 7. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기
+  // 6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기
   async findCouponTemplatesByDateRange(
+    page: number,
+    size: number,
     dateReqDto: DateReqDto,
-  ): Promise<CouponTemplate[]> {
-    return this.couponTemplateRepository.find({
-      where: {
-        created_at: Between(dateReqDto.start_date, dateReqDto.end_date),
-      },
-    });
+  ): Promise<PageResDto<FindCouponTemplateResDto>> {
+    const [couponTemplates, total] =
+      await this.couponTemplateRepository.findAndCount({
+        where: {
+          created_at: Between(dateReqDto.start_date, dateReqDto.end_date),
+        },
+        skip: (page - 1) * size,
+        take: size,
+      });
+
+    const items = couponTemplates.map((template) => ({
+      id: template.id,
+      coupon_name: template.coupon_name,
+      quantity: template.quantity,
+      point: template.point,
+      created_at: template.created_at,
+      expiration_date: template.expiration_date,
+    }));
+
+    return {
+      page,
+      size,
+      total,
+      items,
+    };
   }
 
-  // 8. 쿠폰 템플릿 단일조회 (상세조회)
-  async findCouponTemplateById(id: string): Promise<CouponTemplate> {
-    const couponTemplate = await this.couponTemplateRepository.findOne({
-      where: { id },
-      relations: ['coupons', 'coupons.user'],
-    });
-    if (!couponTemplate) {
-      throw new NotFoundException(`CouponTemplate with ID ${id} not found`);
+  // 7. 쿠폰 템플릿 단일조회 - 쿠폰코드 또는 회원이름으로 조회 (관리자)
+  async findCouponTemplateById(
+    id: string,
+    findCouponReqDto1: FindCouponReqDto1,
+  ): Promise<any> {
+    const { criteria, code, username } = findCouponReqDto1;
+
+    let coupons;
+    if (criteria === 'code' && code) {
+      coupons = await this.couponRepository.find({
+        where: { coupon_template: { id }, code },
+        relations: ['user'],
+      });
+    } else if (criteria === 'username' && username) {
+      coupons = await this.couponRepository.find({
+        where: { coupon_template: { id }, user: { username } },
+        relations: ['user'],
+      });
+    } else {
+      throw new BadRequestException('Invalid criteria or value');
     }
 
-    return couponTemplate;
+    return coupons.map((coupon) => ({
+      code: coupon.code,
+      is_used: coupon.is_used,
+      used_at: coupon.used_at,
+      username: coupon.user.username,
+      email: coupon.user.email,
+    }));
+  }
+
+  // 8. 쿠폰 템플릿 단일조회 (상세조회) - 전체, 사용쿠폰, 미사용쿠폰 조회 (관리자)
+  async findCouponsByTemplateId(
+    id: string,
+    findCouponReqDto2: FindCouponReqDto2,
+    page: number,
+    size: number,
+  ): Promise<any> {
+    const { criteria } = findCouponReqDto2;
+
+    let whereCondition: {
+      coupon_template: { id: string } | { id: string } | { id: string };
+      is_used?: boolean;
+    };
+
+    if (criteria === 'used') {
+      whereCondition = { coupon_template: { id }, is_used: true };
+    } else if (criteria === 'unused') {
+      whereCondition = { coupon_template: { id }, is_used: false };
+    } else {
+      whereCondition = { coupon_template: { id } };
+    }
+
+    const [coupons, total] = await this.couponRepository.findAndCount({
+      where: whereCondition,
+      relations: ['user'],
+      skip: (page - 1) * size,
+      take: size,
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: coupons.map((coupon) => ({
+        code: coupon.code,
+        is_used: coupon.is_used,
+        used_at: coupon.used_at,
+        username: coupon.user.username,
+        email: coupon.user.email,
+      })),
+    };
+  }
+
+  // 9. 단일 쿠폰 삭제 (관리자)
+  async removeCoupon(templateId: string, couponId: string): Promise<void> {
+    const coupon = await this.couponRepository.findOne({
+      where: { id: couponId, coupon_template: { id: templateId } },
+    });
+    if (!coupon) {
+      throw new NotFoundException(`Coupon with ID ${couponId} not found`);
+    }
+
+    await this.couponRepository.remove(coupon);
   }
 }

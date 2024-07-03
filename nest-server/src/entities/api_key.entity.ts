@@ -21,12 +21,12 @@ export class ApiKeys {
 
   // 발급된 API Key
   @ApiProperty({ description: 'API Key' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   api_key: string;
 
   // 발급된 API Key의 IP주소 ( 0개여도 되고, 단수도 되고, 콤마로 구분하여 복수여도 됨.)
   @ApiProperty({ description: '발급된 API Key의 IP주소' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   ips: string;
 
   // 생성 시각

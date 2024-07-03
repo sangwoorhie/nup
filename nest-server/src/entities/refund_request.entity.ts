@@ -28,12 +28,12 @@ export class RefundRequest {
 
   // 계좌주 성명
   @ApiProperty({ description: '계좌주 성명' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   account_holder_name: string;
 
   // 통장 사본
   @ApiProperty({ description: '통장 사본' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar' })
   bank_account_copy: string;
 
   // 환불 신청 시각
