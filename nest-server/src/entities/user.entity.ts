@@ -141,7 +141,7 @@ export class User {
   images: Image[];
 
   // User : CouponTemplate = 1 : N 관계
-  @ApiProperty({ description: '쿠폰 탬플릿 (관리자만 해당)' })
+  @ApiProperty({ description: '쿠폰 템플릿 (관리자만 해당)' })
   @OneToMany(() => CouponTemplate, (coupon_templates) => coupon_templates.user)
   coupon_templates: CouponTemplate[];
 }

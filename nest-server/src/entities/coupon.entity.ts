@@ -45,7 +45,7 @@ export class Coupon {
   updated_at: Date;
 
   // Coupon : CouponTemplate = N : 1 관계
-  @ApiProperty({ description: '쿠폰 탬플릿' })
+  @ApiProperty({ description: '쿠폰 템플릿' })
   @ManyToOne(() => CouponTemplate, (coupon_template) => coupon_template.coupons)
   coupon_template: CouponTemplate;
 
