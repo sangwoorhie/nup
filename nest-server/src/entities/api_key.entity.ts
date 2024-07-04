@@ -29,6 +29,11 @@ export class ApiKeys {
   @Column({ type: 'varchar' })
   ips: string;
 
+  // IP 주소의 활성화 상태 (활성/정지)
+  @ApiProperty({ description: 'API Key의 활성화 상태 (활성/정지)' })
+  @Column({ type: 'boolean', default: true })
+  is_active: boolean;
+
   // 생성 시각
   @ApiProperty({ description: '생성 시각' })
   @CreateDateColumn({ type: 'date' })

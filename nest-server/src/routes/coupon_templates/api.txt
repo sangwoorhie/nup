@@ -1,14 +1,14 @@
 // Coupon Template (O: 테스트성공 / X: 테스트실패)
 
 1. 쿠폰 템플릿 생성 (관리자) O
-2. 쿠폰 템플릿 조회 (관리자) 
-3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자) 
-4. 쿠폰 템플릿 발행수량 추가 (관리자) 
-5. 쿠폰 템플릿 삭제 (관리자) 
-6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자) 
-7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자) 
-8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자) 
-9. 단일 쿠폰 삭제 (관리자) 
+2. 쿠폰 템플릿 조회 (관리자) O
+3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자) O
+4. 쿠폰 템플릿 발행수량 추가 (관리자) X
+5. 쿠폰 템플릿 삭제 (관리자) X
+6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자) X
+7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자) X
+8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자) X
+9. 단일 쿠폰 삭제 (관리자) X
 
 
 
@@ -63,7 +63,10 @@ json
 
 2.쿠폰 템플릿 조회 (관리자)
 메소드: GET
-URL: localhost:3000/coupon-templates?criteria=all&page=1&size=10
+URL: localhost:3000/coupon-templates?page=1&size=20&criteria=all
+URL: localhost:3000/coupon-templates?page=1&size=20&criteria=non-expired
+URL: localhost:3000/coupon-templates?page=1&size=20&criteria=expired
+
 헤더:
 Authorization: Bearer [JWT 토큰]
 응답 상태코드: 200
@@ -72,34 +75,52 @@ json
 -
 {
   "page": 1,
-  "size": 10,
-  "total": 50,
+  "size": 20,
+  "total": 4,
   "items": [
     {
-      "id": "template_id",
+      "id": "42ad8342-1700-4c78-a132-c1095ab65e55",
       "coupon_name": "DiscountCoupon",
-      "quantity": 100,
+      "quantity": 10,
       "point": 50,
-      "created_at": "2023-01-01T00:00:00Z",
-      "expiration_date": "2023-12-31"
+      "created_at": "2024-07-04",
+      "expiration_date": "2024-12-31"
     },
-    ...
+    {
+      "id": "c2e073f5-e945-4a2f-8c58-eb6b87b0a51c",
+      "coupon_name": "DiscountCoupon",
+      "quantity": 10,
+      "point": 50,
+      "created_at": "2024-07-04",
+      "expiration_date": "2024-12-31"
+    },
+    {
+      "id": "156037c8-c1a9-4018-8b97-b742e34cf476",
+      "coupon_name": "DiscountCoupon",
+      "quantity": 5,
+      "point": 50,
+      "created_at": "2024-07-04",
+      "expiration_date": "2024-12-31"
+    },
+    {
+      "id": "4d9ac306-9208-44bb-882f-1b0c61f31807",
+      "coupon_name": "DiscountCoupon",
+      "quantity": 15,
+      "point": 50,
+      "created_at": "2024-07-04",
+      "expiration_date": "2024-12-31"
+    }
   ]
 }
 
 
 
 3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자)
-메소드: POST
-URL: localhost:3000/coupon-templates/name
+메소드: GET
+URL: localhost:3000/coupon-templates/name?coupon_name=DiscountCoupon
 헤더:
 Authorization: Bearer [JWT 토큰]
-요청 바디:
-json
--
-{
-  "coupon_name": "DiscountCoupon"
-}
+
 응답 상태코드: 200
 응답 바디:
 
@@ -107,13 +128,40 @@ json
 -
 [
   {
-    "id": "template_id",
+    "id": "42ad8342-1700-4c78-a132-c1095ab65e55",
     "coupon_name": "DiscountCoupon",
-    "quantity": 100,
+    "quantity": 10,
     "point": 50,
-    "created_at": "2023-01-01T00:00:00Z",
-    "expiration_date": "2023-12-31",
-    "username": "admin_user"
+    "created_at": "2024-07-04",
+    "expiration_date": "2024-12-31",
+    "username": "newUserName"
+  },
+  {
+    "id": "c2e073f5-e945-4a2f-8c58-eb6b87b0a51c",
+    "coupon_name": "DiscountCoupon",
+    "quantity": 10,
+    "point": 50,
+    "created_at": "2024-07-04",
+    "expiration_date": "2024-12-31",
+    "username": ""
+  },
+  {
+    "id": "156037c8-c1a9-4018-8b97-b742e34cf476",
+    "coupon_name": "DiscountCoupon",
+    "quantity": 5,
+    "point": 50,
+    "created_at": "2024-07-04",
+    "expiration_date": "2024-12-31",
+    "username": ""
+  },
+  {
+    "id": "4d9ac306-9208-44bb-882f-1b0c61f31807",
+    "coupon_name": "DiscountCoupon",
+    "quantity": 15,
+    "point": 50,
+    "created_at": "2024-07-04",
+    "expiration_date": "2024-12-31",
+    "username": "newUserName"
   }
 ]
 

@@ -63,8 +63,7 @@ export class FindCouponTemplateReqDto {
     enum: ['all', 'non-expired', 'expired'],
   })
   @IsEnum(['all', 'non-expired', 'expired'])
-  @Transform(({ value }) => value ?? 'all')
-  readonly criteria: 'all' | 'non-expired' | 'expired';
+  criteria: 'all' | 'non-expired' | 'expired';
 }
 
 // 쿠폰 템플릿 상세조회 요청1 DTO

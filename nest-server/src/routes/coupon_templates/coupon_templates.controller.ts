@@ -18,7 +18,11 @@ import {
   FindCouponTemplateReqDto,
   UpdateCouponReqDto,
 } from './dto/req.dto';
-import { CreateCouponResDto, FindCouponTemplateResDto } from './dto/res.dto';
+import {
+  CreateCouponResDto,
+  FindCouponTemplateResDto,
+  FindOneCouponTemplateResDto,
+} from './dto/res.dto';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -64,37 +68,47 @@ export class CouponTemplatesController {
   }
 
   // 2. 쿠폰 템플릿 조회 (관리자)
-  // GET : localhost:3000/coupon-templates?criteria=all&page=1&size=10
+  // GET : localhost:3000/coupon-templates?page=1&size=20&criteria=all
   @Get()
-  @ApiOperation({ summary: '쿠폰 템플릿 조회' })
-  @ApiQuery({ name: 'criteria', required: false, description: '조회 기준' })
+  @ApiOperation({ summary: '쿠폰 템플릿 조회 (관리자)' })
+  @ApiQuery({
+    name: 'criteria',
+    enum: ['all', 'non-expired', 'expired'],
+    required: true,
+    description:
+      '전체조회할 것인지 유효쿠폰만 조회할것인지 만료쿠폰만 조회할것인지 선택',
+  })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async findCouponTemplates(
     @Query() { page, size }: PageReqDto,
-    @Query() { criteria }: FindCouponTemplateReqDto,
+    @Query('criteria') criteria: 'all' | 'non-expired' | 'expired',
   ) {
+    const findCouponTemplateReqDto = new FindCouponTemplateReqDto();
+    findCouponTemplateReqDto.criteria = criteria;
+
     return this.couponTemplatesService.findCouponTemplates(
-      criteria,
+      findCouponTemplateReqDto,
       page,
       size,
     );
   }
 
   // 3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자)
-  // POST : localhost:3000/coupon-templates/name
-  @Post('name')
+  // GET : localhost:3000/coupon-templates/name?coupon_name=DiscountCoupon
+
+  @Get('name')
   @ApiOperation({ summary: '쿠폰명으로 쿠폰 템플릿 조회' })
   @ApiResponse({
     status: 200,
     description: '성공',
-    type: [FindCouponTemplateResDto],
+    type: [FindOneCouponTemplateResDto],
   })
   @Usertype(UserType.ADMIN)
   async findCouponTemplateByName(
-    @Body() findByCouponNameReqDto: FindByCouponNameReqDto,
+    @Query() findByCouponNameReqDto: FindByCouponNameReqDto,
   ) {
     return this.couponTemplatesService.findCouponTemplateByName(
       findByCouponNameReqDto.coupon_name,

@@ -156,7 +156,12 @@ export class UsersController {
   // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=username&username=Jake
   @Get('admin/indi/find')
   @ApiOperation({ summary: '개인회원 단일조회 (관리자)' })
-  @ApiQuery({ name: 'criteria', enum: ['email', 'username'], required: true })
+  @ApiQuery({
+    name: 'criteria',
+    enum: ['email', 'username'],
+    required: true,
+    description: 'email로 조회할것인지 username으로 조회할것인지 선택',
+  })
   @ApiQuery({ name: 'email', required: false })
   @ApiQuery({ name: 'username', required: false })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
@@ -200,6 +205,8 @@ export class UsersController {
     name: 'criteria',
     enum: ['corporate_name', 'business_registration_number'],
     required: true,
+    description:
+      'corporate_name로 조회할것인지 business_registration_number으로 조회할것인지 선택',
   })
   @ApiQuery({ name: 'corporate_name', required: false })
   @ApiQuery({ name: 'business_registration_number', required: false })

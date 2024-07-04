@@ -10,7 +10,7 @@ import {
 import { CouponsService } from './coupons.service';
 import { ApplyCouponReqDto, CouponCodeReqDto } from './dto/req.dto';
 import { ApplyCouponResDto, CouponDetailsResDto } from './dto/res.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { PageResDto } from 'src/common/dto/res.dto';
@@ -42,9 +42,11 @@ export class CouponsController {
   }
 
   // 3. 사용된 쿠폰 목록 조회
-  // GET : localhost:3000/coupons/used?page=1&size=10
+  // GET : localhost:3000/coupons/used?page=1&size=20
   @Get('used')
   @ApiOperation({ summary: '사용된 쿠폰 목록 조회' })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({
     status: 200,
     description: '성공',

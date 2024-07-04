@@ -84,7 +84,7 @@ export class AuthController {
     return { id, accessToken, refreshToken };
   }
 
-  // 3. 로그인
+  // 3. 로그인 (개인회원/사업자회원/관리자회원)
   // POST : localhost:3000/auth/signin
   @Post('signin')
   @Public()
@@ -95,7 +95,7 @@ export class AuthController {
     return this.authService.signIn(signInReqDto);
   }
 
-  // 4. 리프레시토큰 발급
+  // 4. 리프레시토큰 발급 (개인회원/사업자회원/관리자회원)
   // POST : localhost:3000/auth/refresh
   @Post('refresh')
   @ApiOperation({ summary: '리프레시토큰 발급' })
@@ -117,7 +117,7 @@ export class AuthController {
     return { accessToken, refreshToken };
   }
 
-  // 5. 로그아웃
+  // 5. 로그아웃 (개인회원/사업자회원/관리자회원)
   // DELETE : localhost:3000/auth/signout
   @Delete('signout')
   @ApiOperation({ summary: '로그아웃' })

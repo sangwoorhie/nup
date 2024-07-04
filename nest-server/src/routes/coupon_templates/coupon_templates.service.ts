@@ -9,9 +9,14 @@ import {
   DateReqDto,
   FindCouponReqDto1,
   FindCouponReqDto2,
+  FindCouponTemplateReqDto,
   UpdateCouponReqDto,
 } from './dto/req.dto';
-import { CreateCouponResDto, FindCouponTemplateResDto } from './dto/res.dto';
+import {
+  CreateCouponResDto,
+  FindCouponTemplateResDto,
+  FindOneCouponTemplateResDto,
+} from './dto/res.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CouponTemplate } from 'src/entities/coupon_template.entity';
 import {
@@ -117,11 +122,13 @@ export class CouponTemplatesService {
 
   // 2. 쿠폰 템플릿 전체조회
   async findCouponTemplates(
-    criteria: 'all' | 'non-expired' | 'expired',
+    findCouponTemplateReqDto: FindCouponTemplateReqDto,
     page: number,
     size: number,
   ): Promise<PageResDto<FindCouponTemplateResDto>> {
     let whereCondition: { expiration_date?: FindOperator<Date> };
+
+    const { criteria } = findCouponTemplateReqDto;
 
     if (criteria === 'non-expired') {
       whereCondition = {
@@ -161,7 +168,7 @@ export class CouponTemplatesService {
   // 3. 쿠폰명으로 쿠폰 템플릿 조회
   async findCouponTemplateByName(
     coupon_name: string,
-  ): Promise<FindCouponTemplateResDto[]> {
+  ): Promise<FindOneCouponTemplateResDto[]> {
     const couponTemplates = await this.couponTemplateRepository.find({
       where: { coupon_name },
       relations: ['user'],
@@ -173,7 +180,7 @@ export class CouponTemplatesService {
       point: couponTemplate.point,
       created_at: couponTemplate.created_at,
       expiration_date: couponTemplate.expiration_date,
-      username: couponTemplate.user.username,
+      username: couponTemplate.user ? couponTemplate.user.username : '',
     }));
   }
 
