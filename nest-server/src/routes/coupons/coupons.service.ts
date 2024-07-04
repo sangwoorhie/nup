@@ -14,6 +14,8 @@ import {
   CouponListResDto,
 } from './dto/res.dto';
 import { PageResDto } from 'src/common/dto/res.dto';
+import { PaymentRecord } from 'src/entities/payment_record.entity';
+import { ChargeType, PaymentType } from 'src/enums/enums';
 
 @Injectable()
 export class CouponsService {
@@ -22,6 +24,8 @@ export class CouponsService {
     private readonly couponRepository: Repository<Coupon>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(PaymentRecord)
+    private readonly paymentRecordRepository: Repository<PaymentRecord>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -59,15 +63,23 @@ export class CouponsService {
       });
 
       if (!coupon) {
-        throw new NotFoundException(`Coupon with code ${code} not found`);
+        throw new NotFoundException(`쿠폰 코드: ${code} 가 존재하지 않습니다.`);
       }
 
       if (coupon.is_used) {
-        throw new BadRequestException('Coupon already used');
+        throw new BadRequestException('이미 사용된 쿠폰입니다.');
       }
 
       if (new Date() > coupon.coupon_template.expiration_date) {
-        throw new BadRequestException('Coupon expired');
+        const formattedExpirationDate =
+          coupon.coupon_template.expiration_date.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          });
+        throw new BadRequestException(
+          `만료된 쿠폰입니다. 만료일 : ${formattedExpirationDate}`,
+        );
       }
 
       const user = await queryRunner.manager.findOne(User, {
@@ -75,16 +87,29 @@ export class CouponsService {
       });
 
       if (!user) {
-        throw new NotFoundException(`User with ID ${userId} not found`);
+        throw new NotFoundException(
+          `유저 ID : ${userId} 를 조회할 수 없습니다.`,
+        );
       }
 
+      // 유저 포인트 업데이트
       user.point += coupon.coupon_template.point;
       coupon.is_used = true;
       coupon.used_at = new Date();
       coupon.user = user;
 
+      // PaymentRecord 생성
+      const paymentRecord = new PaymentRecord();
+      paymentRecord.payment_type = PaymentType.CHARGE;
+      paymentRecord.charge_type = ChargeType.COUPON;
+      paymentRecord.point = coupon.coupon_template.point;
+      paymentRecord.user_point = user.point;
+      paymentRecord.user = user;
+      paymentRecord.coupons = coupon;
+
       await queryRunner.manager.save(User, user);
       await queryRunner.manager.save(Coupon, coupon);
+      await queryRunner.manager.save(PaymentRecord, paymentRecord);
 
       await queryRunner.commitTransaction();
 
@@ -101,6 +126,7 @@ export class CouponsService {
       await queryRunner.release();
     }
   }
+
   // 3. 사용된 쿠폰 목록 조회
   async getUsedCoupons(
     page: number,
@@ -134,7 +160,7 @@ export class CouponsService {
     const coupon = await this.couponRepository.findOne({ where: { id } });
 
     if (!coupon) {
-      throw new NotFoundException(`Coupon with ID ${id} not found`);
+      throw new NotFoundException(`쿠폰 ID : ${id} 를 조회할 수 없습니다.`);
     }
 
     await this.couponRepository.remove(coupon);

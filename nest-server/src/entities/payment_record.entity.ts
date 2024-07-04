@@ -36,7 +36,7 @@ export class PaymentRecord {
   })
   charge_type: ChargeType;
 
-  // 계좌주 이름
+  // 계좌주 이름 (현금 충전의 경우)
   @ApiProperty({ description: '계좌주 이름' })
   @Column({ type: 'varchar' })
   account_holder_name: string;

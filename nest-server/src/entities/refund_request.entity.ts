@@ -36,6 +36,16 @@ export class RefundRequest {
   @Column({ type: 'varchar' })
   bank_account_copy: string;
 
+  // 환불신청 사유
+  @ApiProperty({ description: ' 환불신청 사유' })
+  @Column({ type: 'varchar' })
+  refund_request_reason: string;
+
+  // 환불신청 완료 여부
+  @ApiProperty({ description: '환불신청 완료 여부' })
+  @Column({ type: 'varchar' })
+  is_refunded: boolean;
+
   // 환불 신청 시각
   @ApiProperty({ description: '환불 신청 시각' })
   @CreateDateColumn({ type: 'date' })
