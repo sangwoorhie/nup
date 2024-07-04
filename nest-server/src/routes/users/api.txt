@@ -1,4 +1,23 @@
-// User
+// User (O: 테스트성공 / X: 테스트실패)
+
+1. 개인회원 본인정보 조회 O
+2. 사업자회원 본인정보 조회 O
+3. 개인회원 본인정보 수정 O
+4. 사업자회원 본인정보 수정 O
+5. 비밀번호 변경 O
+6. 회원 탈퇴 O
+7. 개인회원 전체조회 (관리자) O
+8. 개인회원 단일조회 (관리자) O
+9. 사업자회원 전체조회 (관리자) O
+10. 사업자회원 단일조회 (관리자) O
+11. 회원 계정정지 (관리자) O
+12. 회원 계정정지 취소 (관리자) O
+13. 관리자회원으로 변경 (관리자) O
+14. 사업자등록증 확인처리 (관리자) O
+15. 포인트 충전/차감 (관리자) O
+
+
+
 
 1. 개인회원 본인정보 조회
 메소드: GET
@@ -169,7 +188,7 @@ json
 
 7. 개인회원 전체조회 (관리자)
 메소드: GET
-URL: localhost:3000/users/admin/indi
+URL: localhost:3000/users/admin/indi?page=1&size=20
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:
@@ -200,36 +219,45 @@ json
 
 
 8. 개인회원 단일조회 (관리자)
-메소드: POST
-URL: localhost:3000/users/admin/indi/find
+메소드: GET
+URL : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=email&email=a26484638@komapper.com
+URL : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=username&username=Jake
+요청 파라미터:
+page: 페이지 번호 (기본값: 1)
+size: 페이지 당 데이터 개수 (기본값: 20)
+criteria: email 또는 username
+email: email
+username: username
+
 헤더:
 Authorization: Bearer [JWT 토큰]
-요청 바디:
-json
--
-{
-  "criteria": "email",
-  "email": "example@example.com"
-}
+
 응답 상태코드: 200
 응답 바디:
 json
 -
 {
-  "id": "user_id",
-  "email": "example@example.com",
-  "username": "exampleUser",
-  "phone": 123456789,
-  "emergency_phone": 987654321,
-  "point": 100,
-  "created_at": "2023-01-01T00:00:00Z"
+  "page": 1,
+  "size": 20,
+  "total": 1,
+  "items": [
+    {
+      "id": "19537ac2-405d-4424-8818-f20312a132de",
+      "email": "a5678@komapper.com",
+      "username": "Jake",
+      "phone": 1234,
+      "emergency_phone": 1234,
+      "point": null,
+      "created_at": "2024-07-04"
+    }
+  ]
 }
 
 
 
 9. 사업자회원 전체조회 (관리자)
 메소드: GET
-URL: localhost:3000/users/admin/corp
+URL: localhost:3000/users/admin/corp?page=1&size=20
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:
@@ -269,45 +297,72 @@ json
 
 
 10. 사업자회원 단일조회 (관리자)
-메소드: POST
-URL: localhost:3000/users/admin/corp/find
+메소드: GET
+URL : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=corporate_name&corporate_name=string
+URL : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=business_registration_number&business_registration_number=1234
 헤더:
 Authorization: Bearer [JWT 토큰]
-요청 바디:
-json
--
-{
-  "criteria": "corporate_name",
-  "corporate_name": "Example Corp"
-}
+
+요청 파라미터:
+page: 페이지 번호 (기본값: 1)
+size: 페이지 당 데이터 개수 (기본값: 20)
+criteria: email 또는 username
+corporate_name: corporate_name
+business_registration_number: business_registration_number
+
 응답 상태코드: 200
 응답 바디:
 json
 -
 {
-  "id": "corporate_id",
-  "corporate_name": "Example Corp",
-  "industry_code": 1234,
-  "business_type": "Retail",
-  "business_conditions": "Good",
-  "business_registration_number": 567890,
-  "business_license": "license_url",
-  "address": "123 Street, City",
-  "business_license_verified": false,
-  "username": "exampleUser",
-  "department": "Sales",
-  "position": "Manager",
-  "email": "example@example.com",
-  "phone": 123456789,
-  "emergency_phone": 987654321,
-  "created_at": "2023-01-01T00:00:00Z"
+  "page": 1,
+  "size": 20,
+  "total": 2,
+  "items": [
+    {
+      "id": "23cce0a1-e19b-449d-b537-daedacdc73d9",
+      "corporate_name": "string",
+      "industry_code": 1234,
+      "business_type": "string",
+      "business_conditions": "string",
+      "business_registration_number": 1234,
+      "business_license": "string",
+      "address": "string",
+      "business_license_verified": false,
+      "username": "company",
+      "department": null,
+      "position": null,
+      "email": "a12345678@gmail.com",
+      "phone": 1234,
+      "emergency_phone": 1234,
+      "created_at": "2024-07-04"
+    },
+    {
+      "id": "5d735467-837f-4069-8326-916feccc4dfb",
+      "corporate_name": "string",
+      "industry_code": 1234,
+      "business_type": "string",
+      "business_conditions": "string",
+      "business_registration_number": 1234,
+      "business_license": "string",
+      "address": "string",
+      "business_license_verified": false,
+      "username": "company",
+      "department": null,
+      "position": null,
+      "email": "a09876543@gmail.com",
+      "phone": 1234,
+      "emergency_phone": 1234,
+      "created_at": "2024-07-04"
+    }
+  ]
 }
 
 
 
 11. 회원 계정정지 (관리자)
 메소드: PATCH
-URL: localhost:3000/users/admin/ban
+URL: localhost:3000/users/admin/ban?userId=12345
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:
@@ -330,7 +385,7 @@ json
 
 12. 회원 계정정지 취소 (관리자)
 메소드: PATCH
-URL: localhost:3000/users/admin/unban
+URL: localhost:3000/users/admin/unban?userId=12345
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:
@@ -347,7 +402,7 @@ json
 
 13. 관리자회원으로 변경 (관리자)
 메소드: PATCH
-URL: localhost:3000/users/admin/promote
+URL: localhost:3000/users/admin/promote?userId=12345
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:
@@ -364,7 +419,7 @@ json
 
 14. 사업자등록증 확인처리 (관리자)
 메소드: PATCH
-URL: localhost:3000/users/admin/corp/verify
+URL: localhost:3000/users/admin/corp/verify?corporateId=12345
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:
@@ -381,7 +436,7 @@ json
 
 15. 포인트 충전/차감 (관리자)
 메소드: PATCH
-URL: localhost:3000/users/admin/points
+URL: localhost:3000/users/admin/points?userId=12345
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:

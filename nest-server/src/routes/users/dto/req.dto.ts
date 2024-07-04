@@ -7,11 +7,11 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsStrongPassword,
   IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { IsStrongPassword } from 'src/decorators/strong-password.decorator';
 
 // 개인회원 단일조회 요청 DTO
 export class FindIndiUserReqDto {
@@ -20,18 +20,17 @@ export class FindIndiUserReqDto {
     enum: ['email', 'username'],
   })
   @IsEnum(['email', 'username'])
-  @Transform(({ value }) => value ?? 'email')
-  readonly criteria: 'email' | 'username';
+  criteria: 'email' | 'username';
 
   @ApiProperty({ required: false, description: '유저 이메일' })
   @IsEmail()
   @IsOptional()
-  readonly email?: string;
+  email?: string;
 
   @ApiProperty({ required: false, description: '유저 이름' })
   @IsString()
   @IsOptional()
-  readonly username?: string;
+  username?: string;
 }
 
 // 사업자회원 단일조회 요청 DTO
@@ -41,18 +40,17 @@ export class FindCorpUserReqDto {
     enum: ['corporate_name', 'business_registration_number'],
   })
   @IsEnum(['corporate_name', 'business_registration_number'])
-  @Transform(({ value }) => value ?? 'corporate_name')
-  readonly criteria: 'corporate_name' | 'business_registration_number';
+  criteria: 'corporate_name' | 'business_registration_number';
 
   @ApiProperty({ required: false, description: '기업명' })
   @IsString()
   @IsOptional()
-  readonly corporate_name?: string;
+  corporate_name?: string;
 
   @ApiProperty({ required: false, description: '사업자등록번호' })
   @IsNumber()
   @IsOptional()
-  readonly business_registration_number?: number;
+  business_registration_number?: number;
 }
 
 // 개인회원 정보수정 요청 DTO
@@ -151,9 +149,6 @@ export class ChangePasswordReqDto {
   @ApiProperty({ required: true, description: '현재 비밀번호' })
   @IsString()
   @IsNotEmpty()
-  @MinLength(8)
-  @MaxLength(20)
-  @IsStrongPassword()
   readonly currentPassword: string;
 
   @ApiProperty({ required: true, description: '새 비밀번호' })
@@ -178,9 +173,6 @@ export class DeleteUserReqDto {
   @ApiProperty({ required: true, description: '비밀번호' })
   @IsString()
   @IsNotEmpty()
-  @MinLength(8)
-  @MaxLength(20)
-  @IsStrongPassword()
   readonly password: string;
 }
 

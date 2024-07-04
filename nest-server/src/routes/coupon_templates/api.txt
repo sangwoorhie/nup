@@ -1,0 +1,271 @@
+// Coupon Template (O: 테스트성공 / X: 테스트실패)
+
+1. 쿠폰 템플릿 생성 (관리자) O
+2. 쿠폰 템플릿 조회 (관리자) 
+3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자) 
+4. 쿠폰 템플릿 발행수량 추가 (관리자) 
+5. 쿠폰 템플릿 삭제 (관리자) 
+6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자) 
+7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자) 
+8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자) 
+9. 단일 쿠폰 삭제 (관리자) 
+
+
+
+1. 쿠폰 템플릿 생성 (관리자)
+메소드: POST
+URL: localhost:3000/coupon-templates
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+-
+{
+  "coupon_name": "DiscountCoupon",
+  "quantity": 15,
+  "point": 50,
+  "expiration_date": "2024-12-31T00:00:00.000Z"
+}
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "coupon_name": "DiscountCoupon",
+  "quantity": 15,
+  "point": 50,
+  "expiration_date": "2024-12-31T00:00:00.000Z",
+  "user": {
+    "id": "96117962-cf26-4fea-ba2f-a4d83a6aa23c",
+    "user_type": "admin",
+    "email": "powercom92@komapper.com",
+    "password": "$2b$10$AF.ES.ejVJ1EK8HIlq1L8u6lxcBRjSeMGOGeRbEB8g5SWNxqNsK.C",
+    "username": "newUserName",
+    "phone": 123456789,
+    "emergency_phone": 987654321,
+    "point": null,
+    "profile_image": "new_image_url",
+    "department": null,
+    "position": null,
+    "banned": false,
+    "banned_reason": null,
+    "created_at": "2024-07-03",
+    "updated_at": "2024-07-04",
+    "deleted_at": null
+  },
+  "id": "4d9ac306-9208-44bb-882f-1b0c61f31807",
+  "created_at": "2024-07-04",
+  "updated_at": "2024-07-04"
+}
+
+
+
+2.쿠폰 템플릿 조회 (관리자)
+메소드: GET
+URL: localhost:3000/coupon-templates?criteria=all&page=1&size=10
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+-
+{
+  "page": 1,
+  "size": 10,
+  "total": 50,
+  "items": [
+    {
+      "id": "template_id",
+      "coupon_name": "DiscountCoupon",
+      "quantity": 100,
+      "point": 50,
+      "created_at": "2023-01-01T00:00:00Z",
+      "expiration_date": "2023-12-31"
+    },
+    ...
+  ]
+}
+
+
+
+3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자)
+메소드: POST
+URL: localhost:3000/coupon-templates/name
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+-
+{
+  "coupon_name": "DiscountCoupon"
+}
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+[
+  {
+    "id": "template_id",
+    "coupon_name": "DiscountCoupon",
+    "quantity": 100,
+    "point": 50,
+    "created_at": "2023-01-01T00:00:00Z",
+    "expiration_date": "2023-12-31",
+    "username": "admin_user"
+  }
+]
+
+
+
+4. 쿠폰 템플릿 발행수량 추가 (관리자)
+메소드: PATCH
+URL: localhost:3000/coupon-templates/
+
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+json
+-
+{
+  "quantity": 50
+}
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "id": "template_id",
+  "coupon_name": "DiscountCoupon",
+  "quantity": 150,
+  "point": 50,
+  "expiration_date": "2023-12-31"
+}
+
+
+
+5. 쿠폰 템플릿 삭제 (관리자)
+메소드: DELETE
+URL: localhost:3000/coupon-templates/
+
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+-
+{
+  "message": "쿠폰 템플릿이 삭제되었습니다."
+}
+
+
+
+6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자)
+메소드: GET
+URL: localhost:3000/coupon-templates/date-range?page=1&size=10
+헤더:
+Authorization: Bearer [JWT 토큰]
+요청 파라미터:
+page: 페이지 번호 (기본값: 1)
+size: 페이지 당 데이터 개수 (기본값: 10)
+요청 바디:
+json
+-
+{
+  "start_date": "2023-01-01",
+  "end_date": "2023-12-31"
+}
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "page": 1,
+  "size": 10,
+  "total": 20,
+  "items": [
+    {
+      "id": "template_id",
+      "coupon_name": "DiscountCoupon",
+      "quantity": 100,
+      "point": 50,
+      "created_at": "2023-01-01T00:00:00Z",
+      "expiration_date": "2023-12-31"
+    },
+    ...
+  ]
+}
+
+
+
+7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자)
+메소드: GET
+URL: localhost:3000/coupon-templates/
+?criteria=code&code=ABC123&page=1&size=10
+또는
+localhost:3000/coupon-templates/
+?criteria=username&username=exampleUser&page=1&size=10
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+-
+[
+  {
+    "code": "ABC123",
+    "is_used": false,
+    "used_at": null,
+    "username": "exampleUser",
+    "email": "example@example.com"
+  },
+  ...
+]
+
+
+
+8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자)
+메소드: GET
+URL: localhost:3000/coupon-templates/
+/coupons?criteria=all&page=1&size=10
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+-
+{
+  "page": 1,
+  "size": 10,
+  "total": 100,
+  "items": [
+    {
+      "code": "ABC123",
+      "is_used": false,
+      "used_at": null,
+      "username": "exampleUser",
+      "email": "example@example.com"
+    },
+    ...
+  ]
+}
+
+
+
+9. 단일 쿠폰 삭제 (관리자)
+메소드: DELETE
+URL: localhost:3000/coupon-templates/
+/coupons/
+
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+-
+{
+  "message": "쿠폰이 삭제되었습니다."
+}

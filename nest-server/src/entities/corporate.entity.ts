@@ -5,6 +5,7 @@ import {
   OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -70,5 +71,6 @@ export class Corporate {
   // Corporate : User = 1 : 1 관계
   @ApiProperty({ description: '회원' })
   @OneToOne(() => User, (user) => user.corporate)
+  @JoinColumn({ name: 'user_id' })
   user: User;
 }

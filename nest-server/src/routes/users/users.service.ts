@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -50,35 +51,33 @@ export class UsersService {
   async findCorpUserInfo(userId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      select: [
-        'email',
-        'username',
-        'phone',
-        'emergency_phone',
-        'profile_image',
-        'department',
-        'position',
-      ],
+      relations: ['corporate'],
     });
 
-    const corporate = await this.corporateRepository.findOne({
-      where: { user: { id: userId } },
-      select: [
-        'corporate_name',
-        'industry_code',
-        'business_type',
-        'business_conditions',
-        'business_registration_number',
-        'business_license',
-        'business_license_verified',
-        'address',
-      ],
-    });
-
-    if (user && corporate) {
-      return { ...user, ...corporate };
+    if (!user || !user.corporate) {
+      throw new BadRequestException('해당 사용자 정보를 찾을 수 없습니다.');
     }
-    return user;
+
+    const corporate = user.corporate;
+
+    return {
+      id: user.id,
+      corporate_name: corporate.corporate_name,
+      industry_code: corporate.industry_code,
+      business_type: corporate.business_type,
+      business_conditions: corporate.business_conditions,
+      business_registration_number: corporate.business_registration_number,
+      business_license: corporate.business_license,
+      business_license_verified: corporate.business_license_verified,
+      address: corporate.address,
+      username: user.username,
+      department: user.department,
+      position: user.position,
+      email: user.email,
+      phone: user.phone,
+      emergency_phone: user.emergency_phone,
+      created_at: user.created_at,
+    };
   }
 
   // 3. 본인정보 수정 (개인회원)
@@ -252,6 +251,7 @@ export class UsersService {
       skip: (page - 1) * size,
       take: size,
       select: [
+        'id',
         'email',
         'username',
         'phone',
@@ -278,40 +278,59 @@ export class UsersService {
   }
 
   // 8. 개인회원 단일조회 (관리자)
-  async findIndiUser(findIndiUserReqDto: FindIndiUserReqDto) {
-    const { criteria: searchCriteria, email, username } = findIndiUserReqDto;
+  async findIndiUser(
+    findIndiUserReqDto: FindIndiUserReqDto,
+    page: number,
+    size: number,
+  ): Promise<PageResDto<FindIndiUserResDto>> {
+    const { criteria, email, username } = findIndiUserReqDto;
 
-    if (searchCriteria === 'email' && email) {
-      return await this.userRepository.findOne({
-        where: { email },
-        select: [
-          'id',
-          'email',
-          'username',
-          'phone',
-          'emergency_phone',
-          'point',
-          'created_at',
-        ],
-      });
+    let whereCondition: any = {};
+
+    if (criteria === 'email' && email) {
+      whereCondition.email = email;
+    } else if (criteria === 'username' && username) {
+      whereCondition.username = username;
+    } else {
+      throw new BadRequestException('유효한 검색 기준과 값을 제공해야 합니다.');
     }
 
-    if (searchCriteria === 'username' && username) {
-      return await this.userRepository.findOne({
-        where: { username },
-        select: [
-          'id',
-          'email',
-          'username',
-          'phone',
-          'emergency_phone',
-          'point',
-          'created_at',
-        ],
-      });
+    const [users, total] = await this.userRepository.findAndCount({
+      where: {
+        ...whereCondition,
+        user_type: UserType.INDIVIDUAL,
+      },
+      skip: (page - 1) * size,
+      take: size,
+      select: [
+        'id',
+        'email',
+        'username',
+        'phone',
+        'emergency_phone',
+        'point',
+        'created_at',
+      ],
+    });
+
+    if (users.length === 0) {
+      throw new NotFoundException('해당 조건에 맞는 회원을 찾을 수 없습니다.');
     }
 
-    throw new BadRequestException('유효한 검색 기준과 값을 제공해야 합니다.');
+    return {
+      page,
+      size,
+      total,
+      items: users.map((user) => ({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        phone: user.phone,
+        emergency_phone: user.emergency_phone,
+        point: user.point,
+        created_at: user.created_at,
+      })),
+    };
   }
 
   // 9. 사업자회원 전체조회
@@ -355,52 +374,56 @@ export class UsersService {
   // 10. 사업자회원 단일조회 (관리자)
   async findCorporateUser(
     findCorpUserReqDto: FindCorpUserReqDto,
-  ): Promise<FindCorpUserResDto> {
+    page: number,
+    size: number,
+  ): Promise<PageResDto<FindCorpUserResDto>> {
     const { criteria, corporate_name, business_registration_number } =
       findCorpUserReqDto;
 
+    let whereCondition: any = {};
+
     if (criteria === 'corporate_name' && corporate_name) {
-      const corporate = await this.corporateRepository.findOne({
-        where: { corporate_name },
-        relations: ['user'],
-      });
-
-      if (!corporate)
-        throw new BadRequestException('존재하지 않는 기업명입니다.');
-
-      return {
-        id: corporate.id,
-        corporate_name: corporate.corporate_name,
-        industry_code: corporate.industry_code,
-        business_type: corporate.business_type,
-        business_conditions: corporate.business_conditions,
-        business_registration_number: corporate.business_registration_number,
-        business_license: corporate.business_license,
-        address: corporate.address,
-        business_license_verified: corporate.business_license_verified,
-        username: corporate.user.username,
-        department: corporate.user.department,
-        position: corporate.user.position,
-        email: corporate.user.email,
-        phone: corporate.user.phone,
-        emergency_phone: corporate.user.emergency_phone,
-        created_at: corporate.user.created_at,
-      };
-    }
-
-    if (
+      whereCondition.corporate_name = corporate_name;
+    } else if (
       criteria === 'business_registration_number' &&
       business_registration_number
     ) {
-      const corporate = await this.corporateRepository.findOne({
-        where: { business_registration_number },
-        relations: ['user'],
-      });
+      whereCondition.business_registration_number =
+        business_registration_number;
+    } else {
+      throw new BadRequestException('유효한 검색 기준과 값을 제공해야 합니다.');
+    }
 
-      if (!corporate)
-        throw new BadRequestException('존재하지 않는 사업자등록번호입니다.');
+    const [corporates, total] = await this.corporateRepository.findAndCount({
+      where: {
+        ...whereCondition,
+        // user_type: UserType.CORPORATE,
+      },
+      skip: (page - 1) * size,
+      take: size,
+      select: [
+        'id',
+        'corporate_name',
+        'industry_code',
+        'business_type',
+        'business_conditions',
+        'business_registration_number',
+        'business_license',
+        'address',
+        'business_license_verified',
+      ],
+      relations: ['user'],
+    });
 
-      return {
+    if (corporates.length === 0) {
+      throw new NotFoundException('해당 조건에 맞는 기업을 찾을 수 없습니다.');
+    }
+
+    return {
+      page,
+      size,
+      total,
+      items: corporates.map((corporate) => ({
         id: corporate.id,
         corporate_name: corporate.corporate_name,
         industry_code: corporate.industry_code,
@@ -417,10 +440,8 @@ export class UsersService {
         phone: corporate.user.phone,
         emergency_phone: corporate.user.emergency_phone,
         created_at: corporate.user.created_at,
-      };
-    }
-
-    throw new BadRequestException('유효한 검색 기준과 값을 제공해야 합니다.');
+      })),
+    };
   }
 
   // 11. 회원 계정정지 (관리자)
@@ -433,11 +454,16 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
 
+    if (user.banned) {
+      throw new BadRequestException('이미 계정이 정지된 회원입니다.');
+    }
+
     user.banned = true;
     user.banned_reason = reason; // 계정정지 사유 저장
+    const username = user.username;
     await this.userRepository.save(user);
 
-    return { message: '계정이 정지되었습니다.' };
+    return { message: `username: ${username} 계정이 정지되었습니다.` };
   }
 
   // 12. 회원 계정정지 취소 (관리자)
@@ -445,11 +471,16 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
 
+    if (!user.banned) {
+      throw new BadRequestException('계정이 정지되지 않은 회원입니다.');
+    }
+
     user.banned = false;
     user.banned_reason = null; // 계정정지 사유 제거
+    const username = user.username;
     await this.userRepository.save(user);
 
-    return { message: '계정 정지가 해제되었습니다.' };
+    return { message: `username: ${username} 계정 정지가 해제되었습니다.` };
   }
 
   // 13. 관리자회원으로 변경 (관리자)
@@ -457,10 +488,17 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
 
+    if (user.user_type === UserType.ADMIN) {
+      throw new BadRequestException('이미 관리자 회원입니다.');
+    }
+
     user.user_type = UserType.ADMIN;
+    const username = user.username;
     await this.userRepository.save(user);
 
-    return { message: '회원이 관리자 계정으로 변경되었습니다.' };
+    return {
+      message: `username: ${username} 회원이 관리자 회원으로 변경되었습니다.`,
+    };
   }
 
   // 14. 사업자등록증 확인처리 (관리자)
@@ -473,10 +511,16 @@ export class UsersService {
     if (!corporate)
       throw new UnauthorizedException('존재하지 않는 사업자회원입니다.');
 
+    if (corporate.business_license_verified)
+      throw new BadRequestException('이미 확인처리 된 사업자등록증입니다.');
+
     corporate.business_license_verified = true;
+    const companyName = corporate.corporate_name;
     await this.corporateRepository.save(corporate);
 
-    return { message: '사업자등록증이 확인처리 되었습니다.' };
+    return {
+      message: `기업 명 : ${companyName} 사업자등록증이 확인처리 되었습니다.`,
+    };
   }
 
   // 15. 포인트 충전/차감 (관리자)
@@ -489,15 +533,38 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
 
+    // 포인트 차감 조건 확인
+    if (points < 0) {
+      if (user.point <= 0) {
+        throw new BadRequestException(
+          `회원의 현재 포인트가 ${user.point}P입니다. 0 또는 음수 이므로 포인트를 차감할 수 없습니다.`,
+        );
+      }
+      if (user.point + points < 0) {
+        throw new BadRequestException(
+          `차감하고자 하는 포인트(${points}P)가 회원의 현재 포인트(${user.point}P)보다 큽니다.`,
+        );
+      }
+    }
+
     user.point += points;
     await this.userRepository.save(user);
 
-    return { message: '포인트가 업데이트되었습니다.' };
+    const message =
+      points < 0
+        ? `${points}포인트가 차감되었습니다.`
+        : `${points}포인트가 충전되었습니다.`;
+    return { message };
   }
 
   // 이메일로 회원찾기
   async findOneByEmail(email: string) {
     return await this.userRepository.findOneBy({ email });
+  }
+
+  // 아이디로 회원찾기
+  async findOneById(id: string) {
+    return await this.userRepository.findOneBy({ id });
   }
 
   // 관리자 회원 검증

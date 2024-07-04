@@ -118,54 +118,85 @@ export class AuthService {
     try {
       await validateOrReject(corpSignUpReqDto); // 유효성 검사
 
-      if (password !== confirmPassword) throw new BadRequestException();
-      const user = await this.usersService.findOneByEmail(email);
-      if (user) throw new BadRequestException();
+      if (password !== confirmPassword) {
+        console.error('Passwords do not match');
+        throw new BadRequestException(
+          '비밀번호와 확인 비밀번호가 일치하지 않습니다.',
+        );
+      }
+
+      const existingUser = await this.usersService.findOneByEmail(email);
+      if (existingUser) {
+        console.error('User with email already exists');
+        throw new BadRequestException(
+          '이미 동일한 이메일을 가진 회원이 존재합니다.',
+        );
+      }
 
       const saltRounds = 10;
       const hash = await bcrypt.hash(password, saltRounds);
 
-      const userEntity = queryRunner.manager.create(User, {
-        user_type: UserType.CORPORATE,
-        email,
-        password: hash,
-        username,
-        phone,
-        emergency_phone,
-        profile_image,
-      });
-      await queryRunner.manager.save(userEntity);
+      // User 엔티티 생성
+      const userEntity = new User();
+      userEntity.user_type = UserType.CORPORATE;
+      userEntity.email = email;
+      userEntity.password = hash;
+      userEntity.username = username;
+      userEntity.phone = phone;
+      userEntity.emergency_phone = emergency_phone;
+      userEntity.profile_image = profile_image;
 
-      const corporateEntity = queryRunner.manager.create(Corporate, {
-        corporate_name,
-        industry_code,
-        business_type,
-        business_conditions,
-        business_registration_number,
-        business_license,
-        address,
-        user: userEntity,
-      });
-      await queryRunner.manager.save(corporateEntity);
+      // User 엔티티 저장
+      const savedUser = await queryRunner.manager.save(User, userEntity);
 
-      const accessToken = this.generateAccessToken(userEntity.id);
-      const refreshToken = this.generateRefreshToken(userEntity.id);
-      const refreshTokenEntity = queryRunner.manager.create(RefreshToken, {
-        user: { id: userEntity.id },
-        token: refreshToken,
-      });
-      await queryRunner.manager.save(refreshTokenEntity);
+      // Corporate 엔티티 생성
+      const corporateEntity = new Corporate();
+      corporateEntity.corporate_name = corporate_name;
+      corporateEntity.industry_code = industry_code;
+      corporateEntity.business_type = business_type;
+      corporateEntity.business_conditions = business_conditions;
+      corporateEntity.business_registration_number =
+        business_registration_number;
+      corporateEntity.business_license = business_license;
+      corporateEntity.address = address;
+      corporateEntity.user = savedUser;
+
+      // Corporate 엔티티 저장
+      const savedCorporate = await queryRunner.manager.save(
+        Corporate,
+        corporateEntity,
+      );
+
+      // RefreshToken 엔티티 생성
+      const refreshTokenEntity = new RefreshToken();
+      refreshTokenEntity.user = savedUser;
+      refreshTokenEntity.token = this.generateRefreshToken(savedUser.id);
+
+      // RefreshToken 엔티티 저장
+      const savedRefreshToken = await queryRunner.manager.save(
+        RefreshToken,
+        refreshTokenEntity,
+      );
+
+      const accessToken = this.generateAccessToken(savedUser.id);
+      const refreshToken = savedRefreshToken.token;
+
       await queryRunner.commitTransaction();
+      console.log('Transaction committed');
+
       return {
-        id: userEntity.id,
+        id: savedUser.id,
         accessToken: accessToken,
         refreshToken: refreshToken,
       };
     } catch (e) {
+      console.error('Error occurred:', e);
       await queryRunner.rollbackTransaction();
+      console.log('Transaction rolled back');
       error = e;
     } finally {
       await queryRunner.release();
+      console.log('Query runner released');
       if (error) throw error;
     }
   }

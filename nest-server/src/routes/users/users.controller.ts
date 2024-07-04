@@ -152,14 +152,29 @@ export class UsersController {
   }
 
   // 8. 개인회원 단일조회 (관리자)
-  //  GET : localhost:3000/users/admin/indi/find
-  @Post('admin/indi/find')
+  // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=email&email=a26484638@komapper.com
+  // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=username&username=Jake
+  @Get('admin/indi/find')
   @ApiOperation({ summary: '개인회원 단일조회 (관리자)' })
-  @ApiBody({ type: FindIndiUserReqDto })
+  @ApiQuery({ name: 'criteria', enum: ['email', 'username'], required: true })
+  @ApiQuery({ name: 'email', required: false })
+  @ApiQuery({ name: 'username', required: false })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiGetResponse(FindIndiUserResDto)
   @Usertype(UserType.ADMIN)
-  async findIndiUser(@Body() findIndiUserReqDto: FindIndiUserReqDto) {
-    return await this.usersService.findIndiUser(findIndiUserReqDto);
+  async findIndiUser(
+    @Query() { page, size }: PageReqDto,
+    @Query('criteria') criteria: 'email' | 'username',
+    @Query('email') email?: string,
+    @Query('username') username?: string,
+  ) {
+    const findIndiUserReqDto = new FindIndiUserReqDto();
+    findIndiUserReqDto.criteria = criteria;
+    findIndiUserReqDto.email = email;
+    findIndiUserReqDto.username = username;
+
+    return await this.usersService.findIndiUser(findIndiUserReqDto, page, size);
   }
 
   // 9. 사업자회원 전체조회 (관리자)
@@ -177,14 +192,40 @@ export class UsersController {
   }
 
   // 10. 사업자회원 단일조회 (관리자)
-  // POST : localhost:3000/users/admin/corp/find
-  @Post('admin/corp/find')
+  // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=corporate_name&corporate_name=string
+  // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=business_registration_number&business_registration_number=1234
+  @Get('admin/corp/find')
   @ApiOperation({ summary: '사업자회원 단일조회 (관리자)' })
-  @ApiBody({ type: FindCorpUserReqDto })
+  @ApiQuery({
+    name: 'criteria',
+    enum: ['corporate_name', 'business_registration_number'],
+    required: true,
+  })
+  @ApiQuery({ name: 'corporate_name', required: false })
+  @ApiQuery({ name: 'business_registration_number', required: false })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiGetResponse(FindCorpUserResDto)
   @Usertype(UserType.ADMIN)
-  async findCorporateUser(@Body() findCorpUserReqDto: FindCorpUserReqDto) {
-    return await this.usersService.findCorporateUser(findCorpUserReqDto);
+  async findCorporateUser(
+    @Query() { page, size }: PageReqDto,
+    @Query('criteria')
+    criteria: 'corporate_name' | 'business_registration_number',
+    @Query('corporate_name') corporate_name?: string,
+    @Query('business_registration_number')
+    business_registration_number?: number,
+  ) {
+    const findCorpUserReqDto = new FindCorpUserReqDto();
+    findCorpUserReqDto.criteria = criteria;
+    findCorpUserReqDto.corporate_name = corporate_name;
+    findCorpUserReqDto.business_registration_number =
+      business_registration_number;
+
+    return await this.usersService.findCorporateUser(
+      findCorpUserReqDto,
+      page,
+      size,
+    );
   }
 
   // 11. 회원 계정정지 (관리자)

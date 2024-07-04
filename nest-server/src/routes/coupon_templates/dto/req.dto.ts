@@ -24,6 +24,7 @@ export class CreateCouponReqDto {
 
   @ApiProperty({ description: '쿠폰 만료시각(유효일자)' })
   @IsDate()
+  @Transform(({ value }) => new Date(value))
   readonly expiration_date: Date;
 }
 
@@ -38,10 +39,12 @@ export class UpdateCouponReqDto {
 export class DateReqDto {
   @ApiProperty({ description: '쿠폰 발급 시작일' })
   @IsDate()
+  @Transform(({ value }) => new Date(value))
   readonly start_date: Date;
 
   @ApiProperty({ description: '쿠폰 발급 마감일' })
   @IsDate()
+  @Transform(({ value }) => new Date(value))
   readonly end_date: Date;
 }
 

@@ -18,5 +18,6 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
     // "allowUnusedLabels": false
-  }
+  },
+  "include": ["src", "src/common/types/express.d.ts"]
 }

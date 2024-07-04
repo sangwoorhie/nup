@@ -28,7 +28,6 @@ import {
 } from '@nestjs/swagger';
 import { Usertype } from 'src/decorators/usertype.decorators';
 import { UserType } from 'src/enums/enums';
-import { CouponTemplate } from 'src/entities/coupon_template.entity';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 
@@ -57,6 +56,7 @@ export class CouponTemplatesController {
     @User() user: UserAfterAuth,
     @Body() createCouponReqDto: CreateCouponReqDto,
   ) {
+    console.log('User:', user);
     return this.couponTemplatesService.createCouponTemplate(
       createCouponReqDto,
       user.id,
@@ -73,8 +73,8 @@ export class CouponTemplatesController {
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async findCouponTemplates(
-    @Query() { criteria }: FindCouponTemplateReqDto,
     @Query() { page, size }: PageReqDto,
+    @Query() { criteria }: FindCouponTemplateReqDto,
   ) {
     return this.couponTemplatesService.findCouponTemplates(
       criteria,

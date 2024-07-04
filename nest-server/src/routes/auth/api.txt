@@ -1,6 +1,14 @@
-// Auth
+// Auth (O: 테스트성공 / X: 테스트실패)
 
-1. 회원가입 (개인회원)
+1. 회원가입 (개인회원) O
+2. 회원가입 (사업자회원) O
+3. 로그인 O
+4. 리프레시토큰 발급 O
+5. 로그아웃 O
+
+
+
+1. 회원가입 (개인회원) 
 HTTP Method: POST
 URL: localhost:3000/auth/signup1
 Description: 개인회원 가입을 위한 API
@@ -112,3 +120,9 @@ json
   "accessToken": "string",
   "refreshToken": "string"
 }
+
+ 5. 로그아웃
+HTTP Method DELETE : 
+URL : localhost:3000/auth/signout
+Request Headers:
+Authorization: Bearer [JWT 토큰]

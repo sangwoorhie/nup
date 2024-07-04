@@ -30,6 +30,7 @@ import { CorporatesModule } from '../corporates/corporates.module';
     }),
     TypeOrmModule.forFeature([RefreshToken, Corporate]),
     CorporatesModule,
+    UsersModule,
   ],
   providers: [
     AuthService,

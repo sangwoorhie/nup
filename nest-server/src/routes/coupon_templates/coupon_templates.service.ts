@@ -57,13 +57,14 @@ export class CouponTemplatesService {
       const user = await queryRunner.manager.findOne(User, {
         where: { id: userId },
       });
+
       const couponTemplate = queryRunner.manager.create(CouponTemplate, {
         ...createCouponReqDto,
         user,
       });
       await queryRunner.manager.save(couponTemplate);
 
-      const couponCodes = generateMultipleCouponCodes(quantity);
+      const couponCodes = this.generateMultipleCouponCodes(quantity);
       const coupons = couponCodes.map((code) => {
         return queryRunner.manager.create(Coupon, {
           code,
@@ -87,6 +88,33 @@ export class CouponTemplatesService {
       await queryRunner.release();
     }
   }
+
+  private generateRandomCouponCode(): string {
+    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const segments = [4, 4, 4, 4, 4, 4, 4];
+    let couponCode = '';
+
+    segments.forEach((segmentLength, index) => {
+      for (let i = 0; i < segmentLength; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        couponCode += characters[randomIndex];
+      }
+      if (index < segments.length - 1) {
+        couponCode += '-';
+      }
+    });
+
+    return couponCode;
+  }
+
+  private generateMultipleCouponCodes(count: number): string[] {
+    const couponCodes: string[] = [];
+    for (let i = 0; i < count; i++) {
+      couponCodes.push(this.generateRandomCouponCode());
+    }
+    return couponCodes;
+  }
+
   // 2. 쿠폰 템플릿 전체조회
   async findCouponTemplates(
     criteria: 'all' | 'non-expired' | 'expired',
@@ -169,7 +197,7 @@ export class CouponTemplatesService {
       const additionalQuantity = updateCouponReqDto.quantity;
       const newTotalQuantity = couponTemplate.quantity + additionalQuantity;
 
-      const couponCodes = generateMultipleCouponCodes(additionalQuantity);
+      const couponCodes = this.generateMultipleCouponCodes(additionalQuantity);
       const coupons = couponCodes.map((code) => {
         return queryRunner.manager.create(Coupon, {
           code,

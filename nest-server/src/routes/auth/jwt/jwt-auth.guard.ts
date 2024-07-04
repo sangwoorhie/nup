@@ -14,6 +14,7 @@ import { IS_PUBLIC_KEY } from 'src/decorators/public.decorators';
 import { UserType } from 'src/enums/enums';
 import { USER_TYPE_KEY } from 'src/decorators/usertype.decorators';
 import { Logger } from 'winston';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -39,9 +40,23 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const http = context.switchToHttp();
-    const { url, headers } = http.getRequest<Request>();
-    const token = /Bearer\s(.+)/.exec(headers['authorization'])[1];
+    const request = http.getRequest<Request>();
+    const { url, headers } = request;
+    const authorization = headers['authorization'];
+
+    if (!authorization) {
+      throw new UnauthorizedException('Authorization header not found');
+    }
+
+    const token = authorization.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('Token not found');
+    }
+
     const decoded = this.jwtService.decode(token);
+    if (!decoded) {
+      throw new UnauthorizedException('Invalid token');
+    }
 
     // 리프레시 토큰을 사용하는지 확인하고, 리프레시 토큰이 아닌 경우 에러 발생
     if (url !== '/auth/refresh' && decoded['tokenType'] === 'refresh') {
@@ -60,11 +75,15 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (requireUsertype) {
       const userId = decoded['sub'];
       const admin = this.usersService.checkUserIsAdmin(userId);
-      if (!admin) throw new UnauthorizedException();
+      if (!admin) {
+        throw new UnauthorizedException();
+      }
+      request.user = { id: userId, ...decoded };
       return admin;
     }
 
     // 기본 AuthGuard 로직 실행
+    request.user = { id: decoded['sub'], ...decoded };
     return super.canActivate(context);
   }
 }

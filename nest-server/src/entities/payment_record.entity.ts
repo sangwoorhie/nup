@@ -46,6 +46,11 @@ export class PaymentRecord {
   @Column({ type: 'int' })
   point: number;
 
+  // 유저 포인트
+  @ApiProperty({ description: '유저의 포인트' })
+  @Column({ type: 'int' })
+  user_point: number;
+
   // 거래 발생시각
   @ApiProperty({ description: '거래 발생시각' })
   @CreateDateColumn({ type: 'date' })
