@@ -60,14 +60,13 @@ export class CouponTemplatesController {
     @User() user: UserAfterAuth,
     @Body() createCouponReqDto: CreateCouponReqDto,
   ) {
-    console.log('User:', user);
     return this.couponTemplatesService.createCouponTemplate(
       createCouponReqDto,
       user.id,
     );
   }
 
-  // 2. 쿠폰 템플릿 조회 (관리자)
+  // 2. 쿠폰 템플릿 조회 - 전체조회 or 유효쿠폰조회 or 만료쿠폰조회 (관리자)
   // GET : localhost:3000/coupon-templates?page=1&size=20&criteria=all
   @Get()
   @ApiOperation({ summary: '쿠폰 템플릿 조회 (관리자)' })
@@ -76,7 +75,7 @@ export class CouponTemplatesController {
     enum: ['all', 'non-expired', 'expired'],
     required: true,
     description:
-      '전체조회할 것인지 유효쿠폰만 조회할것인지 만료쿠폰만 조회할것인지 선택',
+      '쿠폰 템플릿 목록을 전체조회할 것인지 유효쿠폰만 조회할것인지 만료쿠폰만 조회할것인지 선택',
   })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
@@ -116,7 +115,7 @@ export class CouponTemplatesController {
   }
 
   // 4. 쿠폰 템플릿 발행수량 추가 (관리자)
-  // PATCH : localhost:3000/coupon-templates/:id
+  // PATCH : localhost:3000/coupon-templates/:template_id
   @Patch(':id')
   @ApiOperation({ summary: '쿠폰 템플릿 발행수량 변경' })
   @ApiResponse({ status: 200, description: '성공' })
@@ -132,7 +131,7 @@ export class CouponTemplatesController {
   }
 
   // 5. 쿠폰 템플릿 삭제 (관리자)
-  // DELETE : localhost:3000/coupon-templates/:id
+  // DELETE : localhost:3000/coupon-templates/:template_id
   @Delete(':id')
   @ApiOperation({ summary: '쿠폰 템플릿 삭제' })
   @ApiResponse({ status: 200, description: '성공' })
@@ -142,19 +141,36 @@ export class CouponTemplatesController {
   }
 
   // 6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자)
-  // GET : localhost:3000/coupon-templates/date-range?page=1&size=10
+  // GET : localhost:3000/coupon-templates/date-range?page=1&size=10&start_date=2023-01-01&end_date=2023-12-31
+
   @Get('date-range')
   @ApiOperation({
     summary: '쿠폰 발급일기준 기간조회',
   })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiQuery({
+    name: 'start_date',
+    required: true,
+    description: '쿠폰 발급 시작일',
+  })
+  @ApiQuery({
+    name: 'end_date',
+    required: true,
+    description: '쿠폰 발급 마감일',
+  })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async findCouponTemplatesByDateRange(
     @Query() { page, size }: PageReqDto,
-    @Query() dateReqDto: DateReqDto,
+    @Query('start_date') start_date: string,
+    @Query('end_date') end_date: string,
   ) {
+    const dateReqDto: DateReqDto = {
+      start_date: new Date(start_date),
+      end_date: new Date(end_date),
+    };
+
     return this.couponTemplatesService.findCouponTemplatesByDateRange(
       page,
       size,
@@ -162,40 +178,70 @@ export class CouponTemplatesController {
     );
   }
 
-  // 7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자)
-  // GET : localhost:3000/coupon-templates/:id?criteria=code&code=ABC123&page=1&size=10
+  // 7. 쿠폰 템플릿 단일조회 - 쿠폰코드조회 또는 회원이름조회 (관리자)
+  // GET : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=code&code=ABC123
+  // GET : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=username&username=Jake
   @Get(':id')
   @ApiOperation({
     summary: '쿠폰코드 또는 회원이름으로 조회',
   })
+  @ApiQuery({
+    name: 'criteria',
+    enum: ['code', 'username'],
+    required: true,
+    description: '쿠폰코드로 조회할것인지 회원이름으로 조회할것인지 선택',
+  })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiQuery({ name: 'code', required: false, description: '쿠폰 코드' })
+  @ApiQuery({ name: 'username', required: false, description: '회원 이름' })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async findCouponTemplateById(
     @Param('id') id: string,
-    @Query() findCouponReqDto1: FindCouponReqDto1,
+    @Query() { page, size }: PageReqDto,
+    @Query('criteria') criteria: 'code' | 'username',
+    @Query('code') code?: string,
+    @Query('username') username?: string,
   ) {
+    const findCouponReqDto1 = new FindCouponReqDto1();
+    findCouponReqDto1.criteria = criteria;
+    findCouponReqDto1.code = code;
+    findCouponReqDto1.username = username;
+
     return this.couponTemplatesService.findCouponTemplateById(
       id,
       findCouponReqDto1,
+      page,
+      size,
     );
   }
 
-  // 8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자)
-  // GET : localhost:3000/coupon-templates/:id/coupons?criteria=all&page=1&size=10
+  // 8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 or 사용쿠폰조회 or 미사용쿠폰조회 (관리자)
+  // GET : localhost:3000/coupon-templates/:template_id/coupons?page=1&size=20&criteria=all
   @Get(':id/coupons')
   @ApiOperation({
     summary: '쿠폰 템플릿 단일조회 - 전체, 사용쿠폰, 미사용쿠폰 조회',
   })
-  @ApiQuery({ name: 'criteria', required: false, description: '조회 기준' })
+  @ApiQuery({
+    name: 'criteria',
+    enum: ['all', 'used', 'unused'],
+    required: true,
+    description:
+      '하나의 쿠폰 템플릿에 있는 쿠폰들을 전체조회할 것인지 사용쿠폰만 조회할것인지 미사용쿠폰만 조회할것인지 선택',
+  })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async findCouponsByTemplateId(
     @Param('id') id: string,
-    @Query() findCouponReqDto2: FindCouponReqDto2,
     @Query() { page, size }: PageReqDto,
+    @Query('criteria') criteria: 'all' | 'used' | 'unused',
   ) {
+    const findCouponReqDto2 = new FindCouponReqDto2();
+    findCouponReqDto2.criteria = criteria;
+
     return this.couponTemplatesService.findCouponsByTemplateId(
       id,
       findCouponReqDto2,

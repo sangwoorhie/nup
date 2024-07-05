@@ -55,6 +55,8 @@ export class CouponTemplate {
 
   // CouponTemplate : Coupon = 1 : N 관계
   @ApiProperty({ description: '쿠폰' })
-  @OneToMany(() => Coupon, (coupons) => coupons.coupon_template)
+  @OneToMany(() => Coupon, (coupons) => coupons.coupon_template, {
+    cascade: true,
+  })
   coupons: Coupon[];
 }

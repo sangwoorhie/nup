@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsDate,
+  IsEmail,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 
 // 쿠폰 생성 응답 DTO
 export class CreateCouponResDto {
@@ -76,4 +82,27 @@ export class FindOneCouponTemplateResDto {
   @ApiProperty({ required: true })
   @IsString()
   readonly username: string;
+}
+
+// 쿠폰 템플릿 상세조회 응답 DTO
+export class FindCouponResDto {
+  @ApiProperty({ description: '쿠폰코드' })
+  @IsString()
+  code: string;
+
+  @ApiProperty({ description: '사용여부' })
+  @IsBoolean()
+  is_used: boolean;
+
+  @ApiProperty({ description: '사용 일시' })
+  @IsDate()
+  used_at: string | null;
+
+  @ApiProperty({ description: '쿠폰사용 회원 이름' })
+  @IsString()
+  username: string | null;
+
+  @ApiProperty({ description: '쿠폰사용 회원 이메일' })
+  @IsEmail()
+  email: string | null;
 }

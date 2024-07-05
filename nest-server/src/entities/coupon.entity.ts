@@ -46,9 +46,14 @@ export class Coupon {
 
   // Coupon : CouponTemplate = N : 1 관계
   @ApiProperty({ description: '쿠폰 템플릿' })
-  @ManyToOne(() => CouponTemplate, (coupon_template) => coupon_template.coupons)
+  @ManyToOne(
+    () => CouponTemplate,
+    (coupon_template) => coupon_template.coupons,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
   coupon_template: CouponTemplate;
-
   // Coupon : User = N : 1 관계
   @ApiProperty({ description: '회원' })
   @ManyToOne(() => User, (user) => user.coupons)

@@ -14,6 +14,7 @@ import {
 } from './dto/req.dto';
 import {
   CreateCouponResDto,
+  FindCouponResDto,
   FindCouponTemplateResDto,
   FindOneCouponTemplateResDto,
 } from './dto/res.dto';
@@ -94,6 +95,7 @@ export class CouponTemplatesService {
     }
   }
 
+  // 랜덤 코드 생성
   private generateRandomCouponCode(): string {
     const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
     const segments = [4, 4, 4, 4, 4, 4, 4];
@@ -165,6 +167,7 @@ export class CouponTemplatesService {
       items,
     };
   }
+
   // 3. 쿠폰명으로 쿠폰 템플릿 조회
   async findCouponTemplateByName(
     coupon_name: string,
@@ -230,15 +233,16 @@ export class CouponTemplatesService {
   }
 
   // 5. 쿠폰 템플릿 삭제
-  async removeCouponTemplate(id: string): Promise<void> {
+  async removeCouponTemplate(id: string): Promise<{ message: string }> {
     const couponTemplate = await this.couponTemplateRepository.findOne({
       where: { id },
     });
     if (!couponTemplate) {
-      throw new NotFoundException(`CouponTemplate with ID ${id} not found`);
+      throw new NotFoundException(`쿠폰 템플릿 ID : ${id}를 찾을 수 없습니다.`);
     }
-
     await this.couponTemplateRepository.remove(couponTemplate);
+
+    return { message: `쿠폰 템플릿 ID : ${id}가 성공적으로 삭제되었습니다.` };
   }
 
   // 6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기
@@ -277,31 +281,42 @@ export class CouponTemplatesService {
   async findCouponTemplateById(
     id: string,
     findCouponReqDto1: FindCouponReqDto1,
-  ): Promise<any> {
+    page: number,
+    size: number,
+  ): Promise<PageResDto<FindCouponResDto>> {
     const { criteria, code, username } = findCouponReqDto1;
 
-    let coupons;
+    let whereCondition: any = { coupon_template: { id } };
+
     if (criteria === 'code' && code) {
-      coupons = await this.couponRepository.find({
-        where: { coupon_template: { id }, code },
-        relations: ['user'],
-      });
+      whereCondition = { ...whereCondition, code };
     } else if (criteria === 'username' && username) {
-      coupons = await this.couponRepository.find({
-        where: { coupon_template: { id }, user: { username } },
-        relations: ['user'],
-      });
+      whereCondition = { ...whereCondition, user: { username } };
     } else {
       throw new BadRequestException('Invalid criteria or value');
     }
 
-    return coupons.map((coupon) => ({
+    const [coupons, total] = await this.couponRepository.findAndCount({
+      where: whereCondition,
+      relations: ['user'],
+      skip: (page - 1) * size,
+      take: size,
+    });
+
+    const items = coupons.map((coupon) => ({
       code: coupon.code,
       is_used: coupon.is_used,
-      used_at: coupon.used_at,
-      username: coupon.user.username,
-      email: coupon.user.email,
+      used_at: coupon.used_at ? coupon.used_at.toISOString() : null,
+      username: coupon.user ? coupon.user.username : null,
+      email: coupon.user ? coupon.user.email : null,
     }));
+
+    return {
+      page,
+      size,
+      total,
+      items,
+    };
   }
 
   // 8. 쿠폰 템플릿 단일조회 (상세조회) - 전체, 사용쿠폰, 미사용쿠폰 조회 (관리자)
@@ -310,11 +325,11 @@ export class CouponTemplatesService {
     findCouponReqDto2: FindCouponReqDto2,
     page: number,
     size: number,
-  ): Promise<any> {
+  ): Promise<PageResDto<FindCouponResDto>> {
     const { criteria } = findCouponReqDto2;
 
     let whereCondition: {
-      coupon_template: { id: string } | { id: string } | { id: string };
+      coupon_template: { id: string };
       is_used?: boolean;
     };
 
@@ -333,29 +348,44 @@ export class CouponTemplatesService {
       take: size,
     });
 
+    const items = coupons.map((coupon) => ({
+      code: coupon.code,
+      is_used: coupon.is_used,
+      used_at: coupon.used_at ? coupon.used_at.toISOString() : null,
+      username: coupon.user ? coupon.user.username : null,
+      email: coupon.user ? coupon.user.email : null,
+    }));
+
     return {
       page,
       size,
       total,
-      items: coupons.map((coupon) => ({
-        code: coupon.code,
-        is_used: coupon.is_used,
-        used_at: coupon.used_at,
-        username: coupon.user.username,
-        email: coupon.user.email,
-      })),
+      items,
     };
   }
 
   // 9. 단일 쿠폰 삭제 (관리자)
-  async removeCoupon(templateId: string, couponId: string): Promise<void> {
+  async removeCoupon(
+    templateId: string,
+    couponId: string,
+  ): Promise<{ message: string }> {
+    const couponTemplate = await this.couponTemplateRepository.findOne({
+      where: { id: templateId },
+    });
+    if (!couponTemplate) {
+      throw new NotFoundException(
+        `쿠폰 템플릿 ID : ${templateId}를 찾을 수 없습니다.`,
+      );
+    }
+
     const coupon = await this.couponRepository.findOne({
       where: { id: couponId, coupon_template: { id: templateId } },
     });
     if (!coupon) {
-      throw new NotFoundException(`Coupon with ID ${couponId} not found`);
+      throw new NotFoundException(`쿠폰 ID ${couponId} 를 찾을 수 없습니다.`);
     }
 
     await this.couponRepository.remove(coupon);
+    return { message: `쿠폰 ID : ${couponId}가 성공적으로 삭제되었습니다.` };
   }
 }

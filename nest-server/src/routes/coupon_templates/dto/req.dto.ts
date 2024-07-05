@@ -73,18 +73,17 @@ export class FindCouponReqDto1 {
     enum: ['code', 'username'],
   })
   @IsEnum(['code', 'username'])
-  @Transform(({ value }) => value ?? 'code')
-  readonly criteria: 'code' | 'username';
+  criteria: 'code' | 'username';
 
   @ApiProperty({ required: false, description: '쿠폰 코드' })
   @IsString()
   @IsOptional()
-  readonly code?: string;
+  code?: string;
 
   @ApiProperty({ required: false, description: '유저 이름' })
   @IsString()
   @IsOptional()
-  readonly username?: string;
+  username?: string;
 }
 
 // 쿠폰 탬플릿 상세조회 요청2 DTO
@@ -95,6 +94,5 @@ export class FindCouponReqDto2 {
     enum: ['all', 'used', 'unused'],
   })
   @IsEnum(['all', 'used', 'unused'])
-  @Transform(({ value }) => value ?? 'all')
-  readonly criteria: 'all' | 'used' | 'unused';
+  criteria: 'all' | 'used' | 'unused';
 }

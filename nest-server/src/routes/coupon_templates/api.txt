@@ -1,14 +1,14 @@
 // Coupon Template (O: 테스트성공 / X: 테스트실패)
 
 1. 쿠폰 템플릿 생성 (관리자) O
-2. 쿠폰 템플릿 조회 (관리자) O
+2. 쿠폰 템플릿 조회 - 전체조회 or 유효쿠폰조회 or 만료쿠폰조회 (관리자) O
 3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자) O
-4. 쿠폰 템플릿 발행수량 추가 (관리자) X
-5. 쿠폰 템플릿 삭제 (관리자) X
-6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자) X
-7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자) X
-8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자) X
-9. 쿠폰 템플릿 안에있는 단일 쿠폰 삭제 (관리자) X
+4. 쿠폰 템플릿 발행수량 추가 (관리자) O
+5. 쿠폰 템플릿 삭제 (관리자) O
+6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자) O
+7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자) O
+8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자) O
+9. 쿠폰 템플릿 안에있는 단일 쿠폰 삭제 (관리자) O
 
 
 
@@ -61,7 +61,7 @@ json
 
 
 
-2.쿠폰 템플릿 조회 (관리자)
+2.쿠폰 템플릿 조회 - 전체조회 or 유효쿠폰조회 or 만료쿠폰조회 (관리자)
 메소드: GET
 URL: localhost:3000/coupon-templates?page=1&size=20&criteria=all
 URL: localhost:3000/coupon-templates?page=1&size=20&criteria=non-expired
@@ -169,7 +169,8 @@ json
 
 4. 쿠폰 템플릿 발행수량 추가 (관리자)
 메소드: PATCH
-URL: localhost:3000/coupon-templates/
+URL: localhost:3000/coupon-templates/:template_id
+(ex) localhost:3000/coupon-templates/42ad8342-1700-4c78-a132-c1095ab65e55
 
 헤더:
 Authorization: Bearer [JWT 토큰]
@@ -196,7 +197,8 @@ json
 
 5. 쿠폰 템플릿 삭제 (관리자)
 메소드: DELETE
-URL: localhost:3000/coupon-templates/
+URL: localhost:3000/coupon-templates/:template_id
+(ex) : localhost:3000/coupon-templates/42ad8342-1700-4c78-a132-c1095ab65e55
 
 헤더:
 Authorization: Bearer [JWT 토큰]
@@ -212,19 +214,14 @@ json
 
 6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자)
 메소드: GET
-URL: localhost:3000/coupon-templates/date-range?page=1&size=10
+localhost:3000/coupon-templates/date-range?page=1&size=20&start_date=2023-01-01&end_date=2024-12-31
+
 헤더:
 Authorization: Bearer [JWT 토큰]
 요청 파라미터:
 page: 페이지 번호 (기본값: 1)
 size: 페이지 당 데이터 개수 (기본값: 10)
-요청 바디:
-json
--
-{
-  "start_date": "2023-01-01",
-  "end_date": "2023-12-31"
-}
+
 응답 상태코드: 200
 응답 바디:
 
@@ -251,11 +248,10 @@ json
 
 7. 쿠폰 템플릿 단일조회 (상세조회) - 쿠폰코드조회 또는 회원이름조회 (관리자)
 메소드: GET
-URL: localhost:3000/coupon-templates/
-?criteria=code&code=ABC123&page=1&size=10
-또는
-localhost:3000/coupon-templates/
-?criteria=username&username=exampleUser&page=1&size=10
+
+URL : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=code&code=coupon-code-ABC123
+URL : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=username&username=Jake
+
 헤더:
 Authorization: Bearer [JWT 토큰]
 응답 상태코드: 200
@@ -277,8 +273,10 @@ json
 
 8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 또는 사용쿠폰조회 또는 미사용쿠폰조회 (관리자)
 메소드: GET
-URL: localhost:3000/coupon-templates/
-/coupons?criteria=all&page=1&size=10
+URL: localhost:3000/coupon-templates/template_id/coupons?page=1&size=20&criteria=all
+URL: localhost:3000/coupon-templates/template_id/coupons?page=1&size=20&criteria=used
+URL: localhost:3000/coupon-templates/template_id/coupons?page=1&size=20&criteria=unused
+
 헤더:
 Authorization: Bearer [JWT 토큰]
 응답 상태코드: 200
@@ -305,8 +303,7 @@ json
 
 9. 단일 쿠폰 삭제 (관리자)
 메소드: DELETE
-URL: localhost:3000/coupon-templates/
-/coupons/
+URL: localhost:3000/coupon-templates/:templateId/coupons/:couponId
 
 헤더:
 Authorization: Bearer [JWT 토큰]

@@ -151,7 +151,7 @@ export class UsersController {
     return await this.usersService.findAll(page, size);
   }
 
-  // 8. 개인회원 단일조회 (관리자)
+  // 8. 개인회원 단일조회 - email조회 또는 회원이름조회 (관리자)
   // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=email&email=a26484638@komapper.com
   // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=username&username=Jake
   @Get('admin/indi/find')
@@ -196,7 +196,7 @@ export class UsersController {
     return await this.usersService.findAllCorporateUsers(page, size);
   }
 
-  // 10. 사업자회원 단일조회 (관리자)
+  // 10. 사업자회원 단일조회 - 기업명조회 또는 사업자등록번호조회 (관리자)
   // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=corporate_name&corporate_name=string
   // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=business_registration_number&business_registration_number=1234
   @Get('admin/corp/find')
