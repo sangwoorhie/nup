@@ -156,13 +156,28 @@ export class CouponsService {
   }
 
   // 4. 단일 쿠폰 삭제
-  async removeCoupon(id: string): Promise<void> {
-    const coupon = await this.couponRepository.findOne({ where: { id } });
+  async removeCoupon(id: string, userId: string): Promise<{ message: string }> {
+    const coupon = await this.couponRepository.findOne({
+      where: { id },
+      relations: ['user', 'payment_records'],
+    });
 
     if (!coupon) {
       throw new NotFoundException(`쿠폰 ID : ${id} 를 조회할 수 없습니다.`);
     }
 
+    if (!coupon.user || coupon.user.id !== userId) {
+      throw new BadRequestException('본인이 사용한 쿠폰만 삭제할 수 있습니다.');
+    }
+
+    // 결제 기록의 쿠폰 관계 제거
+    await this.paymentRecordRepository.update(
+      { coupons: coupon },
+      { coupons: null },
+    );
+
+    // 쿠폰 삭제
     await this.couponRepository.remove(coupon);
+    return { message: `쿠폰 ID : ${id}가 성공적으로 삭제되었습니다.` };
   }
 }

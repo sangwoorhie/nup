@@ -20,16 +20,17 @@ import { PageResDto } from 'src/common/dto/res.dto';
 export class CouponsController {
   constructor(private readonly couponsService: CouponsService) {}
 
-  // 1. 쿠폰 코드 조회
-  // POST : localhost:3000/coupons/details
-  @Post('details')
+  // 1. 쿠폰 코드 조회 (사용자)
+  // POST : localhost:3000/coupons/coupon-code?code=ABC123
+  @Get('coupon-code')
   @ApiOperation({ summary: '쿠폰 코드로 쿠폰 상세 정보 조회' })
+  @ApiQuery({ name: 'code', required: true, description: '쿠폰 코드' })
   @ApiResponse({ status: 200, description: '성공', type: CouponDetailsResDto })
-  async getCouponDetails(@Body() couponCodeReqDto: CouponCodeReqDto) {
+  async getCouponDetails(@Query() couponCodeReqDto: CouponCodeReqDto) {
     return this.couponsService.getCouponDetails(couponCodeReqDto.code);
   }
 
-  // 2. 쿠폰 코드 적용
+  // 2. 쿠폰 코드 적용 (조회를 먼저 하고, 적용함) (사용자)
   // POST : localhost:3000/coupons/apply
   @Post('apply')
   @ApiOperation({ summary: '쿠폰 코드 적용' })
@@ -41,7 +42,7 @@ export class CouponsController {
     return this.couponsService.applyCoupon(user.id, applyCouponReqDto.code);
   }
 
-  // 3. 사용된 쿠폰 목록 조회
+  // 3. 사용된 쿠폰 목록 조회 (사용자)
   // GET : localhost:3000/coupons/used?page=1&size=20
   @Get('used')
   @ApiOperation({ summary: '사용된 쿠폰 목록 조회' })
@@ -56,12 +57,12 @@ export class CouponsController {
     return this.couponsService.getUsedCoupons(pageReqDto.page, pageReqDto.size);
   }
 
-  // 4. 단일 쿠폰 삭제
+  // 4. 단일 쿠폰 삭제 (사용자)
   // DELETE : localhost:3000/coupons/:id
   @Delete(':id')
   @ApiOperation({ summary: '단일 쿠폰 삭제' })
   @ApiResponse({ status: 200, description: '성공' })
-  async removeCoupon(@Param('id') id: string) {
-    return this.couponsService.removeCoupon(id);
+  async removeCoupon(@Param('id') id: string, @User() user: UserAfterAuth) {
+    return this.couponsService.removeCoupon(id, user.id);
   }
 }

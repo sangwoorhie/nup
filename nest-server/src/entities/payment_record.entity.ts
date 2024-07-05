@@ -38,7 +38,7 @@ export class PaymentRecord {
 
   // 계좌주 이름 (현금 충전의 경우)
   @ApiProperty({ description: '계좌주 이름' })
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   account_holder_name: string;
 
   // 거래 포인트 (충전은 양수, 사용은 음수)
@@ -68,6 +68,8 @@ export class PaymentRecord {
 
   // PaymentRecord : Coupon = N : 1 관계
   @ApiProperty({ description: '쿠폰' })
-  @ManyToOne(() => Coupon, (coupons) => coupons.payment_records)
+  @ManyToOne(() => Coupon, (coupons) => coupons.payment_records, {
+    onDelete: 'SET NULL',
+  })
   coupons: Coupon;
 }
