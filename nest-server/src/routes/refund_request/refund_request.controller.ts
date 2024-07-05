@@ -22,6 +22,7 @@ export class RefundRequestController {
   constructor(private readonly refundRequestService: RefundRequestService) {}
 
   // 1. 환불요청 (사용자)
+  // POST : localhost:3000/refund-request
   @Post()
   @ApiOperation({ summary: '환불 요청' })
   @ApiResponse({
@@ -36,43 +37,8 @@ export class RefundRequestController {
     return await this.refundRequestService.requestRefund(user.id, refundReqDto);
   }
 
-  // 2. 전체 회원 환불 요청 목록 조회 (관리자)
-  @Get('admin')
-  @ApiOperation({ summary: '전체 회원 환불 요청 목록 조회' })
-  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
-  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
-  @ApiResponse({
-    status: 200,
-    description: '환불 요청 목록 조회 성공',
-    type: [RefundResAdminDto],
-  })
-  @Usertype(UserType.ADMIN)
-  async getAllRefundRequests(@Query() pageReqDto: PageReqDto) {
-    return await this.refundRequestService.getAllRefundRequests(
-      pageReqDto.page,
-      pageReqDto.size,
-    );
-  }
-
-  // 3. 환불요청 완료 처리 (관리자)
-  @Patch('admin/complete/:id')
-  @ApiOperation({ summary: '환불 요청 완료 처리' })
-  @ApiResponse({ status: 200, description: '환불 요청 완료 처리 성공' })
-  @Usertype(UserType.ADMIN)
-  async completeRefundRequest(@Param('id') id: string) {
-    return await this.refundRequestService.completeRefundRequest(id);
-  }
-
-  // 4. 환불요청 삭제 (관리자)
-  @Delete('admin/:id')
-  @ApiOperation({ summary: '환불 요청 삭제' })
-  @ApiResponse({ status: 200, description: '환불 요청 삭제 성공' })
-  @Usertype(UserType.ADMIN)
-  async deleteRefundRequest(@Param('id') id: string) {
-    return await this.refundRequestService.deleteRefundRequest(id);
-  }
-
-  // 5. 본인 환불 요청 목록 조회 (사용자)
+  // 2. 본인 환불 요청 목록 조회 (사용자)
+  // GET : localhost:3000/refund-request/me?page=1&size=20
   @Get('me')
   @ApiOperation({ summary: '본인 환불 요청 목록 조회' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
@@ -94,7 +60,8 @@ export class RefundRequestController {
     );
   }
 
-  // 6. 환불요청 취소 (사용자)
+  // 3. 본인 환불요청 취소 (사용자)
+  // PATCH : localhost:3000/refund-request/cancel/:id
   @Patch('cancel/:id')
   @ApiOperation({ summary: '본인 환불 요청 취소' })
   @ApiResponse({ status: 200, description: '환불 요청 취소 성공' })
@@ -103,5 +70,43 @@ export class RefundRequestController {
     @Param('id') id: string,
   ) {
     return await this.refundRequestService.cancelRefundRequest(user.id, id);
+  }
+
+  // 4. 전체 회원 환불 요청 목록 조회 (관리자)
+  // GET : localhost:3000/refund-request/admin?page=1&size=20
+  @Get('admin')
+  @ApiOperation({ summary: '전체 회원 환불 요청 목록 조회' })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiResponse({
+    status: 200,
+    description: '환불 요청 목록 조회 성공',
+    type: [RefundResAdminDto],
+  })
+  @Usertype(UserType.ADMIN)
+  async getAllRefundRequests(@Query() pageReqDto: PageReqDto) {
+    return await this.refundRequestService.getAllRefundRequests(
+      pageReqDto.page,
+      pageReqDto.size,
+    );
+  }
+
+  // 5. 환불요청 완료 처리 (관리자)
+  // PATCH : localhost:3000/refund-request/admin/complete/{refundRequestId}
+  @Patch('admin/complete/:id')
+  @ApiOperation({ summary: '환불 요청 완료 처리' })
+  @ApiResponse({ status: 200, description: '환불 요청 완료 처리 성공' })
+  @Usertype(UserType.ADMIN)
+  async completeRefundRequest(@Param('id') id: string) {
+    return await this.refundRequestService.completeRefundRequest(id);
+  }
+
+  // 6. 환불요청 삭제 (관리자)
+  @Delete('admin/:id')
+  @ApiOperation({ summary: '환불 요청 삭제' })
+  @ApiResponse({ status: 200, description: '환불 요청 삭제 성공' })
+  @Usertype(UserType.ADMIN)
+  async deleteRefundRequest(@Param('id') id: string) {
+    return await this.refundRequestService.deleteRefundRequest(id);
   }
 }

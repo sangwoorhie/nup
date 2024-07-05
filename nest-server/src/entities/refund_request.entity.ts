@@ -28,7 +28,7 @@ export class RefundRequest {
 
   // 계좌주 성명
   @ApiProperty({ description: '계좌주 성명' })
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   account_holder_name: string;
 
   // 통장 사본
@@ -43,7 +43,7 @@ export class RefundRequest {
 
   // 환불신청 완료 여부
   @ApiProperty({ description: '환불신청 완료 여부' })
-  @Column({ type: 'varchar' })
+  @Column({ type: 'boolean', default: false })
   is_refunded: boolean;
 
   // 환불 신청 시각

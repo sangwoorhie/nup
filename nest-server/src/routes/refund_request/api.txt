@@ -1,0 +1,154 @@
+// RefundRequest (O: 테스트성공 / X: 테스트실패)
+1. 환불요청 (사용자) O
+2. 본인 환불 요청 목록 조회 (사용자) O
+3. 본인 환불요청 취소 (사용자) O
+4. 전체 회원 환불 요청 목록 조회 (관리자) O
+5. 환불요청 완료 처리 (관리자) O
+6. 환불요청 삭제 (관리자) O
+
+
+
+1. 환불요청 (사용자)
+메소드: POST
+URL: localhost:3000/refund-request
+헤더:
+
+makefile
+-
+Authorization: Bearer [JWT 토큰]
+요청 바디:
+
+json
+-
+{
+  "requested_point": 100,
+  "bank_account_copy": "bank_account_copy_url",
+  "refund_request_reason": "refund reason"
+}
+응답 상태코드: 201
+응답 바디:
+
+json
+-
+{
+  "requested_at": "2024-07-05T12:34:56.000Z",
+  "requested_point": 100,
+  "rest_point": 900
+}
+
+
+
+2. 본인 환불 요청 목록 조회 (사용자)
+메소드: GET
+URL: localhost:3000/refund-request/me?page=1&size=20
+헤더:
+
+makefile
+-
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "page": 1,
+  "size": 20,
+  "total": 1,
+  "items": [
+    {
+      "requested_at": "2024-07-05T12:34:56.000Z",
+      "requested_point": 100,
+      "rest_point": 900
+    }
+  ]
+}
+
+
+
+3. 환불요청 취소 (사용자)
+메소드: PATCH
+URL: localhost:3000/refund-request/cancel/{refundRequestId}
+헤더:
+
+makefile
+-
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "message": "환불 요청이 성공적으로 취소되었습니다."
+}
+
+
+
+4. 전체 회원 환불 요청 목록 조회 (관리자)
+메소드: GET
+URL: localhost:3000/refund-request/admin?page=1&size=20
+헤더:
+
+makefile
+-
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "page": 1,
+  "size": 20,
+  "total": 1,
+  "items": [
+    {
+      "requested_at": "2024-07-05T12:34:56.000Z",
+      "bank_account_copy": "bank_account_copy_url",
+      "requested_point": 100,
+      "rest_point": 900,
+      "refund_request_reason": "refund reason",
+      "username": "exampleUser",
+      "phone": 123456789
+    }
+  ]
+}
+
+
+
+5. 환불요청 완료 처리 (관리자)
+메소드: PATCH
+URL: localhost:3000/refund-request/admin/complete/{refundRequestId}
+헤더:
+
+makefile
+-
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "message": "환불 요청이 성공적으로 완료되었습니다."
+}
+
+
+
+6. 환불요청 삭제 (관리자)
+메소드: DELETE
+URL: localhost:3000/refund-request/admin/{refundRequestId}
+헤더:
+
+makefile
+-
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+
+json
+-
+{
+  "message": "환불 요청이 성공적으로 삭제되었습니다."
+}

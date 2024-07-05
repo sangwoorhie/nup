@@ -32,6 +32,16 @@ export class RefundRequestService {
       throw new BadRequestException('사용자를 찾을 수 없습니다.');
     }
 
+    if (refundReqDto.requested_point <= 0) {
+      throw new BadRequestException('환불요청은 0원 이상이어야 합니다.');
+    }
+
+    if (user.point == null || 0) {
+      throw new BadRequestException(
+        '현재 회원님의 포인트가 존재하지 않습니다.',
+      );
+    }
+
     if (user.point < refundReqDto.requested_point) {
       throw new BadRequestException(
         '환불 요청 포인트가 현재 포인트보다 큽니다.',
@@ -56,7 +66,64 @@ export class RefundRequestService {
     };
   }
 
-  // 2. 전체 회원 환불 요청 목록 조회 (관리자)
+  // 2. 본인 환불 요청 목록 조회 (사용자)
+  async getMyRefundRequests(
+    userId: string,
+    page: number,
+    size: number,
+  ): Promise<PageResDto<RefundResDto>> {
+    const [refundRequests, total] =
+      await this.refundRequestRepository.findAndCount({
+        where: { user: { id: userId } },
+        skip: (page - 1) * size,
+        take: size,
+      });
+
+    const items = refundRequests.map((refundRequest) => ({
+      requested_at: refundRequest.requested_at,
+      requested_point: refundRequest.requested_point,
+      rest_point: refundRequest.rest_point,
+    }));
+
+    return {
+      page,
+      size,
+      total,
+      items,
+    };
+  }
+
+  // 3. 환불요청 취소 (사용자)
+  async cancelRefundRequest(
+    userId: string,
+    refundRequestId: string,
+  ): Promise<{ message: string }> {
+    const refundRequest = await this.refundRequestRepository.findOne({
+      where: { id: refundRequestId },
+      relations: ['user'],
+    });
+
+    if (!refundRequest) {
+      throw new NotFoundException('환불 요청을 찾을 수 없습니다.');
+    }
+
+    if (refundRequest.user.id !== userId) {
+      throw new BadRequestException('본인의 환불 요청만 취소할 수 있습니다.');
+    }
+
+    if (refundRequest.is_refunded) {
+      throw new BadRequestException(
+        '이미 처리된 환불 요청은 취소할 수 없습니다.',
+      );
+    }
+
+    await this.refundRequestRepository.remove(refundRequest);
+    return {
+      message: `환불 요청 ID : ${refundRequestId}가 성공적으로 취소되었습니다.`,
+    };
+  }
+
+  // 4. 전체 회원 환불 요청 목록 조회 (관리자)
   async getAllRefundRequests(
     page: number,
     size: number,
@@ -86,8 +153,10 @@ export class RefundRequestService {
     };
   }
 
-  // 3. 환불요청 완료 처리 (관리자)
-  async completeRefundRequest(refundRequestId: string): Promise<void> {
+  // 5. 환불요청 완료 처리 (관리자)
+  async completeRefundRequest(
+    refundRequestId: string,
+  ): Promise<{ message: string }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -119,6 +188,9 @@ export class RefundRequestService {
       await queryRunner.manager.save(RefundRequest, refundRequest);
 
       await queryRunner.commitTransaction();
+      return {
+        message: `환불처리가 완료되었습니다. 환불포인트: ${refundRequest.requested_point}, 환불 후 유저의 잔여 포인트: ${user.point}`,
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -126,70 +198,22 @@ export class RefundRequestService {
       await queryRunner.release();
     }
   }
-  // 4. 환불요청 삭제 (관리자)
-  async deleteRefundRequest(refundRequestId: string): Promise<void> {
-    const refundRequest = await this.refundRequestRepository.findOne({
-      where: { id: refundRequestId },
-    });
 
-    if (!refundRequest) {
-      throw new NotFoundException('환불 요청을 찾을 수 없습니다.');
-    }
-
-    await this.refundRequestRepository.remove(refundRequest);
-  }
-
-  // 5. 본인 환불 요청 목록 조회 (사용자)
-  async getMyRefundRequests(
-    userId: string,
-    page: number,
-    size: number,
-  ): Promise<PageResDto<RefundResDto>> {
-    const [refundRequests, total] =
-      await this.refundRequestRepository.findAndCount({
-        where: { user: { id: userId } },
-        skip: (page - 1) * size,
-        take: size,
-      });
-
-    const items = refundRequests.map((refundRequest) => ({
-      requested_at: refundRequest.requested_at,
-      requested_point: refundRequest.requested_point,
-      rest_point: refundRequest.rest_point,
-    }));
-
-    return {
-      page,
-      size,
-      total,
-      items,
-    };
-  }
-
-  // 6. 환불요청 취소 (사용자)
-  async cancelRefundRequest(
-    userId: string,
+  // 6. 환불요청 삭제 (관리자)
+  async deleteRefundRequest(
     refundRequestId: string,
-  ): Promise<void> {
+  ): Promise<{ message: string }> {
     const refundRequest = await this.refundRequestRepository.findOne({
       where: { id: refundRequestId },
-      relations: ['user'],
     });
 
     if (!refundRequest) {
       throw new NotFoundException('환불 요청을 찾을 수 없습니다.');
     }
 
-    if (refundRequest.user.id !== userId) {
-      throw new BadRequestException('본인의 환불 요청만 취소할 수 있습니다.');
-    }
-
-    if (refundRequest.is_refunded) {
-      throw new BadRequestException(
-        '이미 처리된 환불 요청은 취소할 수 없습니다.',
-      );
-    }
-
     await this.refundRequestRepository.remove(refundRequest);
+    return {
+      message: `환불요청 ID : ${refundRequestId}가 성공적으로 삭제되었습니다.`,
+    };
   }
 }
