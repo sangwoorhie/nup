@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { ApiKeys } from './api_key.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -48,5 +49,6 @@ export class ApiLog {
   // ApiLog : ApiKeys = N : 1 관계
   @ApiProperty({ description: 'API Key' })
   @ManyToOne(() => ApiKeys, (api_keys) => api_keys.api_logs)
-  api_keys: ApiKeys[];
+  @JoinColumn({ name: 'api_keys_id' })
+  api_keys: ApiKeys;
 }

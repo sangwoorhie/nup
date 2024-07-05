@@ -21,6 +21,13 @@ export enum ChargeType {
   COUPON = 'coupon', // 쿠폰 충전
 }
 
+// 과금내역 관련 관리자 승인상태
+export enum ChargeStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  REJECTED = 'rejected',
+}
+
 // 이미지 분석상태
 export enum ImageStatus {
   NOT_DETECTED = 'not_detected', // 분석안됨, 분석하기 전

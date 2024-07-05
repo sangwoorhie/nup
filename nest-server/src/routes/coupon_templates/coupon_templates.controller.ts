@@ -178,7 +178,7 @@ export class CouponTemplatesController {
     );
   }
 
-  // 7. 쿠폰 템플릿 단일조회 - 쿠폰코드조회 또는 회원이름조회 (관리자)
+  // 7. 쿠폰 템플릿 단일 입력조회 - 쿠폰코드조회 또는 회원이름조회 (관리자)
   // GET : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=code&code=ABC123
   // GET : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=username&username=Jake
   @Get(':id')

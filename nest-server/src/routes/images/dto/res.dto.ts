@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateImageDto } from './create-image.dto';
+import { CreateImageDto } from './req.dto';
 
 export class UpdateImageDto extends PartialType(CreateImageDto) {}

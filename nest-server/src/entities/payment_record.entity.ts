@@ -8,7 +8,7 @@ import {
 import { User } from './user.entity';
 import { AiModel } from './ai_model.entity';
 import { Coupon } from './coupon.entity';
-import { PaymentType, ChargeType } from '../enums/enums';
+import { PaymentType, ChargeType, ChargeStatus } from '../enums/enums';
 import { ApiProperty } from '@nestjs/swagger';
 
 // 과금 내역 (포인트 충전 또는 사용)
@@ -50,6 +50,15 @@ export class PaymentRecord {
   @ApiProperty({ description: '유저의 포인트' })
   @Column({ type: 'int' })
   user_point: number;
+
+  // 거래 상태
+  @ApiProperty({ description: '거래 상태' })
+  @Column({
+    type: 'enum',
+    enum: ChargeStatus,
+    default: ChargeStatus.PENDING,
+  })
+  charge_status: ChargeStatus;
 
   // 거래 발생시각
   @ApiProperty({ description: '거래 발생시각' })

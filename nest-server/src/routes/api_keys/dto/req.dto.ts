@@ -1,5 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsIP, ArrayUnique, ArrayNotEmpty } from 'class-validator';
+import {
+  IsArray,
+  IsIP,
+  ArrayUnique,
+  ArrayNotEmpty,
+  IsEnum,
+  IsString,
+  IsOptional,
+  IsEmail,
+} from 'class-validator';
 
 export class CreateApiKeyDto {
   @ApiProperty({
@@ -23,4 +32,28 @@ export class UpdateApiKeyDto {
   @ArrayUnique()
   @IsIP(undefined, { each: true })
   ips: string[];
+}
+
+export class FindApikeyReqDto {
+  @ApiProperty({
+    description: '조회 기준 (`이메일` 또는 `이름` 또는 `API-Key`)',
+    enum: ['email', 'username', 'apikey'],
+  })
+  @IsEnum(['email', 'username', 'apikey'])
+  criteria: 'email' | 'username' | 'apikey';
+
+  @ApiProperty({ required: false, description: '이메일' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @ApiProperty({ required: false, description: '유저 이름' })
+  @IsString()
+  @IsOptional()
+  username?: string;
+
+  @ApiProperty({ required: false, description: 'API-Key' })
+  @IsString()
+  @IsOptional()
+  apikey?: string;
 }

@@ -22,6 +22,7 @@ import { Logger } from 'winston';
 import swaggerConfig from './config/swagger.config';
 import { config } from 'dotenv';
 import { HealthModule } from './routes/health/health.module';
+import { LogModule } from './routes/log/log.module';
 config();
 
 @Module({
@@ -67,6 +68,7 @@ config();
     ApiKeyIpModule,
     AuthModule,
     HealthModule,
+    LogModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],
