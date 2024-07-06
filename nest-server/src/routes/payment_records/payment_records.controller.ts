@@ -8,7 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { PaymentRecordsService } from './payment_records.service';
-import { AdminChargeDto, CreateChargeDto } from './dto/req.dto';
+import { AdminChargeDto, CreateChargeReqDto } from './dto/req.dto';
 import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { Usertype } from 'src/decorators/usertype.decorators';
@@ -19,15 +19,15 @@ import { PageReqDto } from 'src/common/dto/req.dto';
 export class PaymentRecordsController {
   constructor(private readonly paymentRecordsService: PaymentRecordsService) {}
 
-  // 1. 현금결제 포인트 충전 (사용자)
+  // 1. 현금결제 포인트 충전 요청 (사용자)
   @Post('charge')
   @ApiOperation({ summary: '현금결제 포인트 충전' })
   @ApiResponse({ status: 200, description: '성공' })
   async createCharge(
-    @Body() createChargeDto: CreateChargeDto,
+    @Body() createChargeReqDto: CreateChargeReqDto,
     @User() user: UserAfterAuth,
   ) {
-    return this.paymentRecordsService.createCharge(createChargeDto, user.id);
+    return this.paymentRecordsService.createCharge(createChargeReqDto, user.id);
   }
 
   // 2. 포인트 충전 요청 목록 조회 (관리자)
@@ -37,8 +37,8 @@ export class PaymentRecordsController {
   @ApiOperation({ summary: '포인트 충전 요청 목록 조회 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
-  async getPendingCharges(@Query() { page, size }: PageReqDto) {
-    return this.paymentRecordsService.getPendingCharges(page, size);
+  async getPendingCharges(@Query() pageReqDto: PageReqDto) {
+    return this.paymentRecordsService.getPendingCharges(pageReqDto);
   }
 
   // 3. 포인트 충전 처리 (관리자)
