@@ -48,7 +48,7 @@ export class PaymentRecord {
 
   // 유저 포인트
   @ApiProperty({ description: '유저의 포인트' })
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
   user_point: number;
 
   // 거래 상태

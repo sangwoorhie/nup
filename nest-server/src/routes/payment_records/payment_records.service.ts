@@ -40,18 +40,18 @@ export class PaymentRecordsService {
   }
 
   // 2. 포인트 충전 요청 목록 조회 (관리자)
-  async getPendingCharges(pageReqDto: PageReqDto): Promise<PageResDto<AdminChargeResDto>> {
+  async getPendingCharges(page: number, size: number): Promise<PageResDto<AdminChargeResDto>> {
     const [items, total] = await this.paymentRecordRepository.findAndCount({
       where: { // 조회 조건
         payment_type: PaymentType.CHARGE, // 충전의 경우만
-        charge_status: ChargeStatus.PENDING, // pedning 상태만
+        charge_status: ChargeStatus.PENDING, // pending 상태만
         charge_type: ChargeType.CASH, // 현금충전의 경우만
-       },
+      },
       relations: ['user', 'user.corporate'],
-      skip: (pageReqDto.page - 1) * pageReqDto.size,
-      take: pageReqDto.size,
+      skip: (page - 1) * size,
+      take: size,
     });
-
+  
     const mappedItems = items.map(item => {
       const isCorporate = item.user.user_type === UserType.CORPORATE;
       return {
@@ -65,15 +65,15 @@ export class PaymentRecordsService {
         phone: item.user.phone,
       };
     });
-
+  
     return {
-      page: pageReqDto.page,
-      size: pageReqDto.size,
+      page,
+      size,
       total,
       items: mappedItems,
     };
   }
-
+  
   // 3. 포인트 충전 처리 (관리자)
   async confirmCharge(
     id: string,
