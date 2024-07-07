@@ -21,6 +21,7 @@ import {
   IndiSignUpReqDto,
   CorpSignUpReqDto,
   SignInReqDto,
+  ApiKeySignInReqDto,
 } from './dto/req.dto';
 import {
   CorpSignUpResDto,
@@ -84,7 +85,7 @@ export class AuthController {
     return { id, accessToken, refreshToken };
   }
 
-  // 3. 로그인 (개인회원/사업자회원/관리자회원)
+  // 3. 로그인 (email, password)
   // POST : localhost:3000/auth/signin
   @Post('signin')
   @Public()
@@ -95,7 +96,18 @@ export class AuthController {
     return this.authService.signIn(signInReqDto);
   }
 
-  // 4. 리프레시토큰 발급 (개인회원/사업자회원/관리자회원)
+  // 4. 로그인 (Api key)
+  // POST : localhost:3000/auth/signin/api-key
+  @Post('signin/api-key')
+  @Public()
+  @ApiOperation({ summary: 'API Key로 로그인' })
+  @ApiBody({ type: ApiKeySignInReqDto })
+  @ApiResponse({ status: 200, description: '로그인 성공', type: SigninResDto })
+  async signInByApiKey(@Body() apiKeySignInReqDto: ApiKeySignInReqDto) {
+    return this.authService.signInByApiKey(apiKeySignInReqDto);
+  }
+
+  // 5. 리프레시토큰 발급 (개인회원/사업자회원/관리자회원)
   // POST : localhost:3000/auth/refresh
   @Post('refresh')
   @ApiOperation({ summary: '리프레시토큰 발급' })
@@ -117,7 +129,7 @@ export class AuthController {
     return { accessToken, refreshToken };
   }
 
-  // 5. 로그아웃 (개인회원/사업자회원/관리자회원)
+  // 6. 로그아웃 (개인회원/사업자회원/관리자회원)
   // DELETE : localhost:3000/auth/signout
   @Delete('signout')
   @ApiOperation({ summary: '로그아웃' })

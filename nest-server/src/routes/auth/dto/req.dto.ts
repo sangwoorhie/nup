@@ -160,3 +160,11 @@ export class SignInReqDto {
   @IsNotEmpty()
   readonly password: string;
 }
+
+// API Key 로그인 요청 DTO
+export class ApiKeySignInReqDto {
+  @ApiProperty({ required: true, description: 'API Key' })
+  @IsString()
+  @IsNotEmpty()
+  readonly apiKey: string;
+}

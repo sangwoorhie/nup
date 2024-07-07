@@ -16,13 +16,15 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthModule } from './routes/auth/auth.module';
+import { HealthModule } from './routes/health/health.module';
+import { LogModule } from './routes/log/log.module';
+import { TokenUsageModule } from './routes/token_usage/token_usage.module';
 import postgresConfig from './config/postgres.config';
 import jwtConfig from './config/jwt.config';
 import { Logger } from 'winston';
 import swaggerConfig from './config/swagger.config';
 import { config } from 'dotenv';
-import { HealthModule } from './routes/health/health.module';
-import { LogModule } from './routes/log/log.module';
+
 config();
 
 @Module({
@@ -69,6 +71,7 @@ config();
     AuthModule,
     HealthModule,
     LogModule,
+    TokenUsageModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],

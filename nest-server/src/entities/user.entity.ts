@@ -18,6 +18,7 @@ import { Image } from './image.entity';
 import { CouponTemplate } from './coupon_template.entity';
 import { UserType } from '../enums/enums';
 import { ApiProperty } from '@nestjs/swagger';
+import { TokenUsage } from './token_usage.entity';
 
 // 사용자
 @Entity({ name: 'Users' })
@@ -144,4 +145,9 @@ export class User {
   @ApiProperty({ description: '쿠폰 템플릿 (관리자만 해당)' })
   @OneToMany(() => CouponTemplate, (coupon_templates) => coupon_templates.user)
   coupon_templates: CouponTemplate[];
+
+  // User : TokenUsage = 1 : N 관계
+  @ApiProperty({ description: '토큰 사용량' })
+  @OneToMany(() => TokenUsage, tokenUsage => tokenUsage.user)
+  tokenUsages: TokenUsage[];
 }

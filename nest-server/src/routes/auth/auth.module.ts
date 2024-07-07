@@ -13,6 +13,8 @@ import { RefreshToken } from 'src/entities/refresh_token.entity';
 import { Logger } from 'winston';
 import { Corporate } from 'src/entities/corporate.entity';
 import { CorporatesModule } from '../corporates/corporates.module';
+import { TokenUsage } from 'src/entities/token_usage.entity';
+import { ApiKeys } from 'src/entities/api_key.entity';
 
 @Module({
   imports: [
@@ -28,7 +30,7 @@ import { CorporatesModule } from '../corporates/corporates.module';
         };
       },
     }),
-    TypeOrmModule.forFeature([RefreshToken, Corporate]),
+    TypeOrmModule.forFeature([RefreshToken, Corporate, TokenUsage, ApiKeys]),
     CorporatesModule,
     UsersModule,
   ],

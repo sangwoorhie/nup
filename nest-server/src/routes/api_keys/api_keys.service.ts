@@ -1,15 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApiKeys } from '../../entities/api_key.entity';
 import {
-  CreateApiKeyDto,
-  FindApikeyReqDto,
-  UpdateApiKeyDto,
+  CreateApiKeyReqDto,
+  SearchApikeyReqDto,
+  UpdateApiKeyReqDto,
 } from './dto/req.dto';
 import { ApiLog } from 'src/entities/api_log.entity';
 import * as moment from 'moment';
 import { User } from 'src/entities/user.entity';
+import { PageResDto } from 'src/common/dto/res.dto';
+import { FindApikeyAdminResDto } from './dto/res.dto';
+import { UserType } from 'src/enums/enums';
 
 @Injectable()
 export class ApiKeysService {
@@ -23,8 +26,8 @@ export class ApiKeysService {
   ) {}
 
   // 1. API Key 생성
-  async createApiKey(createApiKeyDto: CreateApiKeyDto) {
-    const { ips } = createApiKeyDto;
+  async createApiKey(userId: string, createApiKeyReqDto: CreateApiKeyReqDto) {
+    const { ips } = createApiKeyReqDto;
 
     // 중복된 IP 확인
     const existingApiKeys = await this.apiKeysRepository.find();
@@ -41,6 +44,14 @@ export class ApiKeysService {
     apiKey.api_key = this.generateSerialNumberForIPs();
     apiKey.ips = ipString;
 
+    // 사용자 정보 가져오기
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new Error('사용자를 찾을 수 없습니다.');
+    }
+    apiKey.user = user;
+
+    // API Key 저장
     await this.apiKeysRepository.save(apiKey);
 
     return { api_key: apiKey.api_key, ips: apiKey.ips };
@@ -97,52 +108,6 @@ export class ApiKeysService {
     };
   }
 
-  //  API Key 목록조회 (User정보가 제외됨)
-  // async listApiKeys(page: number, size: number) {
-  //   const [apiKeys, total] = await this.apiKeysRepository.findAndCount({
-  //     relations: ['api_logs'],
-  //     skip: (page - 1) * size,
-  //     take: size,
-  //   });
-
-  //   const today = moment().startOf('day').toDate();
-
-  //   const items = await Promise.all(
-  //     apiKeys.map(async (apiKey) => {
-  //       const todayUsageResult = await this.apiLogRepository
-  //         .createQueryBuilder('api_log')
-  //         .select('SUM(api_log.tokens_used)', 'sum')
-  //         .where('api_log.api_keys_id = :apiKeyId', { apiKeyId: apiKey.id })
-  //         .andWhere('api_log.created_at >= :today', { today })
-  //         .getRawOne();
-
-  //       const totalUsageResult = await this.apiLogRepository
-  //         .createQueryBuilder('api_log')
-  //         .select('SUM(api_log.tokens_used)', 'sum')
-  //         .where('api_log.api_keys_id = :apiKeyId', { apiKeyId: apiKey.id })
-  //         .getRawOne();
-
-  //       const todayUsage = todayUsageResult.sum || 0;
-  //       const totalUsage = totalUsageResult.sum || 0;
-
-  //       return {
-  //         api_key: apiKey.api_key,
-  //         ips: apiKey.ips.split(','),
-  //         today_usage: parseInt(todayUsage, 10),
-  //         total_usage: parseInt(totalUsage, 10),
-  //         created_at: apiKey.created_at,
-  //       };
-  //     }),
-  //   );
-
-  //   return {
-  //     page,
-  //     size,
-  //     total,
-  //     items,
-  //   };
-  // }
-
   // 3. API Key 활성/정지
   async apiKeyStatus(userId: string, id: string) {
     const apiKey = await this.apiKeysRepository.findOne({
@@ -169,16 +134,21 @@ export class ApiKeysService {
   async updateApiKeyIps(
     userId: string,
     id: string,
-    updateApiKeyDto: UpdateApiKeyDto,
+    updateApiKeyReqDto: UpdateApiKeyReqDto,
   ) {
     const apiKey = await this.apiKeysRepository.findOne({
-      where: { id, user: { id: userId } },
+      where: 
+      { id, 
+        user: { id: userId } 
+      },
+      relations: ['user'],
     });
+    
     if (!apiKey) {
       throw new NotFoundException('API Key를 찾을 수 없습니다.');
     }
 
-    const { ips } = updateApiKeyDto;
+    const { ips } = updateApiKeyReqDto;
     const ipString = ips.join(',');
     apiKey.ips = ipString;
 
@@ -188,9 +158,9 @@ export class ApiKeysService {
   }
 
   // 5. API Key 전체목록 조회 (관리자)
-  async listApiKeysAdmin(page: number, size: number) {
+  async listApiKeysAdmin(page: number, size: number): Promise<PageResDto<FindApikeyAdminResDto>> {
     const [apiKeys, total] = await this.apiKeysRepository.findAndCount({
-      relations: ['user', 'api_logs'],
+      relations: ['user', 'user.corporate', 'api_logs'],
       skip: (page - 1) * size,
       take: size,
     });
@@ -215,13 +185,17 @@ export class ApiKeysService {
         const todayUsage = todayUsageResult.sum || 0;
         const totalUsage = totalUsageResult.sum || 0;
 
+        const usernameOrCorporateName = apiKey.user.user_type === UserType.CORPORATE
+          ? apiKey.user.corporate.corporate_name
+          : apiKey.user.username;
+
         return {
           api_key: apiKey.api_key,
           ips: apiKey.ips.split(','),
-          today_usage: parseInt(todayUsage, 10),
-          total_usage: parseInt(totalUsage, 10),
+          today_usage: todayUsage.toString(),
+          total_usage: totalUsage.toString(),
           created_at: apiKey.created_at,
-          username: apiKey.user ? apiKey.user.username : '',
+          username: usernameOrCorporateName,
           email: apiKey.user ? apiKey.user.email : '',
         };
       }),
@@ -236,42 +210,78 @@ export class ApiKeysService {
   }
 
   // 6. API Key 입력조회 (Email or 이름 or ApiKey) (관리자)
-  async searchApiKeysAdmin(findApikeyReqDto: FindApikeyReqDto) {
-    let apiKeys: ApiKeys[];
+  async searchApiKeysAdmin(
+    searchApikeyReqDto: SearchApikeyReqDto, 
+    page: number, 
+    size: number,
+  ): Promise<PageResDto<FindApikeyAdminResDto>> {
+    let whereCondition: any = {};
 
-    const { criteria, email, username, apikey } = findApikeyReqDto;
+    const { criteria, email, username, apikey } = searchApikeyReqDto;
 
     switch (criteria) {
       case 'email':
-        apiKeys = await this.apiKeysRepository
-          .createQueryBuilder('api_keys')
-          .leftJoinAndSelect('api_keys.user', 'user')
-          .where('user.email = :value', { email })
-          .getMany();
+        whereCondition = { user: { email } };
         break;
       case 'username':
-        apiKeys = await this.apiKeysRepository
-          .createQueryBuilder('api_keys')
-          .leftJoinAndSelect('api_keys.user', 'user')
-          .where('user.username = :value', { username })
-          .getMany();
+        whereCondition = { user: { username } };
         break;
       case 'apikey':
-        apiKeys = await this.apiKeysRepository
-          .createQueryBuilder('api_keys')
-          .leftJoinAndSelect('api_keys.user', 'user')
-          .where('api_keys.api_key = :value', { apikey })
-          .getMany();
+        whereCondition = { api_key: apikey };
         break;
+      default:
+        throw new BadRequestException('Invalid criteria');
     }
 
-    return apiKeys.map((apiKey) => ({
-      api_key: apiKey.api_key,
-      ips: apiKey.ips.split(','),
-      created_at: apiKey.created_at,
-      username: apiKey.user.username,
-      email: apiKey.user.email,
-    }));
+    const [apiKeys, total] = await this.apiKeysRepository.findAndCount({
+      where: whereCondition,
+      relations: ['user', 'user.corporate', 'api_logs'],
+      skip: (page - 1) * size,
+      take: size,
+    });
+
+    const today = moment().startOf('day').toDate();
+
+    const items = await Promise.all(
+      apiKeys.map(async (apiKey) => {
+        const todayUsageResult = await this.apiLogRepository
+          .createQueryBuilder('api_log')
+          .select('SUM(api_log.tokens_used)', 'sum')
+          .where('api_log.api_keys_id = :apiKeyId', { apiKeyId: apiKey.id })
+          .andWhere('api_log.created_at >= :today', { today })
+          .getRawOne();
+
+        const totalUsageResult = await this.apiLogRepository
+          .createQueryBuilder('api_log')
+          .select('SUM(api_log.tokens_used)', 'sum')
+          .where('api_log.api_keys_id = :apiKeyId', { apiKeyId: apiKey.id })
+          .getRawOne();
+
+        const todayUsage = todayUsageResult.sum || 0;
+        const totalUsage = totalUsageResult.sum || 0;
+
+        const usernameOrCorporateName = apiKey.user.user_type === UserType.CORPORATE
+          ? apiKey.user.corporate.corporate_name
+          : apiKey.user.username;
+
+        return {
+          api_key: apiKey.api_key,
+          ips: apiKey.ips.split(','),
+          today_usage: todayUsage.toString(),
+          total_usage: totalUsage.toString(),
+          created_at: apiKey.created_at,
+          username: usernameOrCorporateName,
+          email: apiKey.user ? apiKey.user.email : '',
+        };
+      }),
+    );
+
+    return {
+      page,
+      size,
+      total,
+      items,
+    };
   }
 
   // 7. API Key 활성/비활성 기능 (관리자)

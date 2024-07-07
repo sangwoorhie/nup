@@ -10,7 +10,7 @@ import {
   IsEmail,
 } from 'class-validator';
 
-export class CreateApiKeyDto {
+export class CreateApiKeyReqDto {
   @ApiProperty({
     description: 'API Key를 발급받을 IP 주소들',
     type: [String],
@@ -22,7 +22,7 @@ export class CreateApiKeyDto {
   ips: string[];
 }
 
-export class UpdateApiKeyDto {
+export class UpdateApiKeyReqDto {
   @ApiProperty({
     description: 'API Key를 발급받을 IP 주소들',
     type: [String],
@@ -34,7 +34,7 @@ export class UpdateApiKeyDto {
   ips: string[];
 }
 
-export class FindApikeyReqDto {
+export class SearchApikeyReqDto {
   @ApiProperty({
     description: '조회 기준 (`이메일` 또는 `이름` 또는 `API-Key`)',
     enum: ['email', 'username', 'apikey'],

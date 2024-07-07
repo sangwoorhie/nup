@@ -2,9 +2,10 @@
 
 1. 회원가입 (개인회원) O
 2. 회원가입 (사업자회원) O
-3. 로그인 O
-4. 리프레시토큰 발급 O
-5. 로그아웃 O
+3. 로그인 (email, password) O
+4. 로그인 (apikey) O
+5. 리프레시토큰 발급 O
+6. 로그아웃 O
 
 
 
@@ -75,7 +76,7 @@ json
 
 
 
-3. 로그인
+3. 로그인 (email, password)
 HTTP Method: POST
 URL: localhost:3000/auth/signin
 Description: 로그인 API
@@ -98,7 +99,29 @@ json
 
 
 
-4. 리프레시토큰 발급
+4. 로그인 (apiKey)
+HTTP Method: POST
+URL: localhost:3000/auth/signin/api-key
+Description: 로그인 API
+Request Body:
+json
+-
+{
+  "apiKey": "string",
+}
+Response:
+Status Code: 200
+Body:
+json
+-
+{
+  "accessToken": "string",
+  "refreshToken": "string"
+}
+
+
+
+5. 리프레시토큰 발급
 HTTP Method: POST
 URL: localhost:3000/auth/refresh
 Description: 리프레시토큰 발급을 위한 API
@@ -121,7 +144,9 @@ json
   "refreshToken": "string"
 }
 
- 5. 로그아웃
+
+
+ 6. 로그아웃
 HTTP Method DELETE : 
 URL : localhost:3000/auth/signout
 Request Headers:
