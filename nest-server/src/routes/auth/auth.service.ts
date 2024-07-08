@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import {
@@ -22,6 +23,10 @@ import { Corporate } from 'src/entities/corporate.entity';
 import * as bcrypt from 'bcrypt';
 import { TokenUsage } from 'src/entities/token_usage.entity';
 import { ApiKeys } from 'src/entities/api_key.entity';
+import { Log } from 'src/entities/log.entity';
+import { Request } from 'express';
+import { MailerService } from '@nestjs-modules/mailer';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -37,6 +42,9 @@ export class AuthService {
     private tokenUsageRepository: Repository<TokenUsage>,
     @InjectRepository(ApiKeys)
     private apiKeysRepository: Repository<ApiKeys>,
+    @InjectRepository(Log)
+    private logRepository: Repository<Log>,
+    private readonly mailerService: MailerService,
   ) {}
 
   // 1. 회원가입 (개인회원)
@@ -208,8 +216,8 @@ export class AuthService {
     }
   }
 
-  // 3. 로그인 (email, password)
-  async signIn(signInReqDto: SignInReqDto) {
+  // 3. 로그인 (Email, Password)
+  async signIn(signInReqDto: SignInReqDto, request: Request) {
     const { email, password } = signInReqDto;
     const user = await this.validateUser(email, password);
     if (user.banned) {
@@ -217,14 +225,20 @@ export class AuthService {
     }
     const refreshToken = this.generateRefreshToken(user.id);
     await this.createRefreshTokenUsingUser(user.id, refreshToken);
+
+    await this.logUserAccess(user, request.ip, request.headers['user-agent']);
+
     return {
       accessToken: this.generateAccessToken(user.id),
       refreshToken,
     };
   }
 
-  // 4. 로그인 (Api key)
-  async signInByApiKey(apiKeySignInReqDto: ApiKeySignInReqDto) {
+  // 4. 로그인 (API Key)
+  async signInByApiKey(
+    apiKeySignInReqDto: ApiKeySignInReqDto,
+    request: Request,
+  ) {
     const { apiKey } = apiKeySignInReqDto;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -237,13 +251,17 @@ export class AuthService {
         where: { api_key: apiKey },
         relations: ['user'],
       });
-      if (!apiKeyEntity) throw new UnauthorizedException(`API-Key : ${apiKey} 유효한 API-Key가 아닙니다.`);
+      if (!apiKeyEntity)
+        throw new UnauthorizedException(
+          `API-Key : ${apiKey} 유효한 API-Key가 아닙니다.`,
+        );
 
       const user = apiKeyEntity.user;
       if (!user) throw new UnauthorizedException('회원을 찾을 수 없습니다.');
 
       // 유저의 banned 상태 확인
-      if (user.banned) throw new ForbiddenException('해당 계정은 정지되었습니다.');
+      if (user.banned)
+        throw new ForbiddenException('해당 계정은 정지되었습니다.');
 
       // Token 생성
       const accessToken = this.generateAccessToken(user.id);
@@ -252,6 +270,8 @@ export class AuthService {
 
       // Token Usage 업데이트
       await this.updateTokenUsage(user);
+
+      await this.logUserAccess(user, request.ip, request.headers['user-agent']);
 
       await queryRunner.commitTransaction();
       return {
@@ -267,10 +287,21 @@ export class AuthService {
     }
   }
 
+  // User Log 저장
+  private async logUserAccess(user: User, ip: string, userAgent: string) {
+    const log = this.logRepository.create({
+      user: user,
+      ip: ip,
+      userAgent: userAgent,
+    });
+    await this.logRepository.save(log);
+  }
+
+  // 토큰 사용량 저장
   private async updateTokenUsage(user: User) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     let tokenUsage = await this.tokenUsageRepository.findOne({
       where: {
         user: { id: user.id },
@@ -291,7 +322,6 @@ export class AuthService {
     await this.tokenUsageRepository.save(tokenUsage);
   }
 
-
   // 5. 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
   async refresh(token: string, userId: string) {
     const refreshTokenEntity = await this.refreshTokenRepository.findOneBy({
@@ -309,6 +339,45 @@ export class AuthService {
   async signOut(userId: string) {
     await this.refreshTokenRepository.delete({ user: { id: userId } });
     return { message: '로그아웃 되었습니다.' };
+  }
+
+  // 7. 비밀번호 재설정 (개인회원/사업자회원/관리자회원)
+  async resetPassword(email: string): Promise<{ message: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.usersService.findOneByEmail(email);
+      if (!user) {
+        throw new NotFoundException('존재하지 않는 이메일입니다.');
+      }
+
+      const newPassword = crypto.randomBytes(6).toString('base64');
+      const hash = await bcrypt.hash(newPassword, 10);
+
+      user.password = hash;
+      await this.usersService.updateUser(user);
+
+      await this.mailerService.sendMail({
+        to: email,
+        subject: '비밀번호 재설정 안내',
+        template: '../src/templates/reset-password', // 이메일 템플릿 파일 경로
+        context: {
+          name: user.username,
+          newPassword: newPassword,
+        },
+      });
+
+      return { message: '비밀번호가 이메일로 전송되었습니다.' };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
   }
 
   // 액세스 토큰 생성

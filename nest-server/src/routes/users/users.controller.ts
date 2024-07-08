@@ -111,7 +111,7 @@ export class UsersController {
   // 5. 비밀번호 변경 (개인회원/사업자회원/관리자회원)
   //  PATCH : localhost:3000/users/me/password
   @Patch('me/password')
-  @ApiOperation({ summary: '비밀번호 변경 (개인회원/사업자회원/관리자회원)' })
+  @ApiOperation({ summary: '비밀번호 변경' })
   @ApiBody({ type: ChangePasswordReqDto })
   @ApiResponse({ status: 200, description: '비밀번호가 변경되었습니다.' })
   async changePassword(
@@ -127,7 +127,7 @@ export class UsersController {
   // 6. 회원 탈퇴 (개인회원/사업자회원/관리자회원)
   //  DELETE : localhost:3000/users/me
   @Delete('me')
-  @ApiOperation({ summary: '회원 탈퇴 (개인회원/사업자회원/관리자회원)' })
+  @ApiOperation({ summary: '회원 탈퇴' })
   @ApiBody({ type: DeleteUserReqDto })
   @ApiResponse({ status: 200, description: '회원 탈퇴되었습니다.' })
   async deleteUser(
@@ -155,7 +155,10 @@ export class UsersController {
   // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=email&email=a26484638@komapper.com
   // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=username&username=Jake
   @Get('admin/indi/find')
-  @ApiOperation({ summary: '개인회원 단일조회 (관리자)' })
+  @ApiOperation({
+    summary:
+      '개인회원 단일조회 (email 또는 회원이름으로 필터 후 검색조회) (관리자)',
+  })
   @ApiQuery({
     name: 'criteria',
     enum: ['email', 'username'],
@@ -200,7 +203,9 @@ export class UsersController {
   // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=corporate_name&corporate_name=string
   // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=business_registration_number&business_registration_number=1234
   @Get('admin/corp/find')
-  @ApiOperation({ summary: '사업자회원 단일조회 (관리자)' })
+  @ApiOperation({
+    summary: '사업자회원 단일조회 (기업명 or 사업자등록번호 필터조회) (관리자)',
+  })
   @ApiQuery({
     name: 'criteria',
     enum: ['corporate_name', 'business_registration_number'],
@@ -292,6 +297,7 @@ export class UsersController {
   // 15. 포인트 충전/차감 (관리자)
   // PATCH : localhost:3000/users/admin/points?userId=12345
   @Patch('admin/points')
+  @ApiOperation({ summary: '포인트 충전/차감 (관리자)' })
   @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiBody({ type: UpdatePointsReqDto })
   @ApiResponse({ status: 200, description: '포인트가 업데이트되었습니다.' })

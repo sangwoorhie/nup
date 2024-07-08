@@ -19,6 +19,7 @@ import { CouponTemplate } from './coupon_template.entity';
 import { UserType } from '../enums/enums';
 import { ApiProperty } from '@nestjs/swagger';
 import { TokenUsage } from './token_usage.entity';
+import { Log } from './log.entity';
 
 // 사용자
 @Entity({ name: 'Users' })
@@ -148,6 +149,11 @@ export class User {
 
   // User : TokenUsage = 1 : N 관계
   @ApiProperty({ description: '토큰 사용량' })
-  @OneToMany(() => TokenUsage, tokenUsage => tokenUsage.user)
+  @OneToMany(() => TokenUsage, (tokenUsage) => tokenUsage.user)
   tokenUsages: TokenUsage[];
+
+  // User : Log = 1 : N 관계
+  @ApiProperty({ description: '접속 기록' })
+  @OneToMany(() => Log, (log) => log.user)
+  logs: Log[];
 }

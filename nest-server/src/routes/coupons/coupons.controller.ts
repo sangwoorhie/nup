@@ -23,7 +23,7 @@ export class CouponsController {
   // 1. 쿠폰 코드 조회 (사용자)
   // POST : localhost:3000/coupons/coupon-code?code=ABC123
   @Get('coupon-code')
-  @ApiOperation({ summary: '쿠폰 코드로 쿠폰 상세 정보 조회' })
+  @ApiOperation({ summary: '쿠폰 코드로 쿠폰 상세 정보 조회 (사용자)' })
   @ApiQuery({ name: 'code', required: true, description: '쿠폰 코드' })
   @ApiResponse({ status: 200, description: '성공', type: CouponDetailsResDto })
   async getCouponDetails(@Query() couponCodeReqDto: CouponCodeReqDto) {
@@ -33,7 +33,7 @@ export class CouponsController {
   // 2. 쿠폰 코드 적용 (조회를 먼저 하고, 적용함) (사용자)
   // POST : localhost:3000/coupons/apply
   @Post('apply')
-  @ApiOperation({ summary: '쿠폰 코드 적용' })
+  @ApiOperation({ summary: '쿠폰 코드 적용 (사용자)' })
   @ApiResponse({ status: 200, description: '성공', type: ApplyCouponResDto })
   async applyCoupon(
     @User() user: UserAfterAuth,
@@ -45,7 +45,7 @@ export class CouponsController {
   // 3. 사용된 쿠폰 목록 조회 (사용자)
   // GET : localhost:3000/coupons/used?page=1&size=20
   @Get('used')
-  @ApiOperation({ summary: '사용된 쿠폰 목록 조회' })
+  @ApiOperation({ summary: '사용된 쿠폰 목록 조회 (사용자)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({
@@ -60,7 +60,7 @@ export class CouponsController {
   // 4. 단일 쿠폰 삭제 (사용자)
   // DELETE : localhost:3000/coupons/:id
   @Delete(':id')
-  @ApiOperation({ summary: '단일 쿠폰 삭제' })
+  @ApiOperation({ summary: '단일 쿠폰 삭제 (사용자)' })
   @ApiResponse({ status: 200, description: '성공' })
   async removeCoupon(@Param('id') id: string, @User() user: UserAfterAuth) {
     return this.couponsService.removeCoupon(id, user.id);

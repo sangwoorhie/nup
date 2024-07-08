@@ -19,6 +19,13 @@ async function bootstrap() {
   const PORT = 3000;
   const app = await NestFactory.create(AppModule);
 
+  // CORS 설정 추가
+  app.enableCors({
+    origin: 'http://localhost:3001',
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+    credentials: true,
+  });
+
   // Swagger
   const config = new DocumentBuilder()
     .setTitle('N-UP-NVidia-Inspection')

@@ -1,0 +1,18 @@
+// src > electron-app > main.js
+
+    ipcMainHandler = new IpcMainHandler();
+    ipcMainHandler.init(ipcMain);
+
+IpcMainHandler.js // 이 부분이 컨트롤러계층
+
+클릭해서 타고 들어가면 서비스계층
+
+현재 DB테이블은 없는 상태
+
+src/electron.app - back
+src/react-app - front
+
+//
+AI 모델 - NAS : 00.솔루션개발팀 > 05. AI > AI 모델 > v.2.1.0
+
+exe 빌드형식 (Window)

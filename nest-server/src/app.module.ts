@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './routes/users/users.module';
-import { CorporatesModule } from './routes/corporates/corporates.module';
 import { PaymentRecordsModule } from './routes/payment_records/payment_records.module';
 import { RefundRequestModule } from './routes/refund_request/refund_request.module';
 import { CouponsModule } from './routes/coupons/coupons.module';
@@ -10,21 +9,20 @@ import { CouponTemplatesModule } from './routes/coupon_templates/coupon_template
 import { AiModelsModule } from './routes/ai_models/ai_models.module';
 import { ApiKeysModule } from './routes/api_keys/api_keys.module';
 import { ImagesModule } from './routes/images/images.module';
-import { ApiLogsModule } from './routes/api_logs/api_logs.module';
-import { ApiKeyIpModule } from './routes/api_key_ip/api_key_ip.module';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthModule } from './routes/auth/auth.module';
 import { HealthModule } from './routes/health/health.module';
 import { LogModule } from './routes/log/log.module';
-import { TokenUsageModule } from './routes/token_usage/token_usage.module';
 import postgresConfig from './config/postgres.config';
 import jwtConfig from './config/jwt.config';
 import { Logger } from 'winston';
 import swaggerConfig from './config/swagger.config';
 import { config } from 'dotenv';
-
+import { MailerModule } from '@nestjs-modules/mailer';
+import { join } from 'path';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 config();
 
 @Module({
@@ -58,7 +56,6 @@ config();
     }),
     // Tables
     UsersModule,
-    CorporatesModule,
     PaymentRecordsModule,
     RefundRequestModule,
     CouponsModule,
@@ -66,12 +63,29 @@ config();
     AiModelsModule,
     ApiKeysModule,
     ImagesModule,
-    ApiLogsModule,
-    ApiKeyIpModule,
     AuthModule,
     HealthModule,
     LogModule,
-    TokenUsageModule,
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.example.com',
+        port: 587,
+        auth: {
+          user: 'username',
+          pass: 'password',
+        },
+      },
+      defaults: {
+        from: '"No Reply" <no-reply@example.com>',
+      },
+      template: {
+        dir: join(__dirname, '..', 'templates'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService, Logger],

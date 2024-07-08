@@ -54,6 +54,7 @@ export class Coupon {
     },
   )
   coupon_template: CouponTemplate;
+
   // Coupon : User = N : 1 관계
   @ApiProperty({ description: '회원' })
   @ManyToOne(() => User, (user) => user.coupons)

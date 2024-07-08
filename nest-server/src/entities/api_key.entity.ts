@@ -8,8 +8,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
-import { ApiLog } from './api_log.entity';
-import { ApiKeyIp } from './api_key_ip.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 // 사용자 API Key
@@ -48,14 +46,4 @@ export class ApiKeys {
   @ApiProperty({ description: '회원' })
   @ManyToOne(() => User, (user) => user.api_keys)
   user: User;
-
-  // ApiKeys : ApiLog  = 1 : N 관계
-  @ApiProperty({ description: 'API Log' })
-  @OneToMany(() => ApiLog, (api_logs) => api_logs.api_keys)
-  api_logs: ApiLog[];
-
-  // ApiKeys : ApiKeyIp  = 1 : N 관계
-  @ApiProperty({ description: 'API Key IP' })
-  @OneToMany(() => ApiKeyIp, (api_key_ips) => api_key_ips.api_keys)
-  api_key_ips: ApiKeyIp[];
 }

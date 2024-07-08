@@ -22,6 +22,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { PageResDto } from 'src/common/dto/res.dto';
 import { FindCorpUserResDto, FindIndiUserResDto } from './dto/res.dto';
+import { s3 } from '../../config/aws.config';
 
 @Injectable()
 export class UsersService {
@@ -46,6 +47,24 @@ export class UsersService {
       ],
     });
   }
+
+  // 프로필이미지 조회 가능 코드
+  // async findIndiUserInfo(userId: string) {
+  //   const user = await this.userRepository.findOne({
+  //     where: { id: userId },
+  //     select: [
+  //       'email',
+  //       'username',
+  //       'phone',
+  //       'emergency_phone',
+  //       'profile_image',
+  //     ],
+  //   });
+  //   return {
+  //     ...user,
+  //     profile_image_url: user.profile_image,
+  //   };
+  // }
 
   // 2. 본인정보 조회 (사업자회원)
   async findCorpUserInfo(userId: string) {
@@ -571,5 +590,10 @@ export class UsersService {
   async checkUserIsAdmin(id: string) {
     const user = await this.userRepository.findOneBy({ id });
     return user.user_type === UserType.ADMIN;
+  }
+
+  // 비밀번호 재설정
+  async updateUser(user: User): Promise<User> {
+    return this.userRepository.save(user);
   }
 }

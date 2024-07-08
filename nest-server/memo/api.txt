@@ -21,8 +21,8 @@
 
 1. 회원가입 (개인회원) O
 2. 회원가입 (사업자회원) O
-3. 로그인 (email, password) O
-4. 로그인 (apikey) O
+3. 로그인 (Email, Password) O
+4. 로그인 (API-key) O
 5. 리프레시토큰 발급 O
 6. 로그아웃 O
 
@@ -75,3 +75,7 @@
 6. API Key 입력조회 (Email or 이름 or ApiKey) (관리자) O 
 7. API Key 활성/비활성 기능 (관리자) O 
 8. API Key 재발급 기능 (관리자) O
+
+// <8> Log 
+
+1. 모든 로그 조회 (관리자) O

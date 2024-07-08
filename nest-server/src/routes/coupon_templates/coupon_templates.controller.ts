@@ -53,7 +53,7 @@ export class CouponTemplatesController {
   // 1. 쿠폰 템플릿 생성 (관리자)
   // POST : localhost:3000/coupon-templates
   @Post()
-  @ApiOperation({ summary: '쿠폰 템플릿 생성' })
+  @ApiOperation({ summary: '쿠폰 템플릿 생성 (관리자)' })
   @ApiResponse({ status: 200, description: '성공', type: CreateCouponResDto })
   @Usertype(UserType.ADMIN)
   async createCouponTemplate(
@@ -69,7 +69,10 @@ export class CouponTemplatesController {
   // 2. 쿠폰 템플릿 조회 - 전체조회 or 유효쿠폰조회 or 만료쿠폰조회 (관리자)
   // GET : localhost:3000/coupon-templates?page=1&size=20&criteria=all
   @Get()
-  @ApiOperation({ summary: '쿠폰 템플릿 조회 (관리자)' })
+  @ApiOperation({
+    summary:
+      '쿠폰 템플릿 필터 조회 (전체조회 or 유효쿠폰조회 or 만료쿠폰조회) (관리자)',
+  })
   @ApiQuery({
     name: 'criteria',
     enum: ['all', 'non-expired', 'expired'],
@@ -99,7 +102,7 @@ export class CouponTemplatesController {
   // GET : localhost:3000/coupon-templates/name?coupon_name=DiscountCoupon
 
   @Get('name')
-  @ApiOperation({ summary: '쿠폰명으로 쿠폰 템플릿 조회' })
+  @ApiOperation({ summary: '쿠폰명으로 쿠폰 템플릿 조회 (관리자)' })
   @ApiResponse({
     status: 200,
     description: '성공',
@@ -117,7 +120,7 @@ export class CouponTemplatesController {
   // 4. 쿠폰 템플릿 발행수량 추가 (관리자)
   // PATCH : localhost:3000/coupon-templates/:template_id
   @Patch(':id')
-  @ApiOperation({ summary: '쿠폰 템플릿 발행수량 변경' })
+  @ApiOperation({ summary: '쿠폰 템플릿 발행수량 변경 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async updateCouponTemplate(
@@ -133,7 +136,7 @@ export class CouponTemplatesController {
   // 5. 쿠폰 템플릿 삭제 (관리자)
   // DELETE : localhost:3000/coupon-templates/:template_id
   @Delete(':id')
-  @ApiOperation({ summary: '쿠폰 템플릿 삭제' })
+  @ApiOperation({ summary: '쿠폰 템플릿 삭제 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async removeCouponTemplate(@Param('id') id: string) {
@@ -145,7 +148,7 @@ export class CouponTemplatesController {
 
   @Get('date-range')
   @ApiOperation({
-    summary: '쿠폰 발급일기준 기간조회',
+    summary: '쿠폰 발급일기준 기간조회 (관리자)',
   })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
@@ -183,7 +186,7 @@ export class CouponTemplatesController {
   // GET : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=username&username=Jake
   @Get(':id')
   @ApiOperation({
-    summary: '쿠폰코드 또는 회원이름으로 조회',
+    summary: '쿠폰코드 또는 회원이름으로 필터링 후 검색 조회 (관리자)',
   })
   @ApiQuery({
     name: 'criteria',
@@ -221,7 +224,8 @@ export class CouponTemplatesController {
   // GET : localhost:3000/coupon-templates/:template_id/coupons?page=1&size=20&criteria=all
   @Get(':id/coupons')
   @ApiOperation({
-    summary: '쿠폰 템플릿 단일조회 - 전체, 사용쿠폰, 미사용쿠폰 조회',
+    summary:
+      '쿠폰 템플릿 단일조회 - 전체, 사용쿠폰, 미사용쿠폰 필터조회 (관리자)',
   })
   @ApiQuery({
     name: 'criteria',
@@ -253,7 +257,7 @@ export class CouponTemplatesController {
   // 9. 단일 쿠폰 삭제 (관리자)
   // DELETE : localhost:3000/coupon-templates/:templateId/coupons/:couponId
   @Delete(':templateId/coupons/:couponId')
-  @ApiOperation({ summary: '단일 쿠폰 삭제' })
+  @ApiOperation({ summary: '단일 쿠폰 삭제 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
   @Usertype(UserType.ADMIN)
   async removeCoupon(

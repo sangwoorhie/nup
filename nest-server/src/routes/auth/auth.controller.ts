@@ -4,7 +4,9 @@ import {
   Delete,
   Headers,
   Post,
-  Request,
+  Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -22,16 +24,21 @@ import {
   CorpSignUpReqDto,
   SignInReqDto,
   ApiKeySignInReqDto,
+  ResetPasswordReqDto,
 } from './dto/req.dto';
 import {
   CorpSignUpResDto,
   IndiSignUpResDto,
   RefreshResDto,
+  ResetPasswordResDto,
   SigninResDto,
 } from './dto/res.dto';
 import { ApiPostResponse } from 'src/decorators/swagger.decorators';
 import { Public } from 'src/decorators/public.decorators';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
+import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+// import { multerOptions } from 'src/common/multer.options';
 
 @ApiTags('Auth')
 @ApiExtraModels(
@@ -51,6 +58,7 @@ export class AuthController {
   // POST : localhost:3000/auth/signup1
   @Post('signup1')
   @Public()
+  // @UseInterceptors(FileInterceptor('profile_image', multerOptions))
   @ApiOperation({ summary: '회원가입 (개인회원)' })
   @ApiBody({ type: IndiSignUpReqDto })
   @ApiResponse({
@@ -60,7 +68,11 @@ export class AuthController {
   })
   async IndisignUp(
     @Body() indiSignUpReqDto: IndiSignUpReqDto,
+    // @UploadedFile() profileImage: Express.MulterS3.File,
   ): Promise<IndiSignUpResDto> {
+    // if (profileImage) {
+    //   indiSignUpReqDto.profile_image = profileImage.location;
+    // }
     const { id, accessToken, refreshToken } =
       await this.authService.IndisignUp(indiSignUpReqDto);
     return { id, accessToken, refreshToken };
@@ -70,6 +82,7 @@ export class AuthController {
   // POST : localhost:3000/auth/signup2
   @Post('signup2')
   @Public()
+  // @UseInterceptors(FileInterceptor('profile_image', multerOptions))
   @ApiOperation({ summary: '회원가입 (사업자회원)' })
   @ApiBody({ type: CorpSignUpReqDto })
   @ApiResponse({
@@ -79,38 +92,45 @@ export class AuthController {
   })
   async CorpsignUp(
     @Body() corpSignUpReqDto: CorpSignUpReqDto,
+    // @UploadedFile() profileImage: Express.MulterS3.File,
   ): Promise<CorpSignUpResDto> {
+    // if (profileImage) {
+    //   corpSignUpReqDto.profile_image = profileImage.location;
+    // }
     const { id, accessToken, refreshToken } =
       await this.authService.CorpsignUp(corpSignUpReqDto);
     return { id, accessToken, refreshToken };
   }
 
-  // 3. 로그인 (email, password)
+  // 3. 로그인 (Email, Password)
   // POST : localhost:3000/auth/signin
   @Post('signin')
   @Public()
-  @ApiOperation({ summary: '로그인' })
+  @ApiOperation({ summary: 'Email, Password 로그인' })
   @ApiBody({ type: SignInReqDto })
   @ApiResponse({ status: 200, description: '로그인 성공', type: SigninResDto })
-  async signIn(@Body() signInReqDto: SignInReqDto) {
-    return this.authService.signIn(signInReqDto);
+  async signIn(@Body() signInReqDto: SignInReqDto, @Req() request: Request) {
+    return this.authService.signIn(signInReqDto, request);
   }
 
-  // 4. 로그인 (Api key)
+  // 4. 로그인 (API-Key)
   // POST : localhost:3000/auth/signin/api-key
   @Post('signin/api-key')
   @Public()
-  @ApiOperation({ summary: 'API Key로 로그인' })
+  @ApiOperation({ summary: 'API-Key 로그인' })
   @ApiBody({ type: ApiKeySignInReqDto })
   @ApiResponse({ status: 200, description: '로그인 성공', type: SigninResDto })
-  async signInByApiKey(@Body() apiKeySignInReqDto: ApiKeySignInReqDto) {
-    return this.authService.signInByApiKey(apiKeySignInReqDto);
+  async signInByApiKey(
+    @Body() apiKeySignInReqDto: ApiKeySignInReqDto,
+    @Req() request: Request,
+  ) {
+    return this.authService.signInByApiKey(apiKeySignInReqDto, request);
   }
 
   // 5. 리프레시토큰 발급 (개인회원/사업자회원/관리자회원)
   // POST : localhost:3000/auth/refresh
   @Post('refresh')
-  @ApiOperation({ summary: '리프레시토큰 발급' })
+  @ApiOperation({ summary: '리프레시토큰 자동 발급' })
   @ApiBody({ type: RefreshResDto })
   @ApiResponse({
     status: 200,
@@ -136,6 +156,24 @@ export class AuthController {
   @ApiResponse({ status: 200, description: '로그아웃 성공' })
   async signOut(@User() user: UserAfterAuth) {
     return this.authService.signOut(user.id);
+  }
+
+  // 7. 비밀번호 재설정 (개인회원/사업자회원/관리자회원)
+  // POST : localhost:3000/auth/reset-password
+  @Post('reset-password')
+  @Public()
+  @ApiOperation({ summary: '비밀번호 재설정' })
+  @ApiBody({ type: ResetPasswordReqDto })
+  @ApiResponse({
+    status: 200,
+    description: '비밀번호 재설정 성공',
+    type: ResetPasswordResDto,
+  })
+  async resetPassword(
+    @Body() resetPasswordReqDto: ResetPasswordReqDto,
+  ): Promise<ResetPasswordResDto> {
+    const { email } = resetPasswordReqDto;
+    return this.authService.resetPassword(email);
   }
 }
 

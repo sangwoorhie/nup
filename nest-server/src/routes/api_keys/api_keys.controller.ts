@@ -20,7 +20,7 @@ import { UserType } from 'src/enums/enums';
 import { Usertype } from 'src/decorators/usertype.decorators';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 
-@ApiTags('API Key')
+@ApiTags('API-Key')
 @Controller('api-keys')
 export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
@@ -28,10 +28,10 @@ export class ApiKeysController {
   // 1. API Key 생성 (사용자)
   // POST : localhost:3000/api-keys/create
   @Post('create')
-  @ApiOperation({ summary: 'API Key 생성' })
+  @ApiOperation({ summary: 'API Key 생성 (사용자)' })
   @ApiResponse({ status: 201, description: 'API Key가 생성되었습니다.' })
   async createApiKey(
-    @Body() createApiKeyReqDto: CreateApiKeyReqDto, 
+    @Body() createApiKeyReqDto: CreateApiKeyReqDto,
     @User() user: UserAfterAuth,
   ) {
     return this.apiKeysService.createApiKey(user.id, createApiKeyReqDto);
@@ -40,7 +40,7 @@ export class ApiKeysController {
   // 2. API Key 목록조회 (사용자)
   // GET : localhost:3000/api-keys/list?page=1&size=20
   @Get('list')
-  @ApiOperation({ summary: 'API Key 목록 조회' })
+  @ApiOperation({ summary: 'API Key 목록 조회 (사용자)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: 'API Key 목록을 반환합니다.' })
@@ -54,22 +54,19 @@ export class ApiKeysController {
   // 3. API Key 활성/정지 (사용자)
   // PATCH : localhost:3000/api-keys/active/:apikey_id
   @Patch('active/:id')
-  @ApiOperation({ summary: 'API Key 활성/정지' })
+  @ApiOperation({ summary: 'API Key 활성/정지 (사용자)' })
   @ApiResponse({
     status: 200,
     description: 'API Key의 활성/정지 상태가 변경되었습니다.',
   })
-  async apiKeyStatus(
-    @Param('id') id: string, 
-    @User() user: UserAfterAuth
-  ) {
+  async apiKeyStatus(@Param('id') id: string, @User() user: UserAfterAuth) {
     return this.apiKeysService.apiKeyStatus(user.id, id);
   }
 
   // 4. IP 주소 수정 (사용자)
   // PATCH : localhost:3000/api-keys/update-ips/:apikey_id
   @Patch('update-ips/:id')
-  @ApiOperation({ summary: 'IP 주소 변경' })
+  @ApiOperation({ summary: 'IP 주소 변경 (사용자)' })
   @ApiResponse({ status: 200, description: 'IP 주소가 변경되었습니다.' })
   async updateApiKeyIps(
     @Param('id') id: string,
@@ -82,7 +79,7 @@ export class ApiKeysController {
   // 5. API Key 전체목록 조회 (관리자)
   // GET : localhost:3000/api-keys/admin/list?page=1&size=20
   @Get('admin/list')
-  @ApiOperation({ summary: 'API Key 전체 목록 조회' })
+  @ApiOperation({ summary: 'API Key 전체 목록 조회 (관리자)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: 'API Key 전체 목록을 반환합니다.' })
@@ -99,12 +96,15 @@ export class ApiKeysController {
   // GET : localhost:3000/api-keys/admin/search?page=1&size=20&criteria=username&username=Jake
   // GET : localhost:3000/api-keys/admin/search?page=1&size=20&criteria=apikey&apikey=ABC123
   @Get('admin/search')
-  @ApiOperation({ summary: 'API Key 입력 조회 (Email or 이름 or ApiKey)' })
+  @ApiOperation({
+    summary: 'API Key 입력 조회 (Email or 이름 or ApiKey) (관리자)',
+  })
   @ApiQuery({
     name: 'criteria',
     enum: ['email', 'username', 'apikey'],
     required: true,
-    description: 'Email로 조회할것인지 회원이름으로 조회할것인지 api-key로 조회할것인지 선택)',
+    description:
+      'Email로 조회할것인지 회원이름으로 조회할것인지 api-key로 조회할것인지 선택)',
   })
   @ApiQuery({ name: 'value', required: true, description: '검색 값' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
@@ -123,14 +123,18 @@ export class ApiKeysController {
     searchApikeyReqDto.email = email;
     searchApikeyReqDto.username = username;
     searchApikeyReqDto.apikey = apikey;
-  
-    return this.apiKeysService.searchApiKeysAdmin(searchApikeyReqDto, page, size);
+
+    return this.apiKeysService.searchApiKeysAdmin(
+      searchApikeyReqDto,
+      page,
+      size,
+    );
   }
-  
+
   // 7. API Key 활성/비활성 기능 (관리자)
   // PATCH : localhost:3000/api-keys/admin/active/:apikey_id
   @Patch('admin/active/:id')
-  @ApiOperation({ summary: 'API Key 활성/비활성' })
+  @ApiOperation({ summary: 'API Key 활성/비활성 (관리자)' })
   @ApiResponse({
     status: 200,
     description: 'API Key의 활성/비활성 상태가 변경되었습니다.',
@@ -143,7 +147,7 @@ export class ApiKeysController {
   // 8. API Key 재발급 기능 (관리자)
   // PATCH : localhost:3000/api-keys/admin/regenerate/:id
   @Patch('admin/regenerate/:id')
-  @ApiOperation({ summary: 'API Key 재발급' })
+  @ApiOperation({ summary: 'API Key 재발급 (관리자)' })
   @ApiResponse({ status: 200, description: 'API Key가 재발급되었습니다.' })
   @Usertype(UserType.ADMIN)
   async regenerateApiKeyAdmin(@Param('id') id: string) {

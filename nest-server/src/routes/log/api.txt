@@ -1,0 +1,27 @@
+Log 
+
+1. 모든 로그 조회 (관리자) O
+
+
+1. 모든 로그 조회
+
+메소드 : GET
+URL : localhost:3000/log?page=1&size=20
+헤더:
+Authorization: Bearer [JWT 토큰]
+응답 상태코드: 200
+응답 바디:
+json
+-
+{
+  "page": 1,
+  "size": 20,
+  "total": 1,
+  "items": [
+    {
+      "loginTimestamp": "2024-07-08T02:32:57.401Z",
+      "ip": "::ffff:127.0.0.1",
+      "userAgent": "Thunder Client (https://www.thunderclient.com)"
+    }
+  ]
+}

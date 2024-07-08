@@ -52,3 +52,10 @@ export class RefreshResDto {
   @IsString()
   readonly refreshToken: string;
 }
+
+// 비밀번호 재설정 응답 DTO
+export class ResetPasswordResDto {
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly message: string;
+}

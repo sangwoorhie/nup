@@ -52,10 +52,15 @@ export class IndiSignUpReqDto {
   @IsOptional()
   readonly emergency_phone?: number;
 
-  @ApiProperty({ required: false, description: '프로필 이미지' })
+  @ApiProperty({
+    required: false,
+    description: '프로필 이미지',
+    type: 'string',
+    format: 'binary',
+  })
   @IsString()
   @IsOptional()
-  readonly profile_image?: string;
+  profile_image?: any;
 }
 
 // 사업자 회원가입 요청 DTO
@@ -97,10 +102,15 @@ export class CorpSignUpReqDto {
   @IsOptional()
   readonly emergency_phone?: number;
 
-  @ApiProperty({ required: false, description: '프로필 이미지' })
+  @ApiProperty({
+    required: false,
+    description: '프로필 이미지',
+    type: 'string',
+    format: 'binary',
+  })
   @IsString()
   @IsOptional()
-  readonly profile_image?: string;
+  profile_image?: any;
 
   @ApiProperty({ required: false, description: '부서 (사업자회원만 해당)' })
   @IsString()
@@ -137,10 +147,15 @@ export class CorpSignUpReqDto {
   @IsNotEmpty()
   readonly business_registration_number: number;
 
-  @ApiProperty({ required: true, description: '사업자 등록증 사본' })
+  @ApiProperty({
+    required: true,
+    description: '사업자 등록증 사본',
+    type: 'string',
+    format: 'binary',
+  })
   @IsString()
   @IsNotEmpty()
-  readonly business_license: string;
+  readonly business_license: any;
 
   @ApiProperty({ required: true, description: '주소' })
   @IsString()
@@ -167,4 +182,12 @@ export class ApiKeySignInReqDto {
   @IsString()
   @IsNotEmpty()
   readonly apiKey: string;
+}
+
+// 비밀번호 재설정 요청 DTO
+export class ResetPasswordReqDto {
+  @ApiProperty({ required: true, description: '이메일' })
+  @IsEmail()
+  @IsNotEmpty()
+  readonly email: string;
 }

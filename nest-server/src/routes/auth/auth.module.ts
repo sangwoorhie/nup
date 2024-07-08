@@ -12,9 +12,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefreshToken } from 'src/entities/refresh_token.entity';
 import { Logger } from 'winston';
 import { Corporate } from 'src/entities/corporate.entity';
-import { CorporatesModule } from '../corporates/corporates.module';
 import { TokenUsage } from 'src/entities/token_usage.entity';
 import { ApiKeys } from 'src/entities/api_key.entity';
+import { Log } from 'src/entities/log.entity';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -30,9 +31,15 @@ import { ApiKeys } from 'src/entities/api_key.entity';
         };
       },
     }),
-    TypeOrmModule.forFeature([RefreshToken, Corporate, TokenUsage, ApiKeys]),
-    CorporatesModule,
+    TypeOrmModule.forFeature([
+      RefreshToken,
+      Corporate,
+      TokenUsage,
+      ApiKeys,
+      Log,
+    ]),
     UsersModule,
+    MailerModule,
   ],
   providers: [
     AuthService,
