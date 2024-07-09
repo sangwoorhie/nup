@@ -581,6 +581,14 @@ export class UsersService {
     return await this.userRepository.findOneBy({ email });
   }
 
+  // 이메일과 이름으로 회원찾기
+  async findOneByEmailandName(
+    email: string,
+    username: string,
+  ): Promise<User | undefined> {
+    return await this.userRepository.findOne({ where: { email, username } });
+  }
+
   // 아이디로 회원찾기
   async findOneById(id: string) {
     return await this.userRepository.findOneBy({ id });

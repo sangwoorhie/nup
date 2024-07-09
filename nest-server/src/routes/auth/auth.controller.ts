@@ -172,8 +172,8 @@ export class AuthController {
   async resetPassword(
     @Body() resetPasswordReqDto: ResetPasswordReqDto,
   ): Promise<ResetPasswordResDto> {
-    const { email } = resetPasswordReqDto;
-    return this.authService.resetPassword(email);
+    const { email, username } = resetPasswordReqDto;
+    return this.authService.resetPassword(email, username);
   }
 }
 

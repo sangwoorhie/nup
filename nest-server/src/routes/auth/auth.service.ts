@@ -342,16 +342,23 @@ export class AuthService {
   }
 
   // 7. 비밀번호 재설정 (개인회원/사업자회원/관리자회원)
-  async resetPassword(email: string): Promise<{ message: string }> {
+  async resetPassword(
+    email: string,
+    username: string,
+  ): Promise<{ message: string }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     let error;
     try {
-      const user = await this.usersService.findOneByEmail(email);
+      const user = await this.usersService.findOneByEmailandName(
+        email,
+        username,
+      );
+
       if (!user) {
-        throw new NotFoundException('존재하지 않는 이메일입니다.');
+        throw new NotFoundException('존재하지 않는 회원입니다.');
       }
 
       const newPassword = crypto.randomBytes(6).toString('base64');

@@ -190,4 +190,9 @@ export class ResetPasswordReqDto {
   @IsEmail()
   @IsNotEmpty()
   readonly email: string;
+
+  @ApiProperty({ required: true, description: '회원이름' })
+  @IsString()
+  @IsNotEmpty()
+  readonly username: string;
 }
