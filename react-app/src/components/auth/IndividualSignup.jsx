@@ -89,6 +89,7 @@ const IndividualSignup = () => {
           <StepLabel>가입완료</StepLabel>
         </Step>
       </Steps>
+      <br />
       <Content>
         {currentStep === 1 && (
           <div>
@@ -145,16 +146,12 @@ const IndividualSignup = () => {
         )}
         {currentStep === 2 && (
           <Form onSubmit={handleNextClick}>
+             <SmallText><RequiredIndicator>▶</RequiredIndicator>표시는 필수 입력 항목입니다.</SmallText>
             <Table>
-              <tbody>
-                <tr>
-                  <td>
+                <Row>
+                  <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                  </td>
-                  <td>
                     <Label htmlFor="email">E-mail</Label>
-                  </td>
-                  <td colSpan="2">
                     <InputWrapper>
                       <Input
                         id="email"
@@ -191,16 +188,12 @@ const IndividualSignup = () => {
                       현금영수증 등 각종 문서 및 중요한 알림을 수신하는 데
                       사용되므로, 정확한 이메일 주소를 입력해주세요.
                     </Description>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                  </td>
-                  <td>
                     <Label htmlFor="password">비밀번호</Label>
-                  </td>
-                  <td colSpan="2">
                     <InputWrapper>
                       <Input
                         id="password"
@@ -219,18 +212,14 @@ const IndividualSignup = () => {
                       </ToggleVisibilityButton>
                     </InputWrapper>
                     <Description>
-                      *영문과 숫자, 특수기호로 구성하여 최소 8자 이상 가능
+                      *영문과 숫자, 특수기호로 구성하여 최소 8자 이상 가능합니다.
                     </Description>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                  </td>
-                  <td>
                     <Label htmlFor="confirmPassword">비밀번호 확인</Label>
-                  </td>
-                  <td colSpan="2">
                     <InputWrapper>
                       <Input
                         id="confirmPassword"
@@ -248,74 +237,75 @@ const IndividualSignup = () => {
                         {confirmPasswordVisible ? "👁" : "👁‍🗨"}
                       </ToggleVisibilityButton>
                     </InputWrapper>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
+                    <Description>
+                      *비밀번호를 한번 더 입력해주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                  </td>
-                  <td>
                     <Label htmlFor="name">이름</Label>
-                  </td>
-                  <td colSpan="2">
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <OptionalIndicator>▶</OptionalIndicator>
-                  </td>
-                  <td>
-                    <Label htmlFor="profileImage">프로필 이미지</Label>
-                  </td>
-                  <td colSpan="2">
-                    <Input
-                      id="profileImage"
-                      type="file"
-                      onChange={(e) => setProfileImage(e.target.files[0])}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
+                    <InputWrapper>
+                      <Input
+                        id="name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                  </td>
-                  <td>
                     <Label htmlFor="phone">휴대전화</Label>
-                  </td>
-                  <td colSpan="2">
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
+                    <InputWrapper>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>
+                      *'-'를 제외한 숫자만 입력해주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
                     <OptionalIndicator>▶</OptionalIndicator>
-                  </td>
-                  <td>
+                    <Label htmlFor="profileImage">프로필 이미지</Label>
+                    <InputWrapper>
+                      <Input
+                        id="profileImage"
+                        type="file"
+                        onChange={(e) => setProfileImage(e.target.files[0])}
+                      />
+                    </InputWrapper>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <OptionalIndicator>▶</OptionalIndicator>
                     <Label htmlFor="emergencyPhone">비상연락처</Label>
-                  </td>
-                  <td colSpan="2">
-                    <Input
-                      id="emergencyPhone"
-                      type="tel"
-                      value={emergencyPhone}
-                      onChange={(e) => setEmergencyPhone(e.target.value)}
-                    />
-                  </td>
-                </tr>
-              </tbody>
+                    <InputWrapper>
+                      <Input
+                        id="emergencyPhone"
+                        type="tel"
+                        value={emergencyPhone}
+                        onChange={(e) => setEmergencyPhone(e.target.value)}
+                      />
+                    </InputWrapper>
+                    <Description>
+                      *'-'를 제외한 숫자만 입력해주세요.
+                    </Description>
+                  </Cell>
+                  <br />
+                </Row>
             </Table>
             <ButtonContainer>
               <Button onClick={handleBackClick} secondary>
@@ -459,11 +449,23 @@ const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+`;
+
+const Row = styled.tr`
+  margin-bottom: 10px;
+`;
+
+const Cell = styled.td`
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+  position: relative;
 `;
 
 const InputWrapper = styled.div`
   display: flex;
-  align-items: center;
+  align-items: center; /* Keep elements in the same line */
 `;
 
 const Input = styled.input`
@@ -480,6 +482,7 @@ const CustomEmailInput = styled(Input)`
 const EmailProviderWrapper = styled.div`
   display: flex;
   align-items: center;
+  margin-left: 10px; /* Adjust margin for spacing */
 `;
 
 const Select = styled.select`
@@ -502,6 +505,7 @@ const ToggleVisibilityButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
+  margin-left: -30px; /* Position the eye icon inside the input */
 `;
 
 const Description = styled.p`
@@ -512,10 +516,12 @@ const Description = styled.p`
 
 const RequiredIndicator = styled.span`
   color: red;
+  margin-right: 5px;
 `;
 
 const OptionalIndicator = styled.span`
   color: blue;
+  margin-right: 5px;
 `;
 
 const ButtonContainer = styled.div`
@@ -555,6 +561,11 @@ const Footer = styled.footer`
   text-align: center;
   font-size: 14px;
   color: #888;
+`;
+
+const SmallText = styled.span`
+  font-size: 12px;
+  margin-right: auto;
 `;
 
 export default IndividualSignup;

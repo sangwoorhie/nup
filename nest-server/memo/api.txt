@@ -25,6 +25,7 @@
 4. 로그인 (API-key) O
 5. 리프레시토큰 발급 O
 6. 로그아웃 O
+7. 비밀번호 찾기 X
 
 
 // <3> Refund Request

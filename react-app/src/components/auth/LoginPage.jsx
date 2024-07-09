@@ -120,7 +120,7 @@ const Overlay = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 40%;
+  height: 60%;
   width: 90%;
   max-width: 1200px;
 `;
