@@ -1,1 +1,6 @@
 npm run generate:resource name
+
+https://www.youtube.com/watch?v=2xt33Rd2g4M
+
+https://github.com/thebikashweb/easy-link-app/blob/master/client/src/Services/urlServices.ts
+
