@@ -1,22 +1,23 @@
-import React from "react";
-import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import corporateIcon from "../../assets/img/corporate.png";
-import individualIcon from "../../assets/img/individual.png";
+import React from 'react';
+import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import corporateIcon from '../../assets/img/corporate.png';
+import individualIcon from '../../assets/img/individual.png';
 
+// http://localhost:3000/signup
 const SignupPage = () => {
   const navigate = useNavigate();
 
   const handleSignInClick = () => {
-    navigate("/");
+    navigate('/');
   };
 
   const handleIndividualSignupClick = () => {
-    navigate("/individual-signup");
+    navigate('/individual-signup');
   };
 
   const handleCorporateSignupClick = () => {
-    navigate("/corporate-signup");
+    navigate('/corporate-signup');
   };
 
   return (
@@ -27,19 +28,19 @@ const SignupPage = () => {
         <Options>
           <Option onClick={handleIndividualSignupClick}>
             <IconWrapper>
-              <Icon src={individualIcon} alt="개인 회원가입" />
+              <Icon src={individualIcon} alt='개인 회원가입' />
             </IconWrapper>
             <OptionTitle>개인 회원가입 &gt;</OptionTitle>
           </Option>
           <Option onClick={handleCorporateSignupClick}>
             <IconWrapper>
-              <Icon src={corporateIcon} alt="사업자 회원가입" />
+              <Icon src={corporateIcon} alt='사업자 회원가입' />
             </IconWrapper>
             <OptionTitle>사업자 회원가입 &gt;</OptionTitle>
           </Option>
         </Options>
         <FooterText>
-          이미 회원이신가요?{" "}
+          이미 회원이신가요?{' '}
           <Link onClick={handleSignInClick}>
             <b>Sign In</b>
           </Link>

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import styled from "styled-components";
-import backgroundImage from "../../assets/img/background_img.jpg";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import backgroundImage from '../../assets/img/background_img.jpg';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const LoginPage = () => {
   const [isAPIKeyLogin, setIsAPIKeyLogin] = useState(false);
@@ -10,11 +11,15 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const handleSignUpClick = () => {
-    navigate("/signup");
+    navigate('/signup');
   };
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
+  };
+
+  const handleSignIn = () => {
+    navigate('/user-profile');
   };
 
   return (
@@ -35,10 +40,10 @@ const LoginPage = () => {
                 귀하의 계정과 연결된 E-mail 주소를 입력하면 기존 비밀번호를 재
                 설정할 수 있는 링크를 보내드립니다.
               </Description>
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" placeholder="E-mail" />
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" type="text" placeholder="Name" />
+              <Label htmlFor='email'>E-mail</Label>
+              <Input id='email' type='email' placeholder='E-mail' />
+              <Label htmlFor='name'>Name</Label>
+              <Input id='name' type='text' placeholder='Name' />
               <Button>Reset Password</Button>
               <LinkWrapper>
                 <Link onClick={() => setIsResetPassword(false)}>
@@ -54,9 +59,9 @@ const LoginPage = () => {
               <Form>
                 {isAPIKeyLogin ? (
                   <>
-                    <Label htmlFor="apiKey">API Key</Label>
-                    <Input id="apiKey" type="text" placeholder="API Key" />
-                    <Button>Sign In</Button>
+                    <Label htmlFor='apiKey'>API Key</Label>
+                    <Input id='apiKey' type='text' placeholder='API Key' />
+                    <Button onClick={handleSignIn}>Sign In</Button>
                     <LinkWrapper>
                       <Link onClick={() => setIsAPIKeyLogin(false)}>
                         E-mail 로그인
@@ -66,23 +71,23 @@ const LoginPage = () => {
                   </>
                 ) : (
                   <>
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input id="email" type="email" placeholder="E-mail" />
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor='email'>E-mail</Label>
+                    <Input id='email' type='email' placeholder='E-mail' />
+                    <Label htmlFor='password'>Password</Label>
                     <InputWrapper>
                       <Input
-                        id="password"
-                        type={passwordVisible ? "text" : "password"}
-                        placeholder="Password"
+                        id='password'
+                        type={passwordVisible ? 'text' : 'password'}
+                        placeholder='Password'
                       />
                       <ToggleVisibilityButton
-                        type="button"
+                        type='button'
                         onClick={togglePasswordVisibility}
                       >
-                        {passwordVisible ? "👁" : "👁‍🗨"}
+                        {passwordVisible ? '👁' : '👁‍🗨'}
                       </ToggleVisibilityButton>
                     </InputWrapper>
-                    <Button>Sign In</Button>
+                    <Button onClick={handleSignIn}>Sign In</Button>
                     <LinkWrapper>
                       <Link onClick={() => setIsAPIKeyLogin(true)}>
                         API-Key 로그인

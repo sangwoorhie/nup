@@ -1,23 +1,25 @@
-import React, { useState } from "react";
-import styled from "styled-components";
-import { useNavigate } from "react-router-dom";
-import smileIcon from "../../assets/img/smile.png";
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import smileIcon from '../../assets/img/smile.png';
 
+// http://localhost:3000/individual-signup
 const IndividualSignup = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [marketingAccepted, setMarketingAccepted] = useState(false);
-  const [email, setEmail] = useState("");
-  const [emailProvider, setEmailProvider] = useState("@naver.com");
+  const [email, setEmail] = useState('');
+  const [emailProvider, setEmailProvider] = useState('@naver.com');
+  const [isCustomEmailProvider, setIsCustomEmailProvider] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
   const [profileImage, setProfileImage] = useState(null);
-  const [phone, setPhone] = useState("");
-  const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [phone, setPhone] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
   const navigate = useNavigate();
 
   const handleCheckboxChange = (e, setFunction) => {
@@ -28,14 +30,14 @@ const IndividualSignup = () => {
     if (currentStep === 1) {
       if (!termsAccepted || !privacyAccepted) {
         alert(
-          "KO-MAPPER AI 이용 약관 및 개인정보 수집 및 이용은 필수 동의사항 입니다."
+          'KO-MAPPER AI 이용 약관 및 개인정보 수집 및 이용은 필수 동의사항 입니다.'
         );
         return;
       }
       setCurrentStep(2);
     } else if (currentStep === 2) {
       if (password !== confirmPassword) {
-        alert("Passwords do not match.");
+        alert('Passwords do not match.');
         return;
       }
       setCurrentStep(3);
@@ -44,7 +46,7 @@ const IndividualSignup = () => {
 
   const handleBackClick = () => {
     if (currentStep === 1) {
-      navigate("/signup"); // Adjust this path to the correct signup page route
+      navigate('/signup'); // Adjust this path to the correct signup page route
     } else {
       setCurrentStep(currentStep - 1);
     }
@@ -54,22 +56,37 @@ const IndividualSignup = () => {
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("email", email + emailProvider);
-    formData.append("password", password);
-    formData.append("name", name);
+    formData.append('email', email + emailProvider);
+    formData.append('password', password);
+    formData.append('name', name);
+    formData.append('phone', phone);
     if (profileImage) {
-      formData.append("profileImage", profileImage);
+      formData.append('profileImage', profileImage);
     }
-    formData.append("phone", phone);
-    formData.append("emergencyPhone", emergencyPhone);
+    formData.append('emergencyPhone', emergencyPhone);
 
     // Perform registration logic here with formData
 
-    navigate("/");
+    navigate('/');
   };
 
   const togglePasswordVisibility = (setVisibility) => {
     setVisibility((prevVisibility) => !prevVisibility);
+  };
+
+  const handleEmailProviderChange = (e) => {
+    const value = e.target.value;
+    if (value === '직접입력') {
+      setIsCustomEmailProvider(true);
+      setEmailProvider('');
+    } else {
+      setIsCustomEmailProvider(false);
+      setEmailProvider(value);
+    }
+  };
+
+  const handleCustomEmailProviderChange = (e) => {
+    setEmailProvider(e.target.value);
   };
 
   return (
@@ -77,15 +94,15 @@ const IndividualSignup = () => {
       <Header>KO-MAPPER AI</Header>
       <Steps>
         <Step active={currentStep === 1}>
-          <StepIcon>{currentStep > 1 ? "✓" : "1"}</StepIcon>
+          <StepIcon>{currentStep > 1 ? '✓' : '1'}</StepIcon>
           <StepLabel>약관동의</StepLabel>
         </Step>
         <Step active={currentStep === 2}>
-          <StepIcon>{currentStep > 2 ? "✓" : "2"}</StepIcon>
+          <StepIcon>{currentStep > 2 ? '✓' : '2'}</StepIcon>
           <StepLabel>회원정보입력</StepLabel>
         </Step>
         <Step active={currentStep === 3}>
-          <StepIcon>{currentStep === 3 ? "✓" : "3"}</StepIcon>
+          <StepIcon>{currentStep === 3 ? '✓' : '3'}</StepIcon>
           <StepLabel>가입완료</StepLabel>
         </Step>
       </Steps>
@@ -100,20 +117,20 @@ const IndividualSignup = () => {
             </div>
             <TermsContainer>
               <Section>
-                <h3>KO-MAPPER AI 이용 약관</h3>
+                <h3>I. KO-MAPPER AI 이용 약관</h3>
                 <Terms>{/* Terms content here */}</Terms>
                 <Checkbox
-                  type="checkbox"
+                  type='checkbox'
                   checked={termsAccepted}
                   onChange={(e) => handleCheckboxChange(e, setTermsAccepted)}
                 />
                 <Label>이용 약관을 확인하였으며, 이에 동의합니다. (필수)</Label>
               </Section>
               <Section>
-                <h3>개인정보 수집 및 이용</h3>
+                <h3>II. 개인정보 수집 및 이용</h3>
                 <Terms>{/* Privacy content here */}</Terms>
                 <Checkbox
-                  type="checkbox"
+                  type='checkbox'
                   checked={privacyAccepted}
                   onChange={(e) => handleCheckboxChange(e, setPrivacyAccepted)}
                 />
@@ -122,10 +139,10 @@ const IndividualSignup = () => {
                 </Label>
               </Section>
               <Section>
-                <h3>개인정보 마케팅 활용</h3>
+                <h3>III. 개인정보 마케팅 활용</h3>
                 <Terms>{/* Marketing content here */}</Terms>
                 <Checkbox
-                  type="checkbox"
+                  type='checkbox'
                   checked={marketingAccepted}
                   onChange={(e) =>
                     handleCheckboxChange(e, setMarketingAccepted)
@@ -146,172 +163,177 @@ const IndividualSignup = () => {
         )}
         {currentStep === 2 && (
           <Form onSubmit={handleNextClick}>
-             <SmallText><RequiredIndicator>▶</RequiredIndicator>표시는 필수 입력 항목입니다.</SmallText>
+            <Title>회원정보 입력</Title>
+            <SmallText>
+              <RequiredIndicator>▶</RequiredIndicator>표시는 필수 입력
+              항목입니다.
+            </SmallText>
             <Table>
-                <Row>
-                  <Cell>
-                    <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor="email">E-mail</Label>
-                    <InputWrapper>
-                      <Input
-                        id="email"
-                        type="text"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                      <EmailProviderWrapper>
-                        {emailProvider === "직접입력" ? (
-                          <CustomEmailInput
-                            type="text"
-                            value={emailProvider}
-                            onChange={(e) => setEmailProvider(e.target.value)}
-                            placeholder="직접 입력"
-                            required
-                          />
-                        ) : (
-                          <Select
-                            value={emailProvider}
-                            onChange={(e) => setEmailProvider(e.target.value)}
-                          >
-                            <option value="@naver.com">@naver.com</option>
-                            <option value="@gmail.com">@gmail.com</option>
-                            <option value="@daum.net">@daum.net</option>
-                            <option value="직접입력">직접입력</option>
-                          </Select>
-                        )}
-                      </EmailProviderWrapper>
-                      <CheckButton>중복확인</CheckButton>
-                    </InputWrapper>
-                    <Description>
-                      *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
-                      현금영수증 등 각종 문서 및 중요한 알림을 수신하는 데
-                      사용되므로, 정확한 이메일 주소를 입력해주세요.
-                    </Description>
-                  </Cell>
-                </Row>
-                <Row>
-                  <Cell>
-                    <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor="password">비밀번호</Label>
-                    <InputWrapper>
-                      <Input
-                        id="password"
-                        type={passwordVisible ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <ToggleVisibilityButton
-                        type="button"
-                        onClick={() =>
-                          togglePasswordVisibility(setPasswordVisible)
-                        }
-                      >
-                        {passwordVisible ? "👁" : "👁‍🗨"}
-                      </ToggleVisibilityButton>
-                    </InputWrapper>
-                    <Description>
-                      *영문과 숫자, 특수기호로 구성하여 최소 8자 이상 가능합니다.
-                    </Description>
-                  </Cell>
-                </Row>
-                <Row>
-                  <Cell>
-                    <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor="confirmPassword">비밀번호 확인</Label>
-                    <InputWrapper>
-                      <Input
-                        id="confirmPassword"
-                        type={confirmPasswordVisible ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                      />
-                      <ToggleVisibilityButton
-                        type="button"
-                        onClick={() =>
-                          togglePasswordVisibility(setConfirmPasswordVisible)
-                        }
-                      >
-                        {confirmPasswordVisible ? "👁" : "👁‍🗨"}
-                      </ToggleVisibilityButton>
-                    </InputWrapper>
-                    <Description>
-                      *비밀번호를 한번 더 입력해주세요.
-                    </Description>
-                  </Cell>
-                </Row>
-                <Row>
-                  <Cell>
-                    <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor="name">이름</Label>
-                    <InputWrapper>
-                      <Input
-                        id="name"
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </InputWrapper>
-                  </Cell>
-                </Row>
-                <Row>
-                  <Cell>
-                    <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor="phone">휴대전화</Label>
-                    <InputWrapper>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                      />
-                    </InputWrapper>
-                    <Description>
-                      *'-'를 제외한 숫자만 입력해주세요.
-                    </Description>
-                  </Cell>
-                </Row>
-                <Row>
-                  <Cell>
-                    <OptionalIndicator>▶</OptionalIndicator>
-                    <Label htmlFor="profileImage">프로필 이미지</Label>
-                    <InputWrapper>
-                      <Input
-                        id="profileImage"
-                        type="file"
-                        onChange={(e) => setProfileImage(e.target.files[0])}
-                      />
-                    </InputWrapper>
-                  </Cell>
-                </Row>
-                <Row>
-                  <Cell>
-                    <OptionalIndicator>▶</OptionalIndicator>
-                    <Label htmlFor="emergencyPhone">비상연락처</Label>
-                    <InputWrapper>
-                      <Input
-                        id="emergencyPhone"
-                        type="tel"
-                        value={emergencyPhone}
-                        onChange={(e) => setEmergencyPhone(e.target.value)}
-                      />
-                    </InputWrapper>
-                    <Description>
-                      *'-'를 제외한 숫자만 입력해주세요.
-                    </Description>
-                  </Cell>
-                  <br />
-                </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='email'>E-mail</Label>
+                  <InputWrapper>
+                    <Input
+                      id='email'
+                      type='text'
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                    <EmailProviderWrapper>
+                      {isCustomEmailProvider ? (
+                        <CustomEmailInput
+                          type='text'
+                          value={emailProvider}
+                          onChange={handleCustomEmailProviderChange}
+                          placeholder='직접 입력'
+                          required
+                        />
+                      ) : (
+                        <Select
+                          value={emailProvider}
+                          onChange={handleEmailProviderChange}
+                        >
+                          <option value='@naver.com'>@naver.com</option>
+                          <option value='@gmail.com'>@gmail.com</option>
+                          <option value='@daum.net'>@daum.net</option>
+                          <option value='@hanmail.net'>@hanmail.net</option>
+                          <option value='@kakao.com'>@kakao.com</option>
+                          <option value='@hotmail.com'>@hotmail.com</option>
+                          <option value='@icloud.com'>@icloud.com</option>
+                          <option value='@nate.com'>@nate.com</option>
+                          <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
+                          <option value='직접입력'>직접입력</option>
+                        </Select>
+                      )}
+                    </EmailProviderWrapper>
+                    <CheckButton>중복확인</CheckButton>
+                  </InputWrapper>
+                  <Description>
+                    *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
+                    현금영수증 등 각종 문서 및 중요한 알림을 수신하는 데
+                    사용되므로, 정확한 이메일 주소를 입력해주세요.
+                  </Description>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='password'>비밀번호</Label>
+                  <InputWrapper>
+                    <Input
+                      id='password'
+                      type={passwordVisible ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <ToggleVisibilityButton
+                      type='button'
+                      onClick={() =>
+                        togglePasswordVisibility(setPasswordVisible)
+                      }
+                    >
+                      {passwordVisible ? '👁' : '👁‍🗨'}
+                    </ToggleVisibilityButton>
+                  </InputWrapper>
+                  <Description>
+                    *영문과 숫자, 특수기호로 구성하여 최소 8자 이상 가능합니다.
+                  </Description>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='confirmPassword'>비밀번호 확인</Label>
+                  <InputWrapper>
+                    <Input
+                      id='confirmPassword'
+                      type={confirmPasswordVisible ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                    <ToggleVisibilityButton
+                      type='button'
+                      onClick={() =>
+                        togglePasswordVisibility(setConfirmPasswordVisible)
+                      }
+                    >
+                      {confirmPasswordVisible ? '👁' : '👁‍🗨'}
+                    </ToggleVisibilityButton>
+                  </InputWrapper>
+                  <Description>*비밀번호를 한번 더 입력해주세요.</Description>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='name'>이름</Label>
+                  <InputWrapper>
+                    <Input
+                      id='name'
+                      type='text'
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </InputWrapper>
+                  <Description>*실제 본명을 한글로 입력해 주세요.</Description>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='phone'>휴대전화</Label>
+                  <InputWrapper>
+                    <Input
+                      id='phone'
+                      type='tel'
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                    />
+                  </InputWrapper>
+                  <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <OptionalIndicator>▶</OptionalIndicator>
+                  <Label htmlFor='profileImage'>프로필 이미지</Label>
+                  <InputWrapper>
+                    <Input
+                      id='profileImage'
+                      type='file'
+                      onChange={(e) => setProfileImage(e.target.files[0])}
+                    />
+                  </InputWrapper>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <OptionalIndicator>▶</OptionalIndicator>
+                  <Label htmlFor='emergencyPhone'>비상연락처</Label>
+                  <InputWrapper>
+                    <Input
+                      id='emergencyPhone'
+                      type='tel'
+                      value={emergencyPhone}
+                      onChange={(e) => setEmergencyPhone(e.target.value)}
+                    />
+                  </InputWrapper>
+                  <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                </Cell>
+                <br />
+              </Row>
             </Table>
             <ButtonContainer>
               <Button onClick={handleBackClick} secondary>
                 뒤로가기
               </Button>
-              <Button type="submit">확인</Button>
+              <Button type='submit'>확인</Button>
             </ButtonContainer>
           </Form>
         )}
@@ -319,13 +341,17 @@ const IndividualSignup = () => {
           <div>
             <CompletionContainer>
               <FinalTitle>회원가입이 완료되었습니다!</FinalTitle>
-              <Icon src={smileIcon} alt="회원가입 완료" />
+              <br />
+              <br />
+              <Icon src={smileIcon} alt='회원가입 완료' />
               <CompletionMessage>
                 <p>모든 회원가입절차가 완료되었습니다.</p>
                 <p>로그인 후 모든 서비스를 이용할 수 있습니다.</p>
+                <CenteredButton onClick={handleSubmit}>
+                  로그인 페이지로 이동
+                </CenteredButton>
               </CompletionMessage>
             </CompletionContainer>
-            <Button onClick={handleSubmit}>로그인 페이지로 이동</Button>
           </div>
         )}
       </Content>
@@ -363,13 +389,13 @@ const Step = styled.div`
   flex-direction: column;
   align-items: center;
   margin: 0 10px;
-  color: ${(props) => (props.active ? "#0056b3" : "#ccc")};
+  color: ${(props) => (props.active ? '#0056b3' : '#ccc')};
 `;
 
 const StepIcon = styled.div`
   width: 50px;
   height: 50px;
-  border: 2px solid ${(props) => (props.active ? "#0056b3" : "#ccc")};
+  border: 2px solid ${(props) => (props.active ? '#0056b3' : '#ccc')};
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -536,10 +562,16 @@ const Button = styled.button`
   flex: 1;
   margin: 0 10px;
   padding: 10px 20px;
-  background-color: ${(props) => (props.secondary ? "white" : "#0056b3")};
-  color: ${(props) => (props.secondary ? "#0056b3" : "white")};
-  border: ${(props) => (props.secondary ? "1px solid #0056b3" : "none")};
+  background-color: ${(props) => (props.secondary ? 'white' : '#0056b3')};
+  color: ${(props) => (props.secondary ? '#0056b3' : 'white')};
+  border: ${(props) => (props.secondary ? '1px solid #0056b3' : 'none')};
   cursor: pointer;
+`;
+
+const CenteredButton = styled(Button)`
+  width: 500px; /* Adjust the width as needed */
+  margin-top: 20px;
+  align-self: center; /* Ensure the button is centered horizontally */
 `;
 
 const CompletionMessage = styled.div`
