@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import smileIcon from '../../assets/img/smile.png';
+import { signupCorporate } from '../../services/authServices';
 
-// http://localhost:3000/individual-signup
-const IndividualSignup = () => {
+const CorporateSignup = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -20,6 +20,15 @@ const IndividualSignup = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [phone, setPhone] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [corporateName, setCorporateName] = useState('');
+  const [industryCode, setIndustryCode] = useState('');
+  const [businessType, setBusinessType] = useState('');
+  const [businessConditions, setBusinessConditions] = useState('');
+  const [businessRegistrationNumber, setBusinessRegistrationNumber] =
+    useState('');
+  const [businessLicense, setBusinessLicense] = useState(null);
+  const [address, setAddress] = useState('');
+
   const navigate = useNavigate();
 
   const handleCheckboxChange = (e, setFunction) => {
@@ -41,6 +50,8 @@ const IndividualSignup = () => {
         return;
       }
       setCurrentStep(3);
+    } else if (currentStep === 3) {
+      setCurrentStep(4);
     }
   };
 
@@ -52,22 +63,31 @@ const IndividualSignup = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('email', email + emailProvider);
-    formData.append('password', password);
-    formData.append('name', name);
-    formData.append('phone', phone);
-    if (profileImage) {
-      formData.append('profileImage', profileImage);
-    }
-    formData.append('emergencyPhone', emergencyPhone);
+    const payload = {
+      email: email + emailProvider,
+      password,
+      confirmPassword,
+      username: name,
+      phone,
+      emergency_phone: emergencyPhone,
+      profile_image: profileImage ? URL.createObjectURL(profileImage) : '',
+      department: '',
+      position: '',
+      corporate_name: corporateName,
+      industry_code: industryCode,
+      business_type: businessType,
+      business_conditions: businessConditions,
+      business_registration_number: businessRegistrationNumber,
+      business_license: businessLicense
+        ? URL.createObjectURL(businessLicense)
+        : '',
+      address,
+    };
 
-    // Perform registration logic here with formData
-
-    navigate('/');
+    await signupCorporate(payload, navigate);
   };
 
   const togglePasswordVisibility = (setVisibility) => {
@@ -102,7 +122,11 @@ const IndividualSignup = () => {
           <StepLabel>회원정보입력</StepLabel>
         </Step>
         <Step active={currentStep === 3}>
-          <StepIcon>{currentStep === 3 ? '✓' : '3'}</StepIcon>
+          <StepIcon>{currentStep > 3 ? '✓' : '3'}</StepIcon>
+          <StepLabel>기업정보입력</StepLabel>
+        </Step>
+        <Step active={currentStep === 4}>
+          <StepIcon>{currentStep === 4 ? '✓' : '4'}</StepIcon>
           <StepLabel>가입완료</StepLabel>
         </Step>
       </Steps>
@@ -338,11 +362,143 @@ const IndividualSignup = () => {
           </Form>
         )}
         {currentStep === 3 && (
+          <Form onSubmit={handleNextClick}>
+            <Title>기업정보 입력</Title>
+            <SmallText>
+              <RequiredIndicator>▶</RequiredIndicator>표시는 필수 입력
+              항목입니다.
+            </SmallText>
+            <Table>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='corporateName'>기업명</Label>
+                  <InputWrapper>
+                    <Input
+                      id='corporateName'
+                      type='text'
+                      value={corporateName}
+                      onChange={(e) => setCorporateName(e.target.value)}
+                      required
+                    />
+                  </InputWrapper>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='industryCode'>업종 코드</Label>
+                  <InputWrapper>
+                    <Input
+                      id='industryCode'
+                      type='text'
+                      value={industryCode}
+                      onChange={(e) => setIndustryCode(e.target.value)}
+                      required
+                    />
+                    <CheckButton>검색</CheckButton>
+                  </InputWrapper>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='businessType'>업종 명</Label>
+                  <InputWrapper>
+                    <Input
+                      id='businessType'
+                      type='text'
+                      value={businessType}
+                      onChange={(e) => setBusinessType(e.target.value)}
+                      required
+                    />
+                  </InputWrapper>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='businessConditions'>업태 명</Label>
+                  <InputWrapper>
+                    <Input
+                      id='businessConditions'
+                      type='text'
+                      value={businessConditions}
+                      onChange={(e) => setBusinessConditions(e.target.value)}
+                      required
+                    />
+                  </InputWrapper>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='businessRegistrationNumber'>
+                    사업자 등록번호
+                  </Label>
+                  <InputWrapper>
+                    <Input
+                      id='businessRegistrationNumber'
+                      type='text'
+                      value={businessRegistrationNumber}
+                      onChange={(e) =>
+                        setBusinessRegistrationNumber(e.target.value)
+                      }
+                      required
+                    />
+                    <CheckButton>조회</CheckButton>
+                  </InputWrapper>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='businessLicense'>사업자등록증</Label>
+                  <InputWrapper>
+                    <Input
+                      id='businessLicense'
+                      type='file'
+                      onChange={(e) => setBusinessLicense(e.target.files[0])}
+                    />
+                  </InputWrapper>
+                  <Description>
+                    *사업자등록증 스캔본에 기재된 번호는 사업자 등록번호와
+                    동일해야 하며, 지원되는 파일 유형은 PDF, JPG, PNG입니다.
+                    파일 크기는 최대 10MB까지 가능합니다. 모든 글자가 또렷이
+                    보이도록 선명한 스캔본을 업로드해주세요.
+                  </Description>
+                </Cell>
+              </Row>
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='address'>주소</Label>
+                  <InputWrapper>
+                    <Input
+                      id='address'
+                      type='text'
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      required
+                    />
+                    <CheckButton>검색</CheckButton>
+                  </InputWrapper>
+                </Cell>
+                <br />
+              </Row>
+            </Table>
+            <ButtonContainer>
+              <Button onClick={handleBackClick} secondary>
+                뒤로가기
+              </Button>
+              <Button type='submit'>확인</Button>
+            </ButtonContainer>
+          </Form>
+        )}
+        {currentStep === 4 && (
           <div>
             <CompletionContainer>
               <FinalTitle>회원가입이 완료되었습니다!</FinalTitle>
-              <br />
-              <br />
               <Icon src={smileIcon} alt='회원가입 완료' />
               <CompletionMessage>
                 <p>모든 회원가입절차가 완료되었습니다.</p>
@@ -600,4 +756,4 @@ const SmallText = styled.span`
   margin-right: auto;
 `;
 
-export default IndividualSignup;
+export default CorporateSignup;

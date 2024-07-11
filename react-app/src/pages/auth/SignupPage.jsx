@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import corporateIcon from '../../assets/img/corporate.png';
 import individualIcon from '../../assets/img/individual.png';
 
-// http://localhost:3000/signup
 const SignupPage = () => {
   const navigate = useNavigate();
 

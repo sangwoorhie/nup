@@ -16,7 +16,7 @@ import * as winston from 'winston';
 import * as basicAuth from 'express-basic-auth';
 
 async function bootstrap() {
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
   const app = await NestFactory.create(AppModule);
 
   // CORS 설정 추가

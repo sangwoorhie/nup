@@ -5,6 +5,7 @@ import {
   Headers,
   Post,
   Req,
+  UnauthorizedException,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -138,10 +139,18 @@ export class AuthController {
     type: RefreshResDto,
   })
   async refresh(
-    @Headers('authorization') authorization,
+    @Headers('authorization') authorization: string,
     @User() user: UserAfterAuth,
   ) {
-    const token = /Bearer\s(.+)/.exec(authorization)[1];
+    if (!authorization) {
+      throw new UnauthorizedException('Authorization header is missing');
+    }
+
+    const token = authorization.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('Bearer token is missing');
+    }
+
     const { accessToken, refreshToken } = await this.authService.refresh(
       token,
       user.id,

@@ -327,14 +327,19 @@ export class AuthService {
     const refreshTokenEntity = await this.refreshTokenRepository.findOneBy({
       token,
     });
-    if (!refreshTokenEntity) throw new BadRequestException();
+    if (!refreshTokenEntity) {
+      throw new BadRequestException('Invalid refresh token');
+    }
+
     const accessToken = this.generateAccessToken(userId);
     const refreshToken = this.generateRefreshToken(userId);
+
+    // Update the refresh token entity with the new refresh token
     refreshTokenEntity.token = refreshToken;
     await this.refreshTokenRepository.save(refreshTokenEntity);
+
     return { accessToken, refreshToken };
   }
-
   // 6. 로그아웃
   async signOut(userId: string) {
     await this.refreshTokenRepository.delete({ user: { id: userId } });

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@babel/eslint-parser": "^7.24.7",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@fortawesome/free-regular-svg-icons": "^6.5.2",
     "@fortawesome/free-solid-svg-icons": "^6.5.2",
@@ -10,13 +11,19 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/jwt-decode": "^3.1.0",
     "axios": "^1.7.2",
     "dotenv": "^16.4.5",
+    "jwt-decode": "^4.0.0",
+    "mobx": "^6.13.0",
+    "mobx-react": "^9.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-modal": "^3.16.1",
     "react-router-dom": "^6.24.1",
     "react-scripts": "5.0.1",
     "styled-components": "^6.1.11",
+    "styled-reset": "^4.5.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -44,9 +51,12 @@
     ]
   },
   "devDependencies": {
+    "@babel/parser": "^7.24.7",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/preset-env": "^7.24.7",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/react-modal": "^3.16.3",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-plugin-jsx-a11y": "^6.9.0",

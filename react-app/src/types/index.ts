@@ -1,2 +1,1 @@
-export * from "./urlTypes";
-export * from "./userTypes";
+export * from './userTypes';

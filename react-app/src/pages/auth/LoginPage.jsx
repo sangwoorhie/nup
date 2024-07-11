@@ -1,13 +1,17 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import backgroundImage from '../../assets/img/background_img.jpg';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { login, loginWithApiKey } from '../../services/authServices';
 
 const LoginPage = () => {
   const [isAPIKeyLogin, setIsAPIKeyLogin] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const navigate = useNavigate();
 
   const handleSignUpClick = () => {
@@ -18,8 +22,14 @@ const LoginPage = () => {
     setPasswordVisible(!passwordVisible);
   };
 
-  const handleSignIn = () => {
-    navigate('/user-profile');
+  const handleSignIn = async () => {
+    if (isAPIKeyLogin) {
+      const payload = { apiKey };
+      await loginWithApiKey(payload, navigate);
+    } else {
+      const payload = { email, password };
+      await login(payload, navigate);
+    }
   };
 
   return (

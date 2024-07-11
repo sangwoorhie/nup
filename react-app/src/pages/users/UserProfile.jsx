@@ -1,10 +1,8 @@
-// src/components/auth/UserProfile.jsx
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import TopHeader from '../../utils/TopHeader';
-import SubHeaders from '../../utils/SubHeaders';
+import TopHeader from '../../components/etc/ui/TopHeader';
+import SubHeaders from '../../components/etc/ui/SubHeaders';
 
-//http://localhost:3000/user-profile
 const UserProfile = () => {
   const [activeHeader, setActiveHeader] = useState('User');
 

@@ -24,7 +24,7 @@ const TopHeader = ({ setActiveHeader }) => {
         </MainOption>
       </MainOptions>
       <UserActions>
-      <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
+        <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
         <UserIcon onClick={() => setActiveHeader('User')} />
       </UserActions>
     </Container>
