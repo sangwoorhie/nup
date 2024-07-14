@@ -22,12 +22,12 @@ export class FindIndiUserResDto {
   readonly username: string;
 
   @ApiProperty({ required: true })
-  @IsNumber()
-  readonly phone: number;
+  @IsString()
+  readonly phone: string;
 
   @ApiProperty({ required: true })
-  @IsNumber()
-  readonly emergency_phone: number;
+  @IsString()
+  readonly emergency_phone: string;
 
   @ApiProperty({ required: true })
   @IsNumber()
@@ -93,12 +93,12 @@ export class FindCorpUserResDto {
   readonly email: string;
 
   @ApiProperty({ required: true })
-  @IsNumber()
-  readonly phone: number;
+  @IsString()
+  readonly phone: string;
 
   @ApiProperty({ required: true })
-  @IsNumber()
-  readonly emergency_phone: number;
+  @IsString()
+  readonly emergency_phone: string;
 
   @ApiProperty({ required: true })
   @IsDate()

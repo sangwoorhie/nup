@@ -61,14 +61,14 @@ export class UpdateIndiUserReqDto {
   readonly username?: string;
 
   @ApiProperty({ required: false, description: '연락처' })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  readonly phone?: number;
+  readonly phone?: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  readonly emergency_phone?: number;
+  readonly emergency_phone?: string;
 
   @ApiProperty({ required: false, description: '프로필 이미지' })
   @IsString()
@@ -84,14 +84,14 @@ export class UpdateCorpUserReqDto {
   readonly username?: string;
 
   @ApiProperty({ required: false, description: '연락처' })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  readonly phone?: number;
+  readonly phone?: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  readonly emergency_phone?: number;
+  readonly emergency_phone?: string;
 
   @ApiProperty({ required: false, description: '프로필 이미지' })
   @IsString()

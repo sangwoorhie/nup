@@ -86,3 +86,47 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 }
+
+// @Injectable()
+// export class JwtAuthGuard extends AuthGuard('jwt') {
+//   constructor(
+//     private reflector: Reflector,
+//     private jwtService: JwtService,
+//     private usersService: UsersService,
+//   ) {
+//     super();
+//   }
+//   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+//     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+//       context.getHandler(),
+//       context.getClass(),
+//     ]);
+    
+//     if(isPublic) {
+//       return true;
+//     }
+
+//     const http = context.switchToHttp();
+//     const { url, headers } = http.getRequest<Request>();
+//     const token = /Bearer\s(.+)/.exec(headers['authorization'])[1];
+//     const decoded = this.jwtService.decode(token)
+
+//     if(url !== '/auth/refresh' && decoded['tokenType'] === 'refresh') {
+//       console.error('accessToken is required')
+//       throw new UnauthorizedException();
+//     }
+
+//     const requireUsertype = this.reflector.getAllAndOverride<UserType[]>(
+//       USER_TYPE_KEY,
+//       [context.getHandler(), context.getClass()],
+//     );
+
+//     if(requireUsertype) {
+//       const userId = decoded['sub'];
+//       return this.usersService.checkUserIsAdmin(userId);
+//     }
+
+//     return super.canActivate(context);
+//   }
+
+// }

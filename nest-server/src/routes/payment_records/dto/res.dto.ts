@@ -43,6 +43,6 @@ export class AdminChargeResDto {
 
     // 연락처
     @ApiProperty({ description: '연락처' })
-    @IsNumber()
-    readonly phone: number;
+    @IsString()
+    readonly phone: string;
 }

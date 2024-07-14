@@ -18,10 +18,10 @@ export const signupIndividual = async (
     navigate('/user-profile');
     alert('개인 회원가입에 성공했습니다.');
   } catch (error: any) {
-    alert(
-      `Problem in Signup: ${error.response?.data?.message || error.message}`
-    );
-    console.error(error);
+    const message =
+    error.response?.data?.message || error.message || 'Signup failed';
+  alert(`Problem in Signup: ${message}`);
+  console.error(error);
   }
 };
 
@@ -37,10 +37,10 @@ export const signupCorporate = async (
     navigate('/user-profile');
     alert('사업자 회원가입에 성공했습니다.');
   } catch (error: any) {
-    alert(
-      `Problem in Signup: ${error.response?.data?.message || error.message}`
-    );
-    console.error(error);
+    const message =
+    error.response?.data?.message || error.message || 'Signup failed';
+  alert(`Problem in Signup: ${message}`);
+  console.error(error);
   }
 };
 
@@ -56,9 +56,9 @@ export const login = async (
     navigate('/user-profile');
     alert('로그인 되었습니다.');
   } catch (error: any) {
-    alert(
-      `Problem in login: ${error.response?.data?.message || error.message}`
-    );
+    const message =
+      error.response?.data?.message || error.message || 'Login failed';
+    alert(`Problem in login: ${message}`);
     console.error(error);
   }
 };
@@ -75,10 +75,10 @@ export const loginWithApiKey = async (
     navigate('/user-profile');
     alert('로그인 되었습니다.');
   } catch (error: any) {
-    alert(
-      `Problem in login: ${error.response?.data?.message || error.message}`
-    );
-    console.error(error);
+    const message =
+    error.response?.data?.message || error.message || 'Login failed';
+  alert(`Problem in login: ${message}`);
+  console.error(error);
   }
 };
 

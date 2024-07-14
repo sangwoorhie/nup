@@ -19,6 +19,7 @@ const SignupPage = () => {
     navigate('/corporate-signup');
   };
 
+
   return (
     <Container>
       <Header>KO-MAPPER AI</Header>

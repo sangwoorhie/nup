@@ -4,3 +4,4 @@ https://www.youtube.com/watch?v=2xt33Rd2g4M
 
 https://github.com/thebikashweb/easy-link-app/blob/master/client/src/Services/urlServices.ts
 
+http://192.168.0.5:3000

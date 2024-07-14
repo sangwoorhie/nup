@@ -54,13 +54,13 @@ export class User {
 
   // 연락처
   @ApiProperty({ description: '연락처' })
-  @Column({ type: 'int' })
-  phone: number;
+  @Column({ type: 'varchar', nullable: false  })
+  phone: string;
 
   // 비상연락처
   @ApiProperty({ description: '비상연락처' })
-  @Column({ type: 'int', nullable: true })
-  emergency_phone: number;
+  @Column({ type: 'varchar', nullable: true })
+  emergency_phone: string;
 
   // 포인트
   @ApiProperty({ description: '회원 포인트' })

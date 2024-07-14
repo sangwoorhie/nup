@@ -43,14 +43,14 @@ export class IndiSignUpReqDto {
   readonly username: string;
 
   @ApiProperty({ required: true, description: '연락처' })
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  readonly phone: number;
+  readonly phone: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  readonly emergency_phone?: number;
+  readonly emergency_phone?: string;
 
   @ApiProperty({
     required: false,
@@ -93,14 +93,14 @@ export class CorpSignUpReqDto {
   readonly username: string;
 
   @ApiProperty({ required: true, description: '연락처' })
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  readonly phone: number;
+  readonly phone: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  readonly emergency_phone?: number;
+  readonly emergency_phone?: string;
 
   @ApiProperty({
     required: false,

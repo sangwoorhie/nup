@@ -43,6 +43,6 @@ export class RefundResAdminDto {
   readonly username: string;
 
   @ApiProperty({ description: '연락처' })
-  @IsNumber()
-  readonly phone: number;
+  @IsString()
+  readonly phone: string;
 }

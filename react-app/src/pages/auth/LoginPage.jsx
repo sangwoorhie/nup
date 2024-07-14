@@ -14,8 +14,9 @@ const LoginPage = () => {
   const [apiKey, setApiKey] = useState('');
   const navigate = useNavigate();
 
-  const handleSignUpClick = () => {
+  const handleSignUpClick = (e) => {
     navigate('/signup');
+    e.preventDefault();
   };
 
   const togglePasswordVisibility = () => {

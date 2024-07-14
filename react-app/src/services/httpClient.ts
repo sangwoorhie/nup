@@ -1,9 +1,8 @@
-// httpClient.ts
 import axios from 'axios';
 import { handleRefreshToken } from './authServices';
 
 const httpClient = axios.create({
-  baseURL: 'http://localhost:3000', // Make sure this matches your backend server URL
+  baseURL: 'http://localhost:3000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -29,6 +28,10 @@ httpClient.interceptors.response.use(
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       await handleRefreshToken();
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        originalRequest.headers['Authorization'] = `Bearer ${token}`;
+      }
       return httpClient(originalRequest);
     }
     return Promise.reject(error);

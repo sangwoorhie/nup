@@ -503,7 +503,7 @@ const CorporateSignup = () => {
               <CompletionMessage>
                 <p>모든 회원가입절차가 완료되었습니다.</p>
                 <p>로그인 후 모든 서비스를 이용할 수 있습니다.</p>
-                <CenteredButton onClick={handleSubmit}>
+                <CenteredButton type="button" onClick={handleSubmit}>
                   로그인 페이지로 이동
                 </CenteredButton>
               </CompletionMessage>

@@ -46,22 +46,27 @@ const IndividualSignup = () => {
 
   const handleBackClick = () => {
     if (currentStep === 1) {
-      navigate('/signup'); // Adjust this path to the correct signup page route
+      navigate('/signup');
     } else {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handlePhoneChange = (e, setFunction) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setFunction(value);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const payload = {
-      email: email + emailProvider,
+      email: (email + emailProvider).toLowerCase(),
       password,
       confirmPassword,
       username: name,
-      phone,
-      emergency_phone: emergencyPhone,
+      phone, 
+      emergency_phone: emergencyPhone ? emergencyPhone : null,
       profile_image: profileImage ? URL.createObjectURL(profileImage) : '',
     };
 
@@ -84,7 +89,11 @@ const IndividualSignup = () => {
   };
 
   const handleCustomEmailProviderChange = (e) => {
-    setEmailProvider(e.target.value);
+    setEmailProvider(e.target.value.toLowerCase());
+  };
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value.replace('@', '').toLowerCase());
   };
 
   return (
@@ -176,7 +185,7 @@ const IndividualSignup = () => {
                       id='email'
                       type='text'
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={handleEmailChange}
                       required
                     />
                     <EmailProviderWrapper>
@@ -290,7 +299,7 @@ const IndividualSignup = () => {
                       id='phone'
                       type='tel'
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => handlePhoneChange(e, setPhone)}
                       required
                     />
                   </InputWrapper>
@@ -319,7 +328,7 @@ const IndividualSignup = () => {
                       id='emergencyPhone'
                       type='tel'
                       value={emergencyPhone}
-                      onChange={(e) => setEmergencyPhone(e.target.value)}
+                      onChange={(e) => handlePhoneChange(e, setEmergencyPhone)}
                     />
                   </InputWrapper>
                   <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
@@ -331,7 +340,7 @@ const IndividualSignup = () => {
               <Button onClick={handleBackClick} secondary>
                 뒤로가기
               </Button>
-              <Button type='submit'>확인</Button>
+              <Button type='submit' onClick={handleSubmit}>확인</Button>
             </ButtonContainer>
           </Form>
         )}
@@ -345,7 +354,7 @@ const IndividualSignup = () => {
               <CompletionMessage>
                 <p>모든 회원가입절차가 완료되었습니다.</p>
                 <p>로그인 후 모든 서비스를 이용할 수 있습니다.</p>
-                <CenteredButton onClick={handleSubmit}>
+                <CenteredButton type="button" onClick={() => navigate('/login')}>
                   로그인 페이지로 이동
                 </CenteredButton>
               </CompletionMessage>
