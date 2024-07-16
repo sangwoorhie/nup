@@ -146,10 +146,10 @@ export class UpdateCorpUserReqDto {
 
 // 비밀번호 변경 요청 DTO
 export class ChangePasswordReqDto {
-  @ApiProperty({ required: true, description: '현재 비밀번호' })
-  @IsString()
-  @IsNotEmpty()
-  readonly currentPassword: string;
+  // @ApiProperty({ required: true, description: '현재 비밀번호' })
+  // @IsString()
+  // @IsNotEmpty()
+  // readonly currentPassword: string;
 
   @ApiProperty({ required: true, description: '새 비밀번호' })
   @IsString()
@@ -192,4 +192,20 @@ export class UpdatePointsReqDto {
   })
   @IsNumber()
   readonly points: number;
+}
+
+// 이메일 중복검사 요청 DTO
+export class CheckEmailReqDto {
+  @ApiProperty({ required: true, description: '이메일 중복확인' })
+  @IsEmail()
+  @IsNotEmpty()
+  readonly email: string;
+}
+
+// 비밀번호로 본인확인 검사 DTO
+export class CheckPasswordReqDto {
+  @ApiProperty({ required: true, description: '비밀번호로 본인확인 검사' })
+  @IsString()
+  @IsNotEmpty()
+  readonly password: string;
 }

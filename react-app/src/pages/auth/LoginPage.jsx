@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import backgroundImage from '../../assets/img/background_img.jpg';
 import { useNavigate } from 'react-router-dom';
 import { login, loginWithApiKey } from '../../services/authServices';
+import styled from 'styled-components';
+import backgroundImage from '../../assets/img/background_img.jpg';
 
 const LoginPage = () => {
   const [isAPIKeyLogin, setIsAPIKeyLogin] = useState(false);
@@ -23,13 +22,27 @@ const LoginPage = () => {
     setPasswordVisible(!passwordVisible);
   };
 
-  const handleSignIn = async () => {
-    if (isAPIKeyLogin) {
-      const payload = { apiKey };
-      await loginWithApiKey(payload, navigate);
-    } else {
-      const payload = { email, password };
-      await login(payload, navigate);
+  const handleSignIn = async (event) => {
+    event.preventDefault();
+    try {
+      // API-Key로 로그인하는 경우
+      if (isAPIKeyLogin) {
+        const payload = { apiKey };
+        await loginWithApiKey(payload, navigate);
+      } else {
+        // E-mail로 로그인하는 경우
+        const payload = { email, password };
+        await login(payload, navigate);
+      }
+      alert('로그인 되었습니다.');
+    } catch (error) {
+      const errorMessage = error.response?.data?.message;
+      if (isAPIKeyLogin) {
+        alert('올바른 API Key가 아닙니다.');
+      } else {
+        alert('E-mail 또는 비밀번호가 올바르지 않습니다.');
+      }
+      console.error('Login failed:', error, errorMessage);
     }
   };
 
@@ -48,8 +61,9 @@ const LoginPage = () => {
               <Title>Reset Password</Title>
               <SubTitle>비밀번호를 잊으셨나요?</SubTitle>
               <Description>
-                귀하의 계정과 연결된 E-mail 주소를 입력하면 기존 비밀번호를 재
-                설정할 수 있는 링크를 보내드립니다.
+                귀하의 계정과 연결된 E-mail 주소와 이름을 입력하면 임시
+                비밀번호를 발급하여 보내드립니다. 로그인 후 비밀번호를 변경해
+                주세요.
               </Description>
               <Label htmlFor='email'>E-mail</Label>
               <Input id='email' type='email' placeholder='E-mail' />
@@ -71,7 +85,14 @@ const LoginPage = () => {
                 {isAPIKeyLogin ? (
                   <>
                     <Label htmlFor='apiKey'>API Key</Label>
-                    <Input id='apiKey' type='text' placeholder='API Key' />
+                    <Input
+                      id='apiKey'
+                      type='text'
+                      placeholder='API Key'
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      autoComplete='off'
+                    />
                     <Button onClick={handleSignIn}>Sign In</Button>
                     <LinkWrapper>
                       <Link onClick={() => setIsAPIKeyLogin(false)}>
@@ -83,13 +104,23 @@ const LoginPage = () => {
                 ) : (
                   <>
                     <Label htmlFor='email'>E-mail</Label>
-                    <Input id='email' type='email' placeholder='E-mail' />
+                    <Input
+                      id='email'
+                      type='email'
+                      placeholder='E-mail'
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete='email'
+                    />
                     <Label htmlFor='password'>Password</Label>
                     <InputWrapper>
                       <Input
                         id='password'
                         type={passwordVisible ? 'text' : 'password'}
                         placeholder='Password'
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        autoComplete='current-password'
                       />
                       <ToggleVisibilityButton
                         type='button'

@@ -1,9 +1,12 @@
+import { UsersService } from './../users/users.service';
 import {
   Body,
   Controller,
   Delete,
+  Get,
   Headers,
   Post,
+  Query,
   Req,
   UnauthorizedException,
   UploadedFile,
@@ -16,6 +19,7 @@ import {
   ApiCreatedResponse,
   ApiExtraModels,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
   getSchemaPath,
@@ -39,6 +43,7 @@ import { Public } from 'src/decorators/public.decorators';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CheckEmailReqDto } from '../users/dto/req.dto';
 // import { multerOptions } from 'src/common/multer.options';
 
 @ApiTags('Auth')
@@ -53,7 +58,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 ) // DTO들 입력
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   // 1. 회원가입 (개인회원)
   // POST : localhost:3000/auth/signup1
@@ -183,6 +191,18 @@ export class AuthController {
   ): Promise<ResetPasswordResDto> {
     const { email, username } = resetPasswordReqDto;
     return this.authService.resetPassword(email, username);
+  }
+
+  // 8. E-mail 중복확인 (사용자)
+  // GET : localhost:3000/auth/checkemail?email=powercom92@naver.com
+  @Get('checkemail')
+  @Public()
+  @ApiOperation({ summary: 'E-mail 중복검사' })
+  @ApiResponse({ status: 200, description: '성공' })
+  @ApiQuery({ name: 'email', required: true })
+  async emailCheck(@Query() checkEmailReqDto: CheckEmailReqDto) {
+    const { email } = checkEmailReqDto;
+    return await this.usersService.emailCheck(email);
   }
 }
 

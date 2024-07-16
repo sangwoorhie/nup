@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import corporateIcon from '../../assets/img/corporate.png';
 import individualIcon from '../../assets/img/individual.png';
+import Footer from '../../components/etc/ui/Footer';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,6 @@ const SignupPage = () => {
   const handleCorporateSignupClick = () => {
     navigate('/corporate-signup');
   };
-
 
   return (
     <Container>
@@ -46,9 +46,7 @@ const SignupPage = () => {
           </Link>
         </FooterText>
       </Content>
-      <Footer>
-        copyright © 2024 (주)KO-MAPPER. Co., Ltd All rights reserved.
-      </Footer>
+      <Footer />
     </Container>
   );
 };
@@ -130,14 +128,6 @@ const Link = styled.span`
   &:hover {
     text-decoration: underline;
   }
-`;
-
-const Footer = styled.footer`
-  background-color: #f1f1f1;
-  padding: 10px;
-  text-align: center;
-  font-size: 14px;
-  color: #888;
 `;
 
 export default SignupPage;

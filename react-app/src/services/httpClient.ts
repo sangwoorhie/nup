@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { handleRefreshToken } from './authServices';
+import { handleRefreshToken, logout } from './authServices';
 
 const httpClient = axios.create({
   baseURL: 'http://localhost:3000',
@@ -25,14 +25,24 @@ httpClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
-      await handleRefreshToken();
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        originalRequest.headers['Authorization'] = `Bearer ${token}`;
+      try {
+        await handleRefreshToken();
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return httpClient(originalRequest);
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        logout();
+        return Promise.reject(refreshError);
       }
-      return httpClient(originalRequest);
     }
     return Promise.reject(error);
   }

@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import smileIcon from '../../assets/img/smile.png';
-import { signupCorporate } from '../../services/authServices';
+import {
+  signupCorporate,
+  checkEmailAvailability,
+} from '../../services/authServices';
+import Footer from '../../components/etc/ui/Footer';
 
 const CorporateSignup = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [marketingAccepted, setMarketingAccepted] = useState(false);
+  const [allTermsAccepted, setAllTermsAccepted] = useState(false);
   const [email, setEmail] = useState('');
   const [emailProvider, setEmailProvider] = useState('@naver.com');
   const [isCustomEmailProvider, setIsCustomEmailProvider] = useState(false);
@@ -35,6 +40,14 @@ const CorporateSignup = () => {
     setFunction(e.target.checked);
   };
 
+  const handleAllTermsChange = (e) => {
+    const isChecked = e.target.checked;
+    setAllTermsAccepted(isChecked);
+    setTermsAccepted(isChecked);
+    setPrivacyAccepted(isChecked);
+    setMarketingAccepted(isChecked);
+  };
+
   const handleNextClick = () => {
     if (currentStep === 1) {
       if (!termsAccepted || !privacyAccepted) {
@@ -50,14 +63,12 @@ const CorporateSignup = () => {
         return;
       }
       setCurrentStep(3);
-    } else if (currentStep === 3) {
-      setCurrentStep(4);
     }
   };
 
   const handleBackClick = () => {
     if (currentStep === 1) {
-      navigate('/signup'); // Adjust this path to the correct signup page route
+      navigate('/signup');
     } else {
       setCurrentStep(currentStep - 1);
     }
@@ -66,28 +77,40 @@ const CorporateSignup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (currentStep !== 3) {
+      handleNextClick();
+      return;
+    }
+
     const payload = {
-      email: email + emailProvider,
+      email: (email + emailProvider).toLowerCase(),
       password,
       confirmPassword,
       username: name,
       phone,
-      emergency_phone: emergencyPhone,
+      emergency_phone: emergencyPhone || null,
       profile_image: profileImage ? URL.createObjectURL(profileImage) : '',
       department: '',
       position: '',
       corporate_name: corporateName,
-      industry_code: industryCode,
+      industry_code: Number(industryCode),
       business_type: businessType,
       business_conditions: businessConditions,
-      business_registration_number: businessRegistrationNumber,
+      business_registration_number: Number(businessRegistrationNumber),
       business_license: businessLicense
         ? URL.createObjectURL(businessLicense)
         : '',
       address,
     };
 
-    await signupCorporate(payload, navigate);
+    try {
+      await signupCorporate(payload, setCurrentStep, navigate);
+    } catch (error) {
+      console.error('Error during corporate signup:', error);
+      const message =
+        error.response?.data?.message || error.message || 'Signup failed';
+      alert(`Problem in Signup: ${message}`);
+    }
   };
 
   const togglePasswordVisibility = (setVisibility) => {
@@ -106,7 +129,17 @@ const CorporateSignup = () => {
   };
 
   const handleCustomEmailProviderChange = (e) => {
-    setEmailProvider(e.target.value);
+    setEmailProvider(e.target.value.toLowerCase());
+  };
+
+  const handleCheckEmailClick = async () => {
+    try {
+      const fullEmail = `${email}${emailProvider}`;
+      const response = await checkEmailAvailability(fullEmail);
+      alert(response.data);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Error checking email.');
+    }
   };
 
   return (
@@ -176,6 +209,14 @@ const CorporateSignup = () => {
                   개인정보 마케팅 활용을 확인하였으며, 이에 동의합니다. (선택)
                 </Label>
               </Section>
+              <Section>
+                <Checkbox
+                  type='checkbox'
+                  checked={allTermsAccepted}
+                  onChange={handleAllTermsChange}
+                />
+                <Label>전체 약관에 동의합니다.</Label>
+              </Section>
             </TermsContainer>
             <ButtonContainer>
               <Button onClick={handleBackClick} secondary>
@@ -186,7 +227,7 @@ const CorporateSignup = () => {
           </div>
         )}
         {currentStep === 2 && (
-          <Form onSubmit={handleNextClick}>
+          <Form onSubmit={handleSubmit}>
             <Title>회원정보 입력</Title>
             <SmallText>
               <RequiredIndicator>▶</RequiredIndicator>표시는 필수 입력
@@ -232,12 +273,15 @@ const CorporateSignup = () => {
                         </Select>
                       )}
                     </EmailProviderWrapper>
-                    <CheckButton>중복확인</CheckButton>
+                    <CheckButton type='button' onClick={handleCheckEmailClick}>
+                      중복확인
+                    </CheckButton>
                   </InputWrapper>
                   <Description>
                     *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
-                    현금영수증 등 각종 문서 및 중요한 알림을 수신하는 데
-                    사용되므로, 정확한 이메일 주소를 입력해주세요.
+                    현금영수증 등 각종 문서 수신 및 비밀번호 분실 시 임시
+                    비밀번호 발급 등 중요한 알림을 수신하는 데 사용되므로,
+                    반드시 정확한 이메일 주소를 입력해주세요.
                   </Description>
                 </Cell>
               </Row>
@@ -263,7 +307,8 @@ const CorporateSignup = () => {
                     </ToggleVisibilityButton>
                   </InputWrapper>
                   <Description>
-                    *영문과 숫자, 특수기호로 구성하여 최소 8자 이상 가능합니다.
+                    *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자
+                    이상, 최대 20자 이내로 구성된 비밀번호를 작성해 주세요.
                   </Description>
                 </Cell>
               </Row>
@@ -357,12 +402,12 @@ const CorporateSignup = () => {
               <Button onClick={handleBackClick} secondary>
                 뒤로가기
               </Button>
-              <Button type='submit'>확인</Button>
+              <Button onClick={handleNextClick}>확인</Button>
             </ButtonContainer>
           </Form>
         )}
         {currentStep === 3 && (
-          <Form onSubmit={handleNextClick}>
+          <Form onSubmit={handleSubmit}>
             <Title>기업정보 입력</Title>
             <SmallText>
               <RequiredIndicator>▶</RequiredIndicator>표시는 필수 입력
@@ -503,7 +548,10 @@ const CorporateSignup = () => {
               <CompletionMessage>
                 <p>모든 회원가입절차가 완료되었습니다.</p>
                 <p>로그인 후 모든 서비스를 이용할 수 있습니다.</p>
-                <CenteredButton type="button" onClick={handleSubmit}>
+                <CenteredButton
+                  type='button'
+                  onClick={() => navigate('/login')}
+                >
                   로그인 페이지로 이동
                 </CenteredButton>
               </CompletionMessage>
@@ -511,9 +559,7 @@ const CorporateSignup = () => {
           </div>
         )}
       </Content>
-      <Footer>
-        copyright © 2024 (주)KO-MAPPER. Co., Ltd All rights reserved.
-      </Footer>
+      <Footer />
     </Container>
   );
 };
@@ -741,14 +787,6 @@ const Icon = styled.img`
   width: 300px;
   height: 300px;
   margin-bottom: 20px;
-`;
-
-const Footer = styled.footer`
-  background-color: #f1f1f1;
-  padding: 10px;
-  text-align: center;
-  font-size: 14px;
-  color: #888;
 `;
 
 const SmallText = styled.span`

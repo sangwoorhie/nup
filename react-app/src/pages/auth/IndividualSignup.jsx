@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import smileIcon from '../../assets/img/smile.png';
-import { signupIndividual } from '../../services/authServices';
+import {
+  signupIndividual,
+  checkEmailAvailability,
+} from '../../services/authServices';
+import Footer from '../../components/etc/ui/Footer';
 
 const IndividualSignup = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [marketingAccepted, setMarketingAccepted] = useState(false);
+  const [allTermsAccepted, setAllTermsAccepted] = useState(false);
   const [email, setEmail] = useState('');
   const [emailProvider, setEmailProvider] = useState('@naver.com');
   const [isCustomEmailProvider, setIsCustomEmailProvider] = useState(false);
@@ -24,6 +29,14 @@ const IndividualSignup = () => {
 
   const handleCheckboxChange = (e, setFunction) => {
     setFunction(e.target.checked);
+  };
+
+  const handleAllTermsChange = (e) => {
+    const isChecked = e.target.checked;
+    setAllTermsAccepted(isChecked);
+    setTermsAccepted(isChecked);
+    setPrivacyAccepted(isChecked);
+    setMarketingAccepted(isChecked);
   };
 
   const handleNextClick = () => {
@@ -65,12 +78,12 @@ const IndividualSignup = () => {
       password,
       confirmPassword,
       username: name,
-      phone, 
+      phone,
       emergency_phone: emergencyPhone ? emergencyPhone : null,
       profile_image: profileImage ? URL.createObjectURL(profileImage) : '',
     };
 
-    await signupIndividual(payload, navigate);
+    await signupIndividual(payload, setCurrentStep);
   };
 
   const togglePasswordVisibility = (setVisibility) => {
@@ -94,6 +107,16 @@ const IndividualSignup = () => {
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value.replace('@', '').toLowerCase());
+  };
+
+  const handleCheckEmailClick = async () => {
+    try {
+      const fullEmail = `${email}${emailProvider}`;
+      const response = await checkEmailAvailability(fullEmail);
+      alert(response.data);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Error checking email.');
+    }
   };
 
   return (
@@ -159,6 +182,14 @@ const IndividualSignup = () => {
                   개인정보 마케팅 활용을 확인하였으며, 이에 동의합니다. (선택)
                 </Label>
               </Section>
+              <Section>
+                <Checkbox
+                  type='checkbox'
+                  checked={allTermsAccepted}
+                  onChange={handleAllTermsChange}
+                />
+                <Label>전체 약관에 동의합니다.</Label>
+              </Section>
             </TermsContainer>
             <ButtonContainer>
               <Button onClick={handleBackClick} secondary>
@@ -215,12 +246,15 @@ const IndividualSignup = () => {
                         </Select>
                       )}
                     </EmailProviderWrapper>
-                    <CheckButton>중복확인</CheckButton>
+                    <CheckButton type='button' onClick={handleCheckEmailClick}>
+                      중복확인
+                    </CheckButton>
                   </InputWrapper>
                   <Description>
                     *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
-                    현금영수증 등 각종 문서 및 중요한 알림을 수신하는 데
-                    사용되므로, 정확한 이메일 주소를 입력해주세요.
+                    현금영수증 등 각종 문서 수신 및 비밀번호 분실 시 임시
+                    비밀번호 발급 등 중요한 알림을 수신하는 데 사용되므로,
+                    반드시 정확한 이메일 주소를 입력해주세요.
                   </Description>
                 </Cell>
               </Row>
@@ -246,7 +280,8 @@ const IndividualSignup = () => {
                     </ToggleVisibilityButton>
                   </InputWrapper>
                   <Description>
-                    *영문과 숫자, 특수기호로 구성하여 최소 8자 이상 가능합니다.
+                    *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자
+                    이상, 최대 20자 이내로 구성된 비밀번호를 작성해 주세요.
                   </Description>
                 </Cell>
               </Row>
@@ -340,7 +375,9 @@ const IndividualSignup = () => {
               <Button onClick={handleBackClick} secondary>
                 뒤로가기
               </Button>
-              <Button type='submit' onClick={handleSubmit}>확인</Button>
+              <Button type='submit' onClick={handleSubmit}>
+                확인
+              </Button>
             </ButtonContainer>
           </Form>
         )}
@@ -354,7 +391,10 @@ const IndividualSignup = () => {
               <CompletionMessage>
                 <p>모든 회원가입절차가 완료되었습니다.</p>
                 <p>로그인 후 모든 서비스를 이용할 수 있습니다.</p>
-                <CenteredButton type="button" onClick={() => navigate('/login')}>
+                <CenteredButton
+                  type='button'
+                  onClick={() => navigate('/login')}
+                >
                   로그인 페이지로 이동
                 </CenteredButton>
               </CompletionMessage>
@@ -362,9 +402,7 @@ const IndividualSignup = () => {
           </div>
         )}
       </Content>
-      <Footer>
-        copyright © 2024 (주)KO-MAPPER. Co., Ltd All rights reserved.
-      </Footer>
+      <Footer />
     </Container>
   );
 };
@@ -592,14 +630,6 @@ const Icon = styled.img`
   width: 300px;
   height: 300px;
   margin-bottom: 20px;
-`;
-
-const Footer = styled.footer`
-  background-color: #f1f1f1;
-  padding: 10px;
-  text-align: center;
-  font-size: 14px;
-  color: #888;
 `;
 
 const SmallText = styled.span`

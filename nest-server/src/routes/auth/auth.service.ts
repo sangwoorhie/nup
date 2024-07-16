@@ -230,7 +230,8 @@ export class AuthService {
 
     return {
       accessToken: this.generateAccessToken(user.id),
-      refreshToken,
+      refreshToken: refreshToken,
+      userType: user.user_type,
     };
   }
 
@@ -275,8 +276,9 @@ export class AuthService {
 
       await queryRunner.commitTransaction();
       return {
-        accessToken,
-        refreshToken,
+        accessToken: accessToken,
+        refreshToken: accessToken,
+        userType: user.user_type,
       };
     } catch (e) {
       await queryRunner.rollbackTransaction();
@@ -340,6 +342,7 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
   // 6. 로그아웃
   async signOut(userId: string) {
     await this.refreshTokenRepository.delete({ user: { id: userId } });

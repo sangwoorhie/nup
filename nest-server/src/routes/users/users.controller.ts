@@ -22,6 +22,7 @@ import {
 import {
   BanUserReqDto,
   ChangePasswordReqDto,
+  CheckPasswordReqDto,
   DeleteUserReqDto,
   FindCorpUserReqDto,
   FindIndiUserReqDto,
@@ -128,13 +129,13 @@ export class UsersController {
   //  DELETE : localhost:3000/users/me
   @Delete('me')
   @ApiOperation({ summary: '회원 탈퇴' })
-  @ApiBody({ type: DeleteUserReqDto })
+  // @ApiBody({ type: DeleteUserReqDto })
   @ApiResponse({ status: 200, description: '회원 탈퇴되었습니다.' })
   async deleteUser(
     @User() user: UserAfterAuth,
-    @Body() deleteUserReqDto: DeleteUserReqDto,
+    // @Body() deleteUserReqDto: DeleteUserReqDto,
   ) {
-    return await this.usersService.deleteUser(user.id, deleteUserReqDto);
+    return await this.usersService.deleteUser(user.id);
   }
 
   // 7. 개인회원 전체조회 (관리자)
@@ -307,6 +308,20 @@ export class UsersController {
     @Body() updatePointsReqDto: UpdatePointsReqDto,
   ) {
     return await this.usersService.updatePoints(userId, updatePointsReqDto);
+  }
+
+  // 16. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
+  // POST : localhost:3000/users/me/doublecheckpassword
+  @Post('me/doublecheckpassword')
+  @ApiOperation({ summary: '정보 수정, 삭제 시 비밀번호로 본인 일치 조회' })
+  @ApiBody({ type: CheckPasswordReqDto })
+  @ApiResponse({ status: 200, description: '본인임이 확인되었습니다.' })
+  async doubleCheckPassword(
+    @Body() checkPasswordReqDto: CheckPasswordReqDto,
+    @User() user: UserAfterAuth,
+  ) {
+    const { password } = checkPasswordReqDto;
+    return await this.usersService.doubleCheckPassword(user.id, password);
   }
 }
 

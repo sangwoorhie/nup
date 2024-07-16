@@ -216,8 +216,7 @@ export class UsersService {
     userId: string,
     changePasswordReqDto: ChangePasswordReqDto,
   ) {
-    const { currentPassword, newPassword, newPasswordConfirm } =
-      changePasswordReqDto;
+    const { newPassword, newPasswordConfirm } = changePasswordReqDto;
 
     if (newPassword !== newPasswordConfirm) {
       throw new BadRequestException(
@@ -226,11 +225,14 @@ export class UsersService {
     }
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-
-    if (!isMatch) {
-      throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다.');
+    if (!user) {
+      throw new BadRequestException('해당 회원이 존재하지 않습니다.');
     }
+    // const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    // if (!isMatch) {
+    //   throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다.');
+    // }
 
     const saltRounds = 10;
     const hash = await bcrypt.hash(newPassword, saltRounds);
@@ -248,14 +250,17 @@ export class UsersService {
   }
 
   // 6. 회원 탈퇴 (개인회원/사업자회원/관리자회원)
-  async deleteUser(userId: string, deleteUserReqDto: DeleteUserReqDto) {
+  async deleteUser(userId: string) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    const isMatch = await bcrypt.compare(
-      deleteUserReqDto.password,
-      user.password,
-    );
-    if (!isMatch)
-      throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
+    if (!user) {
+      throw new BadRequestException('해당 회원이 존재하지 않습니다.');
+    }
+    // const isMatch = await bcrypt.compare(
+    //   deleteUserReqDto.password,
+    //   user.password,
+    // );
+    // if (!isMatch)
+    //   throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
 
     await this.userRepository.softDelete(userId);
     return { message: '회원 탈퇴되었습니다.' };
@@ -576,6 +581,20 @@ export class UsersService {
     return { message };
   }
 
+  // 16. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
+  async doubleCheckPassword(
+    userId: string,
+    password: string,
+  ): Promise<{ message: string }> {
+    const user = await this.findOneById(userId);
+    if (!user) throw new UnauthorizedException('존재하지 않는 회원압니다.');
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      throw new UnauthorizedException('올바른 비밀번호가 아닙니다.');
+    if (isMatch) return { message: '비밀번호가 확인되었습니다.' };
+  }
+
   // 이메일로 회원찾기
   async findOneByEmail(email: string) {
     return await this.userRepository.findOneBy({ email });
@@ -592,6 +611,15 @@ export class UsersService {
   // 아이디로 회원찾기
   async findOneById(id: string) {
     return await this.userRepository.findOneBy({ id });
+  }
+
+  // E-mail 중복검사
+  async emailCheck(email: string) {
+    const user = await this.findOneByEmail(email);
+    if (!user) {
+      return `Email : ${email} 은 사용할 수 있는 E-mail입니다.`;
+    }
+    throw new BadRequestException(`Email : ${email}은 이미 사용 중입니다.`);
   }
 
   // 관리자 회원 검증

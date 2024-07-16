@@ -1,11 +1,4 @@
-export type UserType = {
-  id?: string;
-  username: string;
-  email: string;
-  password: string;
-  createdAt: string;
-  updatedAt: string;
-};
+export type UserType = 'individual' | 'corporate' | 'admin';
 
 export type UserRegisterPayloadType = {
   username: string;
@@ -34,9 +27,23 @@ export type AdminUserApi = {
 };
 
 // 개인회원 E-mail 로그인
+export type IndiUserEmail = {
+  email: string;
+  password: string;
+};
 
 // 개인회원 API-Key 로그인
+export type IndiUserApi = {
+  apikey: string;
+};
 
 // 사업자회원 E-mail 로그인
+export type CorpUserEmail = {
+  email: string;
+  password: string;
+};
 
 // 사업자회원 API-Key 로그인
+export type CorpUserApi = {
+  apikey: string;
+};
