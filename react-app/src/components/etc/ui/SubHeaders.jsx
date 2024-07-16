@@ -1,4 +1,3 @@
-// SubHeaders.jsx
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -12,8 +11,9 @@ const SubHeaders = ({ activeHeader, userType }) => {
       destination === '/password-change' ||
       destination === '/unregister'
     ) {
-      // Navigate to password verification first
+      // Navigate to password verification first and reload the page
       navigate('/verify-password', { state: { next: destination } });
+      window.location.reload();
     } else {
       navigate(destination);
     }

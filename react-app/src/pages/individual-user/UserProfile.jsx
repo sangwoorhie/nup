@@ -95,7 +95,7 @@ const ProfileImage = styled.div`
 `;
 
 const Form = styled.div`
-  width: 300px;
+  width: 400px;
   display: flex;
   flex-direction: column;
 `;

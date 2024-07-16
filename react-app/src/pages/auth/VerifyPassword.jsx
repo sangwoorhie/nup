@@ -8,6 +8,7 @@ import Footer from '../../components/etc/ui/Footer';
 
 const VerifyPassword = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const email = localStorage.getItem('userEmail') || '';
@@ -17,7 +18,8 @@ const VerifyPassword = ({ onSuccess }) => {
     try {
       const message = await doubleCheckPassword(password);
       alert(message);
-      onSuccess(nextPath);
+      setPassword(''); // Clear the password input
+      onSuccess(nextPath); // Navigate to the desired path
     } catch (error) {
       alert(error.message);
     }
@@ -29,12 +31,17 @@ const VerifyPassword = ({ onSuccess }) => {
     navigate('/user-profile'); // Navigate back to profile or any other page on cancel
   };
 
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(prevVisible => !prevVisible);
+  };
+
   return (
     <Container>
       <MainHeader setActiveHeader={() => {}} userType={'individual'} />
       <SubHeaders activeHeader={'User'} userType={'individual'} />
       <Content>
         <Title>회원정보 확인</Title>
+        <div>본인 인증이 필요한 기능입니다.</div>
         <div>본인 인증을 위해 비밀번호를 입력해 주세요.</div>
         <br />
         <Form>
@@ -44,11 +51,16 @@ const VerifyPassword = ({ onSuccess }) => {
           </Label>
           <Label>
             비밀번호:
-            <Input
-              type='password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <InputWrapper>
+              <Input
+                type={passwordVisible ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <ToggleVisibilityButton type='button' onClick={togglePasswordVisibility}>
+                {passwordVisible ? '👁' : '👁‍🗨'}
+              </ToggleVisibilityButton>
+            </InputWrapper>
           </Label>
           <ButtonContainer>
             <Button onClick={handleCancel} white>
@@ -73,7 +85,7 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   display: flex;
-  margin-top: 200px;
+  margin-top: 10px;
   flex-direction: column;
   align-items: center;
   padding: 20px;
@@ -103,14 +115,30 @@ const Label = styled.label`
   text-align: left;
 `;
 
+const InputWrapper = styled.div`
+  display: flex;
+  align-items: center; /* Keep elements in the same line */
+  width: 100%; /* Ensure the wrapper takes full width */
+`;
+
 const Input = styled.input`
+  flex: 1;
   padding: 10px;
   margin-top: 5px;
   margin-bottom: 15px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #fff;
-  width: calc(100% - 20px);
+  width: 100%; /* Make the input take full width */
+  box-sizing: border-box; /* Ensure padding and border are included in the width */
+`;
+
+const ToggleVisibilityButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: -30px; /* Position the eye icon inside the input */
+  transform: translateY(-2px); /* Adjust the vertical position of the button */
 `;
 
 const ButtonContainer = styled.div`

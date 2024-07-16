@@ -31,6 +31,11 @@ const Unregister = () => {
     }
   };
 
+  const handleCancel = () => {
+    alert('취소되었습니다');
+    navigate('/user-profile');
+  };
+
   return (
     <Container>
       <MainHeader setActiveHeader={setActiveHeader} userType={'individual'} />
@@ -97,7 +102,10 @@ const Unregister = () => {
               </Label>
             </Section>
           </TermsContainer>
-          <Button onClick={handleUnregister}>회원 탈퇴</Button>
+          <ButtonContainer>
+            <CancelButton onClick={handleCancel}>취소</CancelButton>
+            <DeleteButton onClick={handleUnregister}>회원 탈퇴</DeleteButton>
+          </ButtonContainer>
         </Form>
       </Content>
       <Footer />
@@ -159,14 +167,30 @@ const Label = styled.label`
   font-size: 14px;
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 20px;
+`;
+
 const Button = styled.button`
   padding: 10px;
-  margin-top: 20px;
-  background-color: #d9534f;
-  color: white;
+  width: 350px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+`;
+
+const CancelButton = styled(Button)`
+  background-color: #fff;
+  color: #0056b3;
+  border: 1px solid #0056b3;
+`;
+
+const DeleteButton = styled(Button)`
+  background-color: #d9534f;
+  color: white;
 `;
 
 export default Unregister;
