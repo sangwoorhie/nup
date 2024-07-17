@@ -52,28 +52,35 @@ export class ApiKeysController {
   }
 
   // 3. API Key 활성/정지 (사용자)
-  // PATCH : localhost:3000/api-keys/active/:apikey_id
-  @Patch('active/:id')
+  // PATCH : localhost:3000/api-keys/active?api_key=your_api_key
+  @Patch('active')
   @ApiOperation({ summary: 'API Key 활성/정지 (사용자)' })
   @ApiResponse({
     status: 200,
     description: 'API Key의 활성/정지 상태가 변경되었습니다.',
   })
-  async apiKeyStatus(@Param('id') id: string, @User() user: UserAfterAuth) {
-    return this.apiKeysService.apiKeyStatus(user.id, id);
+  async apiKeyStatus(
+    @Query('api_key') apiKey: string,
+    @User() user: UserAfterAuth,
+  ) {
+    return this.apiKeysService.apiKeyStatus(user.id, apiKey);
   }
 
   // 4. IP 주소 수정 (사용자)
-  // PATCH : localhost:3000/api-keys/update-ips/:apikey_id
-  @Patch('update-ips/:id')
+  // PATCH : localhost:3000/api-keys/update-ips?api_key=your_api_key
+  @Patch('update-ips')
   @ApiOperation({ summary: 'IP 주소 변경 (사용자)' })
   @ApiResponse({ status: 200, description: 'IP 주소가 변경되었습니다.' })
   async updateApiKeyIps(
-    @Param('id') id: string,
+    @Query('api_key') apiKey: string,
     @Body() updateApiKeyReqDto: UpdateApiKeyReqDto,
     @User() user: UserAfterAuth,
   ) {
-    return this.apiKeysService.updateApiKeyIps(user.id, id, updateApiKeyReqDto);
+    return this.apiKeysService.updateApiKeyIps(
+      user.id,
+      apiKey,
+      updateApiKeyReqDto,
+    );
   }
 
   // 5. API Key 전체목록 조회 (관리자)

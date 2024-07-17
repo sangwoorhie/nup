@@ -9,6 +9,7 @@ import VerifyPasswordWrapper from './VerifyPasswordWrapper';
 import UserUpdate from './pages/individual-user/UserUpdate';
 import PasswordChange from './pages/individual-user/PasswordChange';
 import Unregister from './pages/individual-user/Unregister';
+import ApiKey from './pages/individual-user/ApiKey';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -28,6 +29,7 @@ const MainRoutes = () => (
     <Route path='/user-update' element={<UserUpdate />} />
     <Route path='/password-change' element={<PasswordChange />} />
     <Route path='/unregister' element={<Unregister />} />
+    <Route path='/api-key' element={<ApiKey />} />
     {/* </Route> */}
   </Routes>
 );

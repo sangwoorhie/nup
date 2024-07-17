@@ -22,7 +22,8 @@ const UserUpdate = () => {
         const type = localStorage.getItem('userType');
         setUserType(type);
 
-        const endpoint = type === 'corporate' ? '/users/me/corp' : '/users/me/indi';
+        const endpoint =
+          type === 'corporate' ? '/users/me/corp' : '/users/me/indi';
         const { data } = await httpClient.get(endpoint);
         setUserData(data);
         setUsername(data.username);
@@ -76,6 +77,7 @@ const UserUpdate = () => {
     if (userType === 'corporate') return '사업자 회원';
     if (userType === 'admin') return '관리자 회원';
     if (userType === 'individual') return '개인 회원';
+    return '회원';
   };
 
   return (
@@ -84,23 +86,46 @@ const UserUpdate = () => {
       <SubHeaders activeHeader={activeHeader} userType={userType} />
       <Content>
         <Title>정보 수정</Title>
+        <UserTypeLabel>{getUserTypeLabel()}</UserTypeLabel>
         <ProfileImageContainer>
-          <ProfileImage src={profileImage} alt="Profile" />
+          <ProfileImage src={profileImage} alt='Profile' />
           <ImageUploadLabel>
-            <ImageUploadInput type="file" accept="image/*" onChange={handleImageUpload} />
+            <ImageUploadInput
+              type='file'
+              accept='image/*'
+              onChange={handleImageUpload}
+            />
             📷
           </ImageUploadLabel>
         </ProfileImageContainer>
         <Form>
           <Label>이름</Label>
-          <Input type='text' value={username} onChange={(e) => setUsername(e.target.value)} />
-          <Description>* 이름을 한글로 입력해 주세요. (필수 입력사항)</Description>
+          <Input
+            type='text'
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <Description>
+            * 이름을 한글로 입력해 주세요. (필수 입력사항)
+          </Description>
           <Label>휴대전화</Label>
-          <Input type='text' value={phone} onChange={(e) => setPhone(e.target.value)} />
-          <Description>*'-'를 제외한 숫자만 입력해주세요. (필수 입력사항)</Description>
+          <Input
+            type='text'
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          <Description>
+            *'-'를 제외한 숫자만 입력해주세요. (필수 입력사항)
+          </Description>
           <Label>비상 연락처</Label>
-          <Input type='text' value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
-          <Description>*'-'를 제외한 숫자만 입력해주세요. (선택 입력사항)</Description>
+          <Input
+            type='text'
+            value={emergencyPhone}
+            onChange={(e) => setEmergencyPhone(e.target.value)}
+          />
+          <Description>
+            *'-'를 제외한 숫자만 입력해주세요. (선택 입력사항)
+          </Description>
         </Form>
         <br />
         <ButtonContainer>
@@ -130,6 +155,11 @@ const Content = styled.div`
 
 const Title = styled.h2`
   margin-bottom: 20px;
+`;
+
+const UserTypeLabel = styled.h3`
+  margin-bottom: 20px;
+  color: #555;
 `;
 
 const ProfileImageContainer = styled.div`

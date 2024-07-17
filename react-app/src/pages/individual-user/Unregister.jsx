@@ -17,7 +17,9 @@ const Unregister = () => {
       return;
     }
 
-    const confirmDelete = window.confirm('정말 탈퇴하시겠습니까?');
+    const confirmDelete = window.confirm(
+      '확인 버튼을 누르시면 회원 탈퇴처리 됩니다. 정말 탈퇴하시겠습니까?'
+    );
     if (!confirmDelete) return;
 
     try {
@@ -32,7 +34,7 @@ const Unregister = () => {
   };
 
   const handleCancel = () => {
-    alert('취소되었습니다');
+    alert('취소되었습니다.');
     navigate('/user-profile');
   };
 

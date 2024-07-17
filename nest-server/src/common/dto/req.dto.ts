@@ -9,8 +9,8 @@ export class PageReqDto {
   @IsInt()
   readonly page?: number = 1;
 
-  @ApiPropertyOptional({ description: '페이지 당 데이터 갯수. default = 20' })
+  @ApiPropertyOptional({ description: '페이지 당 데이터 갯수. default = 10' })
   @Transform((param) => Number(param.value))
   @IsInt()
-  readonly size?: number = 20;
+  readonly size?: number = 10;
 }

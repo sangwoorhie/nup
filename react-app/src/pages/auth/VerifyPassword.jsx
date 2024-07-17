@@ -32,7 +32,7 @@ const VerifyPassword = ({ onSuccess }) => {
   };
 
   const togglePasswordVisibility = () => {
-    setPasswordVisible(prevVisible => !prevVisible);
+    setPasswordVisible((prevVisible) => !prevVisible);
   };
 
   return (
@@ -57,7 +57,10 @@ const VerifyPassword = ({ onSuccess }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <ToggleVisibilityButton type='button' onClick={togglePasswordVisibility}>
+              <ToggleVisibilityButton
+                type='button'
+                onClick={togglePasswordVisibility}
+              >
                 {passwordVisible ? '👁' : '👁‍🗨'}
               </ToggleVisibilityButton>
             </InputWrapper>
@@ -138,7 +141,7 @@ const ToggleVisibilityButton = styled.button`
   border: none;
   cursor: pointer;
   margin-left: -30px; /* Position the eye icon inside the input */
-  transform: translateY(-2px); /* Adjust the vertical position of the button */
+  transform: translateY(-7px); /* Adjust the vertical position of the button */
 `;
 
 const ButtonContainer = styled.div`

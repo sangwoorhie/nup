@@ -11,7 +11,8 @@ const PasswordChange = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [newPasswordVisible, setNewPasswordVisible] = useState(false);
-  const [confirmNewPasswordVisible, setConfirmNewPasswordVisible] = useState(false);
+  const [confirmNewPasswordVisible, setConfirmNewPasswordVisible] =
+    useState(false);
   const navigate = useNavigate();
 
   const handleChangePassword = async () => {
@@ -28,7 +29,9 @@ const PasswordChange = () => {
       alert(response.data.message);
       navigate('/user-profile');
     } catch (error) {
-      alert(error.response?.data?.message || error.message || '비밀번호 변경 실패');
+      alert(
+        error.response?.data?.message || error.message || '비밀번호 변경 실패'
+      );
     }
   };
 
@@ -63,7 +66,8 @@ const PasswordChange = () => {
             </ToggleVisibilityButton>
           </InputWrapper>
           <Description>
-            *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자 이상, 최대 20자 이내로 구성된 비밀번호를 작성해 주세요.
+            *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자 이상,
+            최대 20자 이내로 구성된 비밀번호를 작성해 주세요. (필수 입력사항)
           </Description>
           <Label>새 비밀번호 확인</Label>
           <InputWrapper>
@@ -74,12 +78,16 @@ const PasswordChange = () => {
             />
             <ToggleVisibilityButton
               type='button'
-              onClick={() => togglePasswordVisibility(setConfirmNewPasswordVisible)}
+              onClick={() =>
+                togglePasswordVisibility(setConfirmNewPasswordVisible)
+              }
             >
               {confirmNewPasswordVisible ? '👁' : '👁‍🗨'}
             </ToggleVisibilityButton>
           </InputWrapper>
-          <Description>* 새 비밀번호와 동일하게 입력해 주세요.</Description>
+          <Description>
+            * 새 비밀번호와 동일하게 입력해 주세요. (필수 입력사항)
+          </Description>
           <ButtonContainer>
             <CancelButton onClick={handleCancel}>취소</CancelButton>
             <UpdateButton onClick={handleChangePassword}>변경</UpdateButton>

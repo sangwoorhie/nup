@@ -20,6 +20,7 @@ export class FindIndiUserReqDto {
     enum: ['email', 'username'],
   })
   @IsEnum(['email', 'username'])
+  @IsNotEmpty()
   criteria: 'email' | 'username';
 
   @ApiProperty({ required: false, description: '유저 이메일' })
@@ -40,6 +41,7 @@ export class FindCorpUserReqDto {
     enum: ['corporate_name', 'business_registration_number'],
   })
   @IsEnum(['corporate_name', 'business_registration_number'])
+  @IsNotEmpty()
   criteria: 'corporate_name' | 'business_registration_number';
 
   @ApiProperty({ required: false, description: '기업명' })
@@ -57,13 +59,13 @@ export class FindCorpUserReqDto {
 export class UpdateIndiUserReqDto {
   @ApiProperty({ required: false, description: '회원이름' })
   @IsString()
-  @IsOptional()
-  readonly username?: string;
+  @IsNotEmpty()
+  readonly username: string;
 
   @ApiProperty({ required: false, description: '연락처' })
   @IsString()
-  @IsOptional()
-  readonly phone?: string;
+  @IsNotEmpty()
+  readonly phone: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
   @IsString()
@@ -80,13 +82,13 @@ export class UpdateIndiUserReqDto {
 export class UpdateCorpUserReqDto {
   @ApiProperty({ required: false, description: '회원이름' })
   @IsString()
-  @IsOptional()
-  readonly username?: string;
+  @IsNotEmpty()
+  readonly username: string;
 
   @ApiProperty({ required: false, description: '연락처' })
   @IsString()
-  @IsOptional()
-  readonly phone?: string;
+  @IsNotEmpty()
+  readonly phone: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
   @IsString()
@@ -110,38 +112,38 @@ export class UpdateCorpUserReqDto {
 
   @ApiProperty({ required: false, description: '기업명' })
   @IsString()
-  @IsOptional()
-  readonly corporate_name?: string;
+  @IsNotEmpty()
+  readonly corporate_name: string;
 
   @ApiProperty({ required: false, description: '업종 코드' })
   @IsNumber()
-  @IsOptional()
-  readonly industry_code?: number;
+  @IsNotEmpty()
+  readonly industry_code: number;
 
   @ApiProperty({ required: false, description: '업종 명' })
   @IsString()
-  @IsOptional()
-  readonly business_type?: string;
+  @IsNotEmpty()
+  readonly business_type: string;
 
   @ApiProperty({ required: false, description: '업태 명' })
   @IsString()
-  @IsOptional()
-  readonly business_conditions?: string;
+  @IsNotEmpty()
+  readonly business_conditions: string;
 
   @ApiProperty({ required: false, description: '사업자 등록번호' })
   @IsNumber()
-  @IsOptional()
-  readonly business_registration_number?: number;
+  @IsNotEmpty()
+  readonly business_registration_number: number;
 
   @ApiProperty({ required: false, description: '사업자 등록증 사본' })
   @IsString()
-  @IsOptional()
-  readonly business_license?: string;
+  @IsNotEmpty()
+  readonly business_license: string;
 
   @ApiProperty({ required: false, description: '주소' })
   @IsString()
-  @IsOptional()
-  readonly address?: string;
+  @IsNotEmpty()
+  readonly address: string;
 }
 
 // 비밀번호 변경 요청 DTO

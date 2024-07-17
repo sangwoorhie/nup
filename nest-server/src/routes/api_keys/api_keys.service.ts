@@ -71,6 +71,7 @@ export class ApiKeysService {
       where: { user: { id: userId } },
       skip: (page - 1) * size,
       take: size,
+      order: { created_at: 'DESC' }, // Order by created_at in descending order
     });
 
     const today = moment().startOf('day').toDate();
@@ -107,49 +108,53 @@ export class ApiKeysService {
     };
   }
   // 3. API Key 활성/정지 (사용자)
-  async apiKeyStatus(userId: string, id: string) {
-    const apiKey = await this.apiKeysRepository.findOne({
+  async apiKeyStatus(userId: string, apiKey: string) {
+    const apiKeyEntity = await this.apiKeysRepository.findOne({
       where: {
-        id,
+        api_key: apiKey,
         user: { id: userId },
       },
       relations: ['user'],
     });
 
-    if (!apiKey) {
+    if (!apiKeyEntity) {
       throw new NotFoundException('API Key를 찾을 수 없습니다.');
     }
 
-    apiKey.is_active = !apiKey.is_active;
-    await this.apiKeysRepository.save(apiKey);
-    const message = apiKey.is_active
+    apiKeyEntity.is_active = !apiKeyEntity.is_active;
+    await this.apiKeysRepository.save(apiKeyEntity);
+    const message = apiKeyEntity.is_active
       ? 'API-Key가 활성화되었습니다.'
       : 'API-Key가 정지되었습니다.';
-    return { api_key: apiKey.api_key, is_active: apiKey.is_active, message };
+    return {
+      api_key: apiKeyEntity.api_key,
+      is_active: apiKeyEntity.is_active,
+      message,
+    };
   }
 
   // 4. IP 주소 수정 (사용자)
   async updateApiKeyIps(
     userId: string,
-    id: string,
+    apiKey: string,
     updateApiKeyReqDto: UpdateApiKeyReqDto,
   ) {
-    const apiKey = await this.apiKeysRepository.findOne({
-      where: { id, user: { id: userId } },
+    const apiKeyEntity = await this.apiKeysRepository.findOne({
+      where: { api_key: apiKey, user: { id: userId } },
       relations: ['user'],
     });
 
-    if (!apiKey) {
+    if (!apiKeyEntity) {
       throw new NotFoundException('API Key를 찾을 수 없습니다.');
     }
 
     const { ips } = updateApiKeyReqDto;
     const ipString = ips.join(',');
-    apiKey.ips = ipString;
+    apiKeyEntity.ips = ipString;
 
-    await this.apiKeysRepository.save(apiKey);
+    await this.apiKeysRepository.save(apiKeyEntity);
 
-    return { api_key: apiKey.api_key, ips: apiKey.ips.split(',') };
+    return { api_key: apiKeyEntity.api_key, ips: apiKeyEntity.ips.split(',') };
   }
 
   // 5. API Key 전체목록 조회 (관리자)

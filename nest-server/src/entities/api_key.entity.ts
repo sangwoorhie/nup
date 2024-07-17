@@ -34,12 +34,12 @@ export class ApiKeys {
 
   // 생성 시각
   @ApiProperty({ description: '생성 시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 수정 시각
   @ApiProperty({ description: '수정 시각' })
-  @UpdateDateColumn({ type: 'date' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
   // ApiKeys : User = N : 1 관계
