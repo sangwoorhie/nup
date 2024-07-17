@@ -55,10 +55,10 @@ const UpdateApiKeyModal = ({ isOpen, onRequestClose, apiKey, ips }) => {
           경우, 중복하여 발급할 수 없습니다.
           <br />
           * 하나의 API Key에 단수 또는 복수 개의 IP 주소를 적용할 수 있습니다.
-          IP 주소를 2개 이상 적용하실 경우, 콤마(",")로 구분해 주세요.
+          IP 주소를 2개 이상 적용하실 경우, 띄어쓰기 없이 콤마(",")로 구분해 주세요.
           <br />
           <br />
-          예: 192.168.1.1, 192.168.1.2
+          예: 192.168.1.1,192.168.1.2
         </Description>
         <ButtonContainer>
           <Button onClick={onRequestClose} secondary>

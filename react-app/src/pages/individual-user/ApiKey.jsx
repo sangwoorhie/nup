@@ -26,7 +26,11 @@ const ApiKey = () => {
   const fetchApiKeys = useCallback(async (page = 1, size = 10) => {
     try {
       const { data } = await listApiKeys(page, size);
-      setApiKeys(data.items || []);
+      const formattedData = data.items.map(item => ({
+        ...item,
+        is_active: true
+      }));
+      setApiKeys(formattedData);
       setTotalRecords(data.total || 0);
     } catch (error) {
       console.error('Failed to fetch API keys:', error);
