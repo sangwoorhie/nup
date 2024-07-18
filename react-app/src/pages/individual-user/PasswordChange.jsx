@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import MainHeader from '../../components/etc/ui/MainHeader';
 import SubHeaders from '../../components/etc/ui/SubHeaders';
 import httpClient from '../../services/httpClient';
@@ -14,6 +14,8 @@ const PasswordChange = () => {
   const [confirmNewPasswordVisible, setConfirmNewPasswordVisible] =
     useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const userType = location.state?.userType || 'individual'; // default to individual if not provided
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmNewPassword) {
@@ -27,7 +29,7 @@ const PasswordChange = () => {
         newPasswordConfirm: confirmNewPassword,
       });
       alert(response.data.message);
-      navigate('/user-profile');
+      navigate('/user-profile', { state: { userType } }); // Pass userType on navigation
     } catch (error) {
       alert(
         error.response?.data?.message || error.message || '비밀번호 변경 실패'
@@ -37,7 +39,7 @@ const PasswordChange = () => {
 
   const handleCancel = () => {
     alert('취소되었습니다.');
-    navigate('/user-profile');
+    navigate('/user-profile', { state: { userType } }); // Pass userType on navigation
   };
 
   const togglePasswordVisibility = (setVisibility) => {
@@ -46,8 +48,8 @@ const PasswordChange = () => {
 
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={'individual'} />
-      <SubHeaders activeHeader={activeHeader} userType={'individual'} />
+      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <SubHeaders activeHeader={activeHeader} userType={userType} />
       <Content>
         <Title>비밀번호 변경</Title>
         <Form>

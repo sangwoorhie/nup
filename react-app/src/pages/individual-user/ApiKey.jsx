@@ -26,11 +26,7 @@ const ApiKey = () => {
   const fetchApiKeys = useCallback(async (page = 1, size = 10) => {
     try {
       const { data } = await listApiKeys(page, size);
-      const formattedData = data.items.map(item => ({
-        ...item,
-        is_active: true
-      }));
-      setApiKeys(formattedData);
+      setApiKeys(data.items); // Remove the incorrect is_active setting
       setTotalRecords(data.total || 0);
     } catch (error) {
       console.error('Failed to fetch API keys:', error);

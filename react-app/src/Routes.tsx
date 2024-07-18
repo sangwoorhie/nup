@@ -10,6 +10,8 @@ import UserUpdate from './pages/individual-user/UserUpdate';
 import PasswordChange from './pages/individual-user/PasswordChange';
 import Unregister from './pages/individual-user/Unregister';
 import ApiKey from './pages/individual-user/ApiKey';
+import CorporateProfile from './pages/corporate-user/CorporateProfile';
+import CorporateUpdate from './pages/corporate-user/CorporateUpdate';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -25,8 +27,10 @@ const MainRoutes = () => (
 
     {/* <Route element={<PrivateRoutes />}> */}
     <Route path='/user-profile' element={<UserProfile />} />
+    <Route path='/corporate-info' element={<CorporateProfile />} />
     <Route path='/verify-password' element={<VerifyPasswordWrapper />} />
     <Route path='/user-update' element={<UserUpdate />} />
+    <Route path='/corporate-update' element={<CorporateUpdate />} />
     <Route path='/password-change' element={<PasswordChange />} />
     <Route path='/unregister' element={<Unregister />} />
     <Route path='/api-key' element={<ApiKey />} />

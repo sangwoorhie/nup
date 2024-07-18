@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import MainHeader from '../../components/etc/ui/MainHeader';
 import SubHeaders from '../../components/etc/ui/SubHeaders';
 import httpClient from '../../services/httpClient';
@@ -10,6 +10,8 @@ const Unregister = () => {
   const [activeHeader, setActiveHeader] = useState('User');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const userType = location.state?.userType || 'individual'; // default to individual if not provided
 
   const handleUnregister = async () => {
     if (!termsAccepted) {
@@ -35,13 +37,13 @@ const Unregister = () => {
 
   const handleCancel = () => {
     alert('취소되었습니다.');
-    navigate('/user-profile');
+    navigate('/user-profile', { state: { userType } }); // Pass userType on navigation
   };
 
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={'individual'} />
-      <SubHeaders activeHeader={activeHeader} userType={'individual'} />
+      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <SubHeaders activeHeader={activeHeader} userType={userType} />
       <Content>
         <Title>회원 탈퇴</Title>
         <Form>

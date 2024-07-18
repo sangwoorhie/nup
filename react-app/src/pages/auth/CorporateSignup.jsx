@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import smileIcon from '../../assets/img/smile.png';
+import AddressModal from '../../components/etc/modals/AddressModal';
 import {
   signupCorporate,
   checkEmailAvailability,
@@ -33,6 +34,8 @@ const CorporateSignup = () => {
     useState('');
   const [businessLicense, setBusinessLicense] = useState(null);
   const [address, setAddress] = useState('');
+  const [detailedAddress, setDetailedAddress] = useState('');
+  const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
 
   const navigate = useNavigate();
 
@@ -58,16 +61,38 @@ const CorporateSignup = () => {
       }
       setCurrentStep(2);
     } else if (currentStep === 2) {
+      if (!email || !password || !confirmPassword || !name || !phone) {
+        alert('필수 입력 항목을 모두 입력하세요.');
+        return;
+      }
       if (password !== confirmPassword) {
-        alert('Passwords do not match.');
+        alert('비밀번호와 확인 비밀번호가 동일하지 않습니다.');
         return;
       }
       setCurrentStep(3);
+    } else if (currentStep === 3) {
+      if (
+        !corporateName ||
+        !industryCode ||
+        !businessType ||
+        !businessConditions ||
+        !businessRegistrationNumber ||
+        !address ||
+        !detailedAddress
+      ) {
+        alert('필수 입력 항목을 모두 입력하세요.');
+        return;
+      }
+      setCurrentStep(4);
     }
   };
 
   const handleBackClick = () => {
     if (currentStep === 1) {
+      const confirmCancel = window.confirm(
+        '입력하신 정보는 저장되지 않습니다. 회원가입을 취소하시겠습니까?'
+      );
+      if (!confirmCancel) return;
       navigate('/signup');
     } else {
       setCurrentStep(currentStep - 1);
@@ -81,6 +106,8 @@ const CorporateSignup = () => {
       handleNextClick();
       return;
     }
+
+    const fullAddress = `${address} ${detailedAddress}`;
 
     const payload = {
       email: (email + emailProvider).toLowerCase(),
@@ -100,7 +127,7 @@ const CorporateSignup = () => {
       business_license: businessLicense
         ? URL.createObjectURL(businessLicense)
         : '',
-      address,
+      address: fullAddress,
     };
 
     try {
@@ -140,6 +167,11 @@ const CorporateSignup = () => {
     } catch (error) {
       alert(error.response?.data?.message || 'Error checking email.');
     }
+  };
+
+  const handleAddressSelect = (data) => {
+    setAddress(data.address);
+    setIsAddressPopupVisible(false);
   };
 
   return (
@@ -427,6 +459,10 @@ const CorporateSignup = () => {
                       required
                     />
                   </InputWrapper>
+                  <Description>
+                    *사업자등록증에 기재되어 있는 기업 명(상호 명)을 입력해
+                    주세요.
+                  </Description>
                 </Cell>
               </Row>
               <Row>
@@ -441,8 +477,10 @@ const CorporateSignup = () => {
                       onChange={(e) => setIndustryCode(e.target.value)}
                       required
                     />
-                    <CheckButton>검색</CheckButton>
                   </InputWrapper>
+                  <Description>
+                    *사업자등록증에 기재되어 있는 업종 코드를 입력해 주세요.
+                  </Description>
                 </Cell>
               </Row>
               <Row>
@@ -458,6 +496,9 @@ const CorporateSignup = () => {
                       required
                     />
                   </InputWrapper>
+                  <Description>
+                    *사업자등록증에 기재되어 있는 업종 명을 입력해 주세요.
+                  </Description>
                 </Cell>
               </Row>
               <Row>
@@ -473,6 +514,9 @@ const CorporateSignup = () => {
                       required
                     />
                   </InputWrapper>
+                  <Description>
+                    *사업자등록증에 기재되어 있는 업태 명을 입력해 주세요.
+                  </Description>
                 </Cell>
               </Row>
               <Row>
@@ -491,8 +535,10 @@ const CorporateSignup = () => {
                       }
                       required
                     />
-                    <CheckButton>조회</CheckButton>
                   </InputWrapper>
+                  <Description>
+                    *사업자등록증에 기재되어 있는 등록번호를 입력해 주세요.
+                  </Description>
                 </Cell>
               </Row>
               <Row>
@@ -526,7 +572,23 @@ const CorporateSignup = () => {
                       onChange={(e) => setAddress(e.target.value)}
                       required
                     />
-                    <CheckButton>검색</CheckButton>
+                    <CheckButton
+                      type='button'
+                      onClick={() => setIsAddressPopupVisible(true)}
+                    >
+                      주소 검색
+                    </CheckButton>
+                  </InputWrapper>
+                  <br />
+                  <InputWrapper>
+                    <Input
+                      id='detailedAddress'
+                      type='text'
+                      value={detailedAddress}
+                      onChange={(e) => setDetailedAddress(e.target.value)}
+                      placeholder='상세 주소를 입력하세요.'
+                      required
+                    />
                   </InputWrapper>
                 </Cell>
                 <br />
@@ -560,6 +622,11 @@ const CorporateSignup = () => {
         )}
       </Content>
       <Footer />
+      <AddressModal
+        isVisible={isAddressPopupVisible}
+        onClose={() => setIsAddressPopupVisible(false)}
+        onComplete={handleAddressSelect}
+      />
     </Container>
   );
 };
@@ -693,7 +760,7 @@ const Cell = styled.td`
 
 const InputWrapper = styled.div`
   display: flex;
-  align-items: center; /* Keep elements in the same line */
+  align-items: center;
 `;
 
 const Input = styled.input`

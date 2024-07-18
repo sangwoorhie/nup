@@ -281,10 +281,10 @@ export class UsersController {
     return await this.usersService.promoteUser(userId);
   }
 
-  // 14. 사업자등록증 확인처리 (관리자)
+  // 14. 미확인 사업자등록증 확인처리 (관리자)
   // PATCH : localhost:3000/users/admin/corp/verify?corporateId=12345
   @Patch('admin/corp/verify')
-  @ApiOperation({ summary: '사업자등록증 확인처리 (관리자)' })
+  @ApiOperation({ summary: '미확인 사업자등록증 확인처리 (관리자)' })
   @ApiQuery({ name: 'corporateId', required: true, description: '기업 ID' })
   @ApiResponse({
     status: 200,

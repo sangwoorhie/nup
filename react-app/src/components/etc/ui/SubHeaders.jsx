@@ -1,4 +1,3 @@
-// components/etc/ui/SubHeaders.jsx
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -10,32 +9,33 @@ const SubHeaders = ({ activeHeader, userType }) => {
     if (
       destination === '/user-update' ||
       destination === '/password-change' ||
-      destination === '/unregister'
+      destination === '/unregister' ||
+      destination === '/corporate-update'
     ) {
-      // Navigate to password verification first and reload the page
-      navigate('/verify-password', { state: { next: destination } });
-      window.location.reload();
+      navigate('/verify-password', {
+        state: { next: destination, userType },
+      });
     } else {
-      navigate(destination);
+      navigate(destination, { state: { userType } });
     }
   };
 
   const renderSubOptions = () => {
     if (activeHeader === 'User') {
-      if (userType === 'individual' || userType === 'admin') {
-        return [
-          { label: '내 정보', path: '/user-profile' },
-          { label: '정보 수정', path: '/user-update' },
-          { label: '비밀번호 변경', path: '/password-change' },
-          { label: 'API Key', path: '/api-key' },
-          { label: '회원 탈퇴', path: '/unregister' },
-        ];
-      } else if (userType === 'corporate') {
+      if (userType === 'corporate') {
         return [
           { label: '내 정보', path: '/user-profile' },
           { label: '사업자 정보', path: '/corporate-info' },
           { label: '내 정보 수정', path: '/user-update' },
           { label: '사업자 정보 수정', path: '/corporate-update' },
+          { label: '비밀번호 변경', path: '/password-change' },
+          { label: 'API Key', path: '/api-key' },
+          { label: '회원 탈퇴', path: '/unregister' },
+        ];
+      } else {
+        return [
+          { label: '내 정보', path: '/user-profile' },
+          { label: '정보 수정', path: '/user-update' },
           { label: '비밀번호 변경', path: '/password-change' },
           { label: 'API Key', path: '/api-key' },
           { label: '회원 탈퇴', path: '/unregister' },

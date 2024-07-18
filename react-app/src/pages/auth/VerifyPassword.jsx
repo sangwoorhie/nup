@@ -6,7 +6,7 @@ import MainHeader from '../../components/etc/ui/MainHeader';
 import SubHeaders from '../../components/etc/ui/SubHeaders';
 import Footer from '../../components/etc/ui/Footer';
 
-const VerifyPassword = ({ onSuccess }) => {
+const VerifyPassword = ({ onSuccess, userType }) => {
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ const VerifyPassword = ({ onSuccess }) => {
 
   return (
     <Container>
-      <MainHeader setActiveHeader={() => {}} userType={'individual'} />
-      <SubHeaders activeHeader={'User'} userType={'individual'} />
+      <MainHeader setActiveHeader={() => {}} userType={userType} />
+      <SubHeaders activeHeader='User' userType={userType} />
       <Content>
         <Title>회원정보 확인</Title>
         <div>본인 인증이 필요한 기능입니다.</div>

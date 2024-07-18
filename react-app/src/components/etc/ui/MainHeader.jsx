@@ -1,4 +1,3 @@
-// components/etc/ui/MainHeader.jsx
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -71,7 +70,7 @@ const LeftSection = styled.div`
 `;
 
 const Logo = styled.img`
-  height: 30px; // Adjust as needed
+  height: 30px;
   margin-right: 20px;
 `;
 

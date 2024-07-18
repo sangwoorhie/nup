@@ -98,6 +98,7 @@ export class ApiKeysService {
       today_usage: parseInt(todayUsage, 10),
       total_usage: parseInt(totalUsage, 10),
       created_at: apiKey.created_at,
+      is_active: apiKey.is_active,
     }));
 
     return {
@@ -107,6 +108,7 @@ export class ApiKeysService {
       items,
     };
   }
+
   // 3. API Key 활성/정지 (사용자)
   async apiKeyStatus(userId: string, apiKey: string) {
     const apiKeyEntity = await this.apiKeysRepository.findOne({

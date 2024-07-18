@@ -525,7 +525,7 @@ export class UsersService {
     };
   }
 
-  // 14. 사업자등록증 확인처리 (관리자)
+  // 14. 미확인 사업자등록증 확인처리 (관리자)
   async verifyBusinessLicense(
     corporateId: string,
   ): Promise<{ message: string }> {

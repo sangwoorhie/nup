@@ -49,8 +49,12 @@ const IndividualSignup = () => {
       }
       setCurrentStep(2);
     } else if (currentStep === 2) {
+      if (!email || !password || !confirmPassword || !name || !phone) {
+        alert('필수 입력 항목을 모두 입력하세요.');
+        return;
+      }
       if (password !== confirmPassword) {
-        alert('Passwords do not match.');
+        alert('비밀번호와 확인 비밀번호가 동일하지 않습니다.');
         return;
       }
       setCurrentStep(3);
@@ -59,6 +63,10 @@ const IndividualSignup = () => {
 
   const handleBackClick = () => {
     if (currentStep === 1) {
+      const confirmCancel = window.confirm(
+        '입력하신 정보는 저장되지 않습니다. 회원가입을 취소하시겠습니까?'
+      );
+      if (!confirmCancel) return;
       navigate('/signup');
     } else {
       setCurrentStep(currentStep - 1);
