@@ -34,7 +34,7 @@ const SubHeaders = ({ activeHeader, userType }) => {
         ];
       } else {
         return [
-          { label: '내 정보', path: '/user-profile' },
+          { label: '내 정보', path: '/individual-members' },
           { label: '정보 수정', path: '/user-update' },
           { label: '비밀번호 변경', path: '/password-change' },
           { label: 'API Key', path: '/api-key' },

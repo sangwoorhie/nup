@@ -9,7 +9,7 @@ const AddressModal = ({ isVisible, onClose, onComplete }) => {
     <ModalOverlay>
       <ModalContainer>
         <CloseButton onClick={onClose}>X</CloseButton>
-        <br />
+        <ModalTitle>주소 찾기</ModalTitle>
         <DaumPostcode onComplete={onComplete} />
       </ModalContainer>
     </ModalOverlay>
@@ -47,6 +47,13 @@ const CloseButton = styled.button`
   border: none;
   font-size: 20px;
   cursor: pointer;
+`;
+
+const ModalTitle = styled.h2`
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  text-align: center;
 `;
 
 export default AddressModal;
