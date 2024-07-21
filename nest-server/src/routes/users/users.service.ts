@@ -274,6 +274,7 @@ export class UsersService {
     const [users, total] = await this.userRepository.findAndCount({
       skip: (page - 1) * size,
       take: size,
+      where: { user_type: UserType.INDIVIDUAL },
       select: [
         'id',
         'email',

@@ -54,7 +54,7 @@ export class User {
 
   // 연락처
   @ApiProperty({ description: '연락처' })
-  @Column({ type: 'varchar', nullable: false  })
+  @Column({ type: 'varchar', nullable: false })
   phone: string;
 
   // 비상연락처
@@ -64,7 +64,7 @@ export class User {
 
   // 포인트
   @ApiProperty({ description: '회원 포인트' })
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', default: 0 })
   point: number;
 
   // 프로필 이미지

@@ -22,8 +22,8 @@ const IndividualUserManagement = () => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
 
-  const fetchUsers = useCallback(async () => {
-    const { data } = await getUsers(page, pageSize);
+  const fetchUsers = useCallback(async (criteria = '', value = '') => {
+    const { data } = await getUsers(page, pageSize, criteria, value);
     setUsers(data.items);
     setTotalRecords(data.total);
   }, [page, pageSize]);
@@ -34,14 +34,7 @@ const IndividualUserManagement = () => {
 
   const handleSearch = async () => {
     try {
-      const { data } = await getUsers(
-        page,
-        pageSize,
-        searchCriteria,
-        searchValue
-      );
-      setUsers(data.items);
-      setTotalRecords(data.total);
+      await fetchUsers(searchCriteria, searchValue);
     } catch (error) {
       alert('검색어와 일치하는 회원이 존재하지 않습니다.');
     }
@@ -57,7 +50,7 @@ const IndividualUserManagement = () => {
       for (const userId of selectedUserIds) {
         await promoteUser(userId);
       }
-      fetchUsers();
+      fetchUsers(searchCriteria, searchValue);
       alert('선택한 회원이 관리자 회원으로 변경되었습니다.');
     }
   };
@@ -82,7 +75,7 @@ const IndividualUserManagement = () => {
           await banUser(user.id, { reason: '관리자에 의해 정지됨' });
         }
       }
-      fetchUsers();
+      fetchUsers(searchCriteria, searchValue);
     }
   };
 
@@ -119,7 +112,7 @@ const IndividualUserManagement = () => {
           <ButtonContainer>
             <button onClick={handlePromote}>관리자 회원으로 변경</button>
             <button onClick={handleBan}>계정 정지</button>
-            <RefreshButton onClick={fetchUsers}>
+            <RefreshButton onClick={() => fetchUsers(searchCriteria, searchValue)}>
               <img src={refreshImage} alt='새로고침' />
             </RefreshButton>
           </ButtonContainer>
@@ -179,6 +172,7 @@ const IndividualUserManagement = () => {
             onPageChange={(e) => {
               setPage(e.first / e.rows + 1);
               setPageSize(e.rows);
+              fetchUsers(searchCriteria, searchValue);
             }}
           />
         </Pagination>

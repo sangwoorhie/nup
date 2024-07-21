@@ -12,7 +12,8 @@ import Unregister from './pages/individual-user/Unregister';
 import ApiKey from './pages/individual-user/ApiKey';
 import CorporateProfile from './pages/corporate-user/CorporateProfile';
 import CorporateUpdate from './pages/corporate-user/CorporateUpdate';
-import IndividualUserManagement from './pages/admin/IndividualUserManagement ';
+import IndividualUserManagement from './pages/admin/IndividualUserManagement';
+import CorporateUserManagement from './pages/admin/CorporateUserManagement'; 
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -36,6 +37,7 @@ const MainRoutes = () => (
     <Route path='/unregister' element={<Unregister />} />
     <Route path='/api-key' element={<ApiKey />} />
     <Route path='/individual-members' element={<IndividualUserManagement />} />
+    <Route path='/corporate-members' element={<CorporateUserManagement />} />
     {/* </Route> */}
   </Routes>
 );
