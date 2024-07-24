@@ -15,3 +15,23 @@ export const doubleCheckPassword = async (
     throw new Error(`Problem in verification: ${message}`);
   }
 };
+
+// 현금 충전
+export const sendChargeEmail = async (
+  amount: number,
+  accountHolderName: string
+) => {
+  try {
+    const response = await httpClient.post('/payment-records/charge', {
+      amount,
+      account_holder_name: accountHolderName,
+    });
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to send charge email';
+    throw new Error(message);
+  }
+};

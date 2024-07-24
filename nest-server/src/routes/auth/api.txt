@@ -56,7 +56,6 @@ json
   "department": "string" (optional),
   "position": "string" (optional),
   "corporate_name": "string",
-  "industry_code": number,
   "business_type": "string",
   "business_conditions": "string",
   "business_registration_number": number,

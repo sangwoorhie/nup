@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, loginWithApiKey } from '../../services/authServices';
+import {
+  login,
+  loginWithApiKey,
+  resetPassword,
+} from '../../services/authServices';
 import styled from 'styled-components';
 import backgroundImage from '../../assets/img/background_img.jpg';
 
@@ -11,6 +15,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [apiKey, setApiKey] = useState('');
+  const [username, setUsername] = useState('');
   const navigate = useNavigate();
 
   const handleSignUpClick = (e) => {
@@ -25,12 +30,10 @@ const LoginPage = () => {
   const handleSignIn = async (event) => {
     event.preventDefault();
     try {
-      // API-Key로 로그인하는 경우
       if (isAPIKeyLogin) {
         const payload = { apiKey };
         await loginWithApiKey(payload, navigate);
       } else {
-        // E-mail로 로그인하는 경우
         const payload = { email, password };
         await login(payload, navigate);
       }
@@ -43,6 +46,17 @@ const LoginPage = () => {
         alert('E-mail 또는 비밀번호가 올바르지 않습니다.');
       }
       console.error('Login failed:', error, errorMessage);
+    }
+  };
+
+  const handleResetPassword = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await resetPassword({ email, username });
+      alert(response.message);
+    } catch (error) {
+      alert('비밀번호 재설정 요청에 실패했습니다.');
+      console.error('Reset password failed:', error);
     }
   };
 
@@ -64,12 +78,28 @@ const LoginPage = () => {
                 귀하의 계정과 연결된 E-mail 주소와 이름을 입력하면 임시
                 비밀번호를 발급하여 보내드립니다. 로그인 후 비밀번호를 변경해
                 주세요.
+                <br />
+                <br />
+                Reset Password 버튼을 누른 뒤, 잠시 시간이 소요되니 알림 창이
+                나올 때까지 기다려 주세요.
               </Description>
               <Label htmlFor='email'>E-mail</Label>
-              <Input id='email' type='email' placeholder='E-mail' />
+              <Input
+                id='email'
+                type='email'
+                placeholder='E-mail'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
               <Label htmlFor='name'>Name</Label>
-              <Input id='name' type='text' placeholder='Name' />
-              <Button>Reset Password</Button>
+              <Input
+                id='name'
+                type='text'
+                placeholder='Name'
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <Button onClick={handleResetPassword}>Reset Password</Button>
               <LinkWrapper>
                 <Link onClick={() => setIsResetPassword(false)}>
                   E-mail 로그인
@@ -177,7 +207,7 @@ const LogoWrapper = styled.div`
 `;
 
 const Logo = styled.h1`
-  font-size: 64px; // Increased font size
+  font-size: 64px;
   margin: 0;
   color: #1a1a1a;
   &:nth-child(1) {
@@ -192,7 +222,7 @@ const Logo = styled.h1`
 `;
 
 const Tagline = styled.p`
-  font-size: 24px; // Increased font size
+  font-size: 24px;
   margin: 10px 0 0 0;
   color: #0056b3;
 `;
@@ -200,10 +230,10 @@ const Tagline = styled.p`
 const FormWrapper = styled.div`
   width: 100%;
   height: 90%;
-  max-width: 500px; // Adjusted max-width
+  max-width: 500px;
   padding: 20px;
-  background-color: rgba(255, 255, 255, 0.9); // Less translucent background
-  border-radius: 10px; // Optional: to give rounded corners
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
 `;
 
 const Title = styled.h2`

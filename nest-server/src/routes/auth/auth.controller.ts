@@ -163,7 +163,7 @@ export class AuthController {
       token,
       user.id,
     );
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, user };
   }
 
   // 6. 로그아웃 (개인회원/사업자회원/관리자회원)
@@ -179,11 +179,11 @@ export class AuthController {
   // POST : localhost:3000/auth/reset-password
   @Post('reset-password')
   @Public()
-  @ApiOperation({ summary: '비밀번호 재설정' })
+  @ApiOperation({ summary: '비밀번호 재발급 이메일 전송' })
   @ApiBody({ type: ResetPasswordReqDto })
   @ApiResponse({
     status: 200,
-    description: '비밀번호 재설정 성공',
+    description: '비밀번호 재발급 이메일 전송 성공',
     type: ResetPasswordResDto,
   })
   async resetPassword(

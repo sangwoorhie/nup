@@ -27,6 +27,7 @@ import { Log } from 'src/entities/log.entity';
 import { Request } from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as crypto from 'crypto';
+import { createTransporter } from 'src/config/mailer.config';
 
 @Injectable()
 export class AuthService {
@@ -121,7 +122,6 @@ export class AuthService {
       emergency_phone,
       profile_image,
       corporate_name,
-      industry_code,
       business_type,
       business_conditions,
       business_registration_number,
@@ -167,7 +167,6 @@ export class AuthService {
       // Corporate 엔티티 생성
       const corporateEntity = new Corporate();
       corporateEntity.corporate_name = corporate_name;
-      corporateEntity.industry_code = industry_code;
       corporateEntity.business_type = business_type;
       corporateEntity.business_conditions = business_conditions;
       corporateEntity.business_registration_number =
@@ -326,11 +325,17 @@ export class AuthService {
 
   // 5. 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
   async refresh(token: string, userId: string) {
-    const refreshTokenEntity = await this.refreshTokenRepository.findOneBy({
-      token,
+    const refreshTokenEntity = await this.refreshTokenRepository.findOne({
+      where: { token, user: { id: userId } },
+      relations: ['user'],
     });
     if (!refreshTokenEntity) {
       throw new BadRequestException('Invalid refresh token');
+    }
+
+    const user = await this.usersService.findOneById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
 
     const accessToken = this.generateAccessToken(userId);
@@ -340,7 +345,7 @@ export class AuthService {
     refreshTokenEntity.token = refreshToken;
     await this.refreshTokenRepository.save(refreshTokenEntity);
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, user };
   }
 
   // 6. 로그아웃
@@ -375,24 +380,42 @@ export class AuthService {
       user.password = hash;
       await this.usersService.updateUser(user);
 
-      await this.mailerService.sendMail({
+      const transporter = createTransporter();
+
+      await transporter.sendMail({
+        from: process.env.GMAIL_USER,
         to: email,
-        subject: '비밀번호 재설정 안내',
-        template: '../src/templates/reset-password', // 이메일 템플릿 파일 경로
-        context: {
-          name: user.username,
-          newPassword: newPassword,
-        },
+        subject: '비밀번호 재설정 안내 - Komapper A.I.',
+        html: `<p>안녕하세요, ${user.username}님.</p>
+               <p>요청하신 비밀번호가 재설정되었습니다. 새로운 비밀번호는 아래와 같습니다:</p>
+               <p><strong>${newPassword}</strong></p>
+               <p>로그인 후 비밀번호를 변경하는 것을 권장드립니다.</p>
+               <p>감사합니다.</p>`,
       });
 
+      await queryRunner.commitTransaction();
       return { message: '비밀번호가 이메일로 전송되었습니다.' };
     } catch (e) {
       await queryRunner.rollbackTransaction();
+      console.error('Error in resetPassword:', e);
       error = e;
     } finally {
       await queryRunner.release();
       if (error) throw error;
     }
+  }
+
+  // 이메일과 이름으로 유저 찾기
+  async findOneByEmailandName(
+    email: string,
+    username: string,
+  ): Promise<User | undefined> {
+    return await this.usersService.findOneByEmailandName(email, username);
+  }
+
+  // 비밀번호 재설정
+  async updateUser(user: User): Promise<User> {
+    return this.usersService.updateUser(user);
   }
 
   // 액세스 토큰 생성

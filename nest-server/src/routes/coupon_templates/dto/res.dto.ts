@@ -51,6 +51,10 @@ export class FindCouponTemplateResDto {
   @ApiProperty({ required: true })
   @IsDate()
   readonly expiration_date: Date;
+
+  // @ApiProperty({ required: true })
+  // @IsString()
+  // readonly username: string;
 }
 
 // 쿠폰 상세 조회 응답 DTO

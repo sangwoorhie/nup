@@ -47,3 +47,9 @@ export type CorpUserEmail = {
 export type CorpUserApi = {
   apikey: string;
 };
+
+// 비밀번호 리셋
+export interface ResetPasswordPayloadType {
+  email: string;
+  username: string;
+}

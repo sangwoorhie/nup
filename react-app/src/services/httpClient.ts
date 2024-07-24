@@ -32,12 +32,13 @@ httpClient.interceptors.response.use(
     ) {
       originalRequest._retry = true;
       try {
-        await handleRefreshToken();
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+        const refreshResult = await handleRefreshToken();
+        if (refreshResult && refreshResult.accessToken) {
+          localStorage.setItem('accessToken', refreshResult.accessToken);
+          httpClient.defaults.headers.common['Authorization'] =
+            `Bearer ${refreshResult.accessToken}`;
+          return httpClient(originalRequest);
         }
-        return httpClient(originalRequest);
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
         logout();
@@ -47,5 +48,4 @@ httpClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 export default httpClient;

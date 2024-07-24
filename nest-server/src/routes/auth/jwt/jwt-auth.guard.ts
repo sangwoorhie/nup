@@ -34,14 +34,16 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getHandler(),
       context.getClass(),
     ]);
+
+    const http = context.switchToHttp();
+    const request = http.getRequest<Request>();
+    const { url, headers } = request;
+
     // Allow access without authentication for public routes
     if (isPublic) {
       return true;
     }
 
-    const http = context.switchToHttp();
-    const request = http.getRequest<Request>();
-    const { url, headers } = request;
     const authorization = headers['authorization'];
 
     if (!authorization) {
@@ -101,7 +103,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 //       context.getHandler(),
 //       context.getClass(),
 //     ]);
-    
+
 //     if(isPublic) {
 //       return true;
 //     }

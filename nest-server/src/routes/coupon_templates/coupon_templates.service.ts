@@ -147,6 +147,7 @@ export class CouponTemplatesService {
     const [couponTemplates, total] =
       await this.couponTemplateRepository.findAndCount({
         where: whereCondition,
+        relations: ['user'],
         skip: (page - 1) * size,
         take: size,
       });
@@ -158,6 +159,7 @@ export class CouponTemplatesService {
       point: template.point,
       created_at: template.created_at,
       expiration_date: template.expiration_date,
+      username: template.user ? template.user.username : '',
     }));
 
     return {

@@ -24,12 +24,16 @@ export class PaymentRecordsController {
   // POST : localhost:3000/payment-records/charge
   @Post('charge')
   @ApiOperation({ summary: '현금결제 포인트 충전요청 (사용자)' })
-  @ApiResponse({ status: 200, description: '성공' })
+  @ApiResponse({
+    status: 200,
+    description: '이메일로 입금 계좌정보가 전송되었습니다.',
+  })
   async createCharge(
     @Body() createChargeReqDto: CreateChargeReqDto,
     @User() user: UserAfterAuth,
   ) {
-    return this.paymentRecordsService.createCharge(createChargeReqDto, user.id);
+    await this.paymentRecordsService.createCharge(createChargeReqDto, user.id);
+    return { message: '이메일로 입금 계좌정보가 전송되었습니다.' };
   }
 
   // 2. 포인트 충전 요청 목록 조회 (관리자)

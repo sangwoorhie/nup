@@ -8,6 +8,7 @@ import {
   UserRegisterPayloadType,
   UserLoginPayloadType,
   ApiKeyLoginPayloadType,
+  ResetPasswordPayloadType,
 } from '../types';
 
 // 개인 회원가입
@@ -90,25 +91,43 @@ export const loginWithApiKey = async (
   }
 };
 
-interface RefreshResDto {
-  accessToken: string;
-  refreshToken: string;
-}
+// 비밀번호 재설정
+export const resetPassword = async (payload: ResetPasswordPayloadType) => {
+  try {
+    const { data } = await httpClient.post('/auth/reset-password', payload);
+    return data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message || error.message || 'Reset password failed';
+    throw new Error(`Problem in reset password: ${message}`);
+  }
+};
 
 // 리프레시토큰 재발급
 export const handleRefreshToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    console.error('No refresh token available');
+    logout();
+    return Promise.reject(new Error('No refresh token available'));
+  }
+
   try {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) throw new Error('No refresh token available');
-    const { data }: { data: RefreshResDto } = await httpClient.post(
+    const { data } = await httpClient.post(
       '/auth/refresh',
-      { refreshToken }
+      {},
+      {
+        headers: { Authorization: `Bearer ${refreshToken}` },
+      }
     );
     storeAccessTokenToLocal(data.accessToken);
-    storeRefreshTokenToLocal(data.refreshToken); // Note the naming consistency
+    storeRefreshTokenToLocal(data.refreshToken);
+    console.log('data', data);
+    return data;
   } catch (error: any) {
     console.error('Error refreshing token:', error);
-    logout(); // Ensure the user is logged out if refreshing fails
+    logout();
+    return Promise.reject(error);
   }
 };
 
@@ -116,6 +135,8 @@ export const handleRefreshToken = async () => {
 export const logout = (navigate?: NavigateFunction) => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userType');
+  localStorage.removeItem('userEmail');
   if (navigate) {
     navigate('/login');
   }

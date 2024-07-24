@@ -86,11 +86,11 @@ export class ApiKeysController {
   // 5. API Key 전체목록 조회 (관리자)
   // GET : localhost:3000/api-keys/admin/list?page=1&size=20
   @Get('admin/list')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: 'API Key 전체 목록 조회 (관리자)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: 'API Key 전체 목록을 반환합니다.' })
-  @Usertype(UserType.ADMIN)
   async listApiKeysAdmin(@Query() pageReqDto: PageReqDto) {
     return this.apiKeysService.listApiKeysAdmin(
       pageReqDto.page,
@@ -103,6 +103,7 @@ export class ApiKeysController {
   // GET : localhost:3000/api-keys/admin/search?page=1&size=20&criteria=username&username=Jake
   // GET : localhost:3000/api-keys/admin/search?page=1&size=20&criteria=apikey&apikey=ABC123
   @Get('admin/search')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({
     summary: 'API Key 입력 조회 (Email or 이름 or ApiKey) (관리자)',
   })
@@ -117,7 +118,6 @@ export class ApiKeysController {
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: 'API Key 검색 결과를 반환합니다.' })
-  @Usertype(UserType.ADMIN)
   async searchApiKeysAdmin(
     @Query() { page, size }: PageReqDto,
     @Query('criteria') criteria: 'email' | 'username' | 'apikey',
@@ -139,24 +139,37 @@ export class ApiKeysController {
   }
 
   // 7. API Key 활성/비활성 기능 (관리자)
-  // PATCH : localhost:3000/api-keys/admin/active/:apikey_id
-  @Patch('admin/active/:id')
+  // PATCH : localhost:3000/api-keys/admin/active?api_key=your_api_key
+  @Patch('admin/active')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: 'API Key 활성/비활성 (관리자)' })
   @ApiResponse({
     status: 200,
     description: 'API Key의 활성/비활성 상태가 변경되었습니다.',
   })
-  @Usertype(UserType.ADMIN)
-  async apiKeyStatusAdmin(@Param('id') id: string) {
-    return this.apiKeysService.apiKeyStatusAdmin(id);
+  async apiKeyStatusAdmin(@Query('api_key') apiKey: string) {
+    return this.apiKeysService.apiKeyStatusAdmin(apiKey);
   }
 
-  // 8. API Key 재발급 기능 (관리자)
+  // 8. 회원 IP 주소 수정 (관리자)
+  // PATCH : localhost:3000/api-keys/admin/update-ips?api_key=your_api_key
+  @Patch('admin/update-ips')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '회원 IP 주소 변경 (관리자)' })
+  @ApiResponse({ status: 200, description: 'IP 주소가 변경되었습니다.' })
+  async updateApiKeyIpsAdmin(
+    @Query('api_key') apiKey: string,
+    @Body() updateApiKeyReqDto: UpdateApiKeyReqDto,
+  ) {
+    return this.apiKeysService.updateApiKeyIpsAdmin(apiKey, updateApiKeyReqDto);
+  }
+
+  // 9. API Key 재발급 기능 (관리자)
   // PATCH : localhost:3000/api-keys/admin/regenerate/:id
   @Patch('admin/regenerate/:id')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: 'API Key 재발급 (관리자)' })
   @ApiResponse({ status: 200, description: 'API Key가 재발급되었습니다.' })
-  @Usertype(UserType.ADMIN)
   async regenerateApiKeyAdmin(@Param('id') id: string) {
     return this.apiKeysService.regenerateApiKeyAdmin(id);
   }

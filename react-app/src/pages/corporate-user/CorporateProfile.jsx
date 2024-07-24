@@ -43,14 +43,6 @@ const CorporateProfile = () => {
             />
           </FormItem>
           <FormItem>
-            <Label>업종 코드</Label>
-            <Input
-              type='text'
-              value={CorporateProfile.industry_code}
-              readOnly
-            />
-          </FormItem>
-          <FormItem>
             <Label>업종 명</Label>
             <Input
               type='text'

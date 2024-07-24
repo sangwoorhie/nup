@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import styled from 'styled-components';
-import { updateApiKeyIps } from '../../../services/apiKeysService';
 
 const customStyles = {
   content: {
@@ -19,7 +18,13 @@ const customStyles = {
   },
 };
 
-const UpdateApiKeyModal = ({ isOpen, onRequestClose, apiKey, ips }) => {
+const UpdateApiKeyModal = ({
+  isOpen,
+  onRequestClose,
+  apiKey,
+  ips,
+  updateFunction,
+}) => {
   const [newIps, setNewIps] = useState(ips.join(','));
 
   useEffect(() => {
@@ -28,7 +33,7 @@ const UpdateApiKeyModal = ({ isOpen, onRequestClose, apiKey, ips }) => {
 
   const handleUpdate = async () => {
     try {
-      await updateApiKeyIps(apiKey, newIps.split(','));
+      await updateFunction(apiKey, { ips: newIps.split(',') });
       alert('IP 주소가 성공적으로 업데이트되었습니다');
       onRequestClose();
     } catch (error) {
@@ -62,7 +67,7 @@ const UpdateApiKeyModal = ({ isOpen, onRequestClose, apiKey, ips }) => {
           예: 192.168.1.1,192.168.1.2
         </Description>
         <ButtonContainer>
-          <Button onClick={onRequestClose} secondary>
+          <Button onClick={onRequestClose} secondary='true'>
             취소
           </Button>
           <Button onClick={handleUpdate}>수정</Button>

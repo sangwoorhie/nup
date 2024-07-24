@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
-config();
+import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {
@@ -14,6 +14,8 @@ import { WinstonModule, utilities } from 'nest-winston';
 import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
 import * as basicAuth from 'express-basic-auth';
+dotenv.config();
+config();
 
 async function bootstrap() {
   const PORT = process.env.PORT || 3000;

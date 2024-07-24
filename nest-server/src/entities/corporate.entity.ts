@@ -23,11 +23,6 @@ export class Corporate {
   @Column({ type: 'varchar' })
   corporate_name: string;
 
-  // 업종 코드
-  @ApiProperty({ description: '업종 코드' })
-  @Column({ type: 'int' })
-  industry_code: number;
-
   // 업종 명
   @ApiProperty({ description: '업종 명' })
   @Column({ type: 'varchar' })

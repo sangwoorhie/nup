@@ -165,6 +165,7 @@ export class ApiKeysService {
       relations: ['user', 'user.corporate'],
       skip: (page - 1) * size,
       take: size,
+      order: { created_at: 'DESC' },
     });
 
     const items = await Promise.all(
@@ -175,6 +176,7 @@ export class ApiKeysService {
             ips: apiKey.ips.split(','),
             today_usage: '0',
             total_usage: '0',
+            is_active: apiKey.is_active,
             created_at: apiKey.created_at,
             username: '',
             email: '',
@@ -212,6 +214,7 @@ export class ApiKeysService {
           ips: apiKey.ips.split(','),
           today_usage: todayUsage.toString(),
           total_usage: totalUsage.toString(),
+          is_active: apiKey.is_active,
           created_at: apiKey.created_at,
           username: usernameOrCorporateName,
           email: apiKey.user ? apiKey.user.email : '',
@@ -290,6 +293,7 @@ export class ApiKeysService {
           total_usage: totalUsage.toString(),
           created_at: apiKey.created_at,
           username: usernameOrCorporateName,
+          is_active: apiKey.is_active,
           email: apiKey.user ? apiKey.user.email : '',
         };
       }),
@@ -304,20 +308,51 @@ export class ApiKeysService {
   }
 
   // 7. API Key 활성/비활성 기능 (관리자)
-  async apiKeyStatusAdmin(id: string) {
-    const apiKey = await this.apiKeysRepository.findOne({ where: { id } });
-    if (!apiKey) {
+  async apiKeyStatusAdmin(apiKey: string) {
+    const apiKeyEntity = await this.apiKeysRepository.findOne({
+      where: { api_key: apiKey },
+    });
+
+    if (!apiKeyEntity) {
       throw new NotFoundException('API Key를 찾을 수 없습니다.');
     }
-    apiKey.is_active = !apiKey.is_active;
-    await this.apiKeysRepository.save(apiKey);
-    const message = apiKey.is_active
+
+    apiKeyEntity.is_active = !apiKeyEntity.is_active;
+    await this.apiKeysRepository.save(apiKeyEntity);
+    const message = apiKeyEntity.is_active
       ? 'API-Key가 활성화되었습니다.'
       : 'API-Key가 정지되었습니다.';
-    return { api_key: apiKey.api_key, is_active: apiKey.is_active, message };
+    return {
+      api_key: apiKeyEntity.api_key,
+      is_active: apiKeyEntity.is_active,
+      message,
+    };
   }
 
-  // 8. API Key 재발급 기능 (관리자)
+  // 8. 회원 IP 주소 수정 (관리자)
+  async updateApiKeyIpsAdmin(
+    apiKey: string,
+    updateApiKeyReqDto: UpdateApiKeyReqDto,
+  ) {
+    const apiKeyEntity = await this.apiKeysRepository.findOne({
+      where: { api_key: apiKey },
+      relations: ['user'],
+    });
+
+    if (!apiKeyEntity) {
+      throw new NotFoundException('API Key를 찾을 수 없습니다.');
+    }
+
+    const { ips } = updateApiKeyReqDto;
+    const ipString = ips.join(',');
+    apiKeyEntity.ips = ipString;
+
+    await this.apiKeysRepository.save(apiKeyEntity);
+
+    return { api_key: apiKeyEntity.api_key, ips: apiKeyEntity.ips.split(',') };
+  }
+
+  // 9. API Key 재발급 기능 (관리자)
   async regenerateApiKeyAdmin(id: string) {
     const apiKey = await this.apiKeysRepository.findOne({ where: { id } });
     if (!apiKey) {

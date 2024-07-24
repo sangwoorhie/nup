@@ -27,7 +27,6 @@ const CorporateSignup = () => {
   const [phone, setPhone] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
   const [corporateName, setCorporateName] = useState('');
-  const [industryCode, setIndustryCode] = useState('');
   const [businessType, setBusinessType] = useState('');
   const [businessConditions, setBusinessConditions] = useState('');
   const [businessRegistrationNumber, setBusinessRegistrationNumber] =
@@ -73,7 +72,6 @@ const CorporateSignup = () => {
     } else if (currentStep === 3) {
       if (
         !corporateName ||
-        !industryCode ||
         !businessType ||
         !businessConditions ||
         !businessRegistrationNumber ||
@@ -120,7 +118,6 @@ const CorporateSignup = () => {
       department: '',
       position: '',
       corporate_name: corporateName,
-      industry_code: Number(industryCode),
       business_type: businessType,
       business_conditions: businessConditions,
       business_registration_number: Number(businessRegistrationNumber),
@@ -462,24 +459,6 @@ const CorporateSignup = () => {
                   <Description>
                     *사업자등록증에 기재되어 있는 기업 명(상호 명)을 입력해
                     주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='industryCode'>업종 코드</Label>
-                  <InputWrapper>
-                    <Input
-                      id='industryCode'
-                      type='text'
-                      value={industryCode}
-                      onChange={(e) => setIndustryCode(e.target.value)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>
-                    *사업자등록증에 기재되어 있는 업종 코드를 입력해 주세요.
                   </Description>
                 </Cell>
               </Row>

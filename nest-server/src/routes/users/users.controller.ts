@@ -22,8 +22,10 @@ import {
 import {
   BanUserReqDto,
   ChangePasswordReqDto,
+  ChargeAmountReqDto,
   CheckPasswordReqDto,
   DeleteUserReqDto,
+  FindAdminUserReqDto,
   FindCorpUserReqDto,
   FindIndiUserReqDto,
   UpdateCorpUserReqDto,
@@ -40,7 +42,12 @@ import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { Usertype } from 'src/decorators/usertype.decorators';
 import { UserType } from 'src/enums/enums';
 import { PageResDto } from 'src/common/dto/res.dto';
-import { FindCorpUserResDto, FindIndiUserResDto } from './dto/res.dto';
+import {
+  FindAdminUserResDto,
+  FindCorpUserResDto,
+  FindIndiUserResDto,
+} from './dto/res.dto';
+import { sortAndDeduplicateDiagnostics } from 'typescript';
 
 @ApiTags('User')
 @ApiExtraModels(
@@ -138,14 +145,14 @@ export class UsersController {
     return await this.usersService.deleteUser(user.id);
   }
 
-  // 7. 개인회원 전체조회 (관리자)
+  // 7. 개인회원 전체목록 조회 (관리자)
   // GET localhost:3000/users/admin/indi?page=1&size=20
   @Get('admin/indi')
-  @ApiOperation({ summary: '개인회원 전체조회 (관리자)' })
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '개인회원 전체목록 조회 (관리자)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiGetItemsResponse(FindIndiUserResDto)
-  @Usertype(UserType.ADMIN)
   async findAll(
     @Query() { page, size }: PageReqDto,
   ): Promise<PageResDto<FindIndiUserResDto>> {
@@ -156,6 +163,7 @@ export class UsersController {
   // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=email&email=a26484638@komapper.com
   // GET : localhost:3000/users/admin/indi/find?page=1&size=20&criteria=username&username=Jake
   @Get('admin/indi/find')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({
     summary:
       '개인회원 단일조회 (email 또는 회원이름으로 필터 후 검색조회) (관리자)',
@@ -171,7 +179,6 @@ export class UsersController {
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiGetResponse(FindIndiUserResDto)
-  @Usertype(UserType.ADMIN)
   async findIndiUser(
     @Query() { page, size }: PageReqDto,
     @Query('criteria') criteria: 'email' | 'username',
@@ -186,14 +193,14 @@ export class UsersController {
     return await this.usersService.findIndiUser(findIndiUserReqDto, page, size);
   }
 
-  // 9. 사업자회원 전체조회 (관리자)
+  // 9. 사업자회원 전체목록 조회 (관리자)
   //  GET : localhost:3000/users/admin/corp?page=1&size=20
   @Get('admin/corp')
-  @ApiOperation({ summary: '사업자회원 전체조회 (관리자)' })
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '사업자회원 전체목록 조회 (관리자)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiGetItemsResponse(FindCorpUserResDto)
-  @Usertype(UserType.ADMIN)
   async findAllCorporateUsers(
     @Query() { page, size }: PageReqDto,
   ): Promise<PageResDto<FindCorpUserResDto>> {
@@ -204,6 +211,7 @@ export class UsersController {
   // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=corporate_name&corporate_name=string
   // GET : localhost:3000/users/admin/corp/find?page=1&size=20&criteria=business_registration_number&business_registration_number=1234
   @Get('admin/corp/find')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({
     summary: '사업자회원 단일조회 (기업명 or 사업자등록번호 필터조회) (관리자)',
   })
@@ -219,7 +227,6 @@ export class UsersController {
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiGetResponse(FindCorpUserResDto)
-  @Usertype(UserType.ADMIN)
   async findCorporateUser(
     @Query() { page, size }: PageReqDto,
     @Query('criteria')
@@ -241,14 +248,66 @@ export class UsersController {
     );
   }
 
-  // 11. 회원 계정정지 (관리자)
+  // 11. 관리자 회원 전체목록 조회 (관리자)
+  // GET : localhost:3000/users/admin?page=1&size=20
+  @Get('admin')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '관리자 전체목록 조회 (관리자)' })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiGetResponse(FindAdminUserResDto)
+  async findAllAdmins(
+    @Query() { page, size }: PageReqDto,
+  ): Promise<PageResDto<FindAdminUserResDto>> {
+    return await this.usersService.findAllAdmins(page, size);
+  }
+
+  // 12. 관리자 회원 단일조회 (관리자)
+  // GET : localhost:3000/users/admin/find?criteria=email&email=admin@example.com
+  // GET : localhost:3000/users/admin/find?criteria=username&username=admin
+  @Get('admin/find')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({
+    summary:
+      '관리자 단일조회 (email 또는 회원이름으로 필터 후 검색조회) (관리자)',
+  })
+  @ApiQuery({
+    name: 'criteria',
+    enum: ['email', 'username'],
+    required: true,
+    description: 'email로 조회할것인지 username으로 조회할것인지 선택',
+  })
+  @ApiQuery({ name: 'email', required: false })
+  @ApiQuery({ name: 'username', required: false })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiGetResponse(FindAdminUserResDto)
+  async findAdminUser(
+    @Query() { page, size }: PageReqDto,
+    @Query('criteria') criteria: 'email' | 'username',
+    @Query('email') email?: string,
+    @Query('username') username?: string,
+  ) {
+    const findAdminUserReqDto = new FindAdminUserReqDto();
+    findAdminUserReqDto.criteria = criteria;
+    findAdminUserReqDto.email = email;
+    findAdminUserReqDto.username = username;
+
+    return await this.usersService.findAdminUser(
+      findAdminUserReqDto,
+      page,
+      size,
+    );
+  }
+
+  // 13. 회원 계정정지 (관리자)
   // PATCH localhost:3000/users/admin/ban?userId=12345
   @Patch('admin/ban')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '회원 계정정지 (관리자)' })
   @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiBody({ type: BanUserReqDto })
   @ApiResponse({ status: 200, description: '계정이 정지되었습니다.' })
-  @Usertype(UserType.ADMIN)
   async banUser(
     @Query('userId') userId: string,
     @Body() banUserReqDto: BanUserReqDto,
@@ -256,53 +315,53 @@ export class UsersController {
     return await this.usersService.banUser(userId, banUserReqDto);
   }
 
-  // 12. 회원 계정정치 취소 (관리자)
+  // 14. 회원 계정정치 취소 (관리자)
   // PATCH localhost:3000/users/admin/unban?userId=12345
   @Patch('admin/unban')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '회원 계정정지 취소 (관리자)' })
   @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiResponse({ status: 200, description: '계정 정지가 해제되었습니다.' })
-  @Usertype(UserType.ADMIN)
   async unbanUser(@Query('userId') userId: string) {
     return await this.usersService.unbanUser(userId);
   }
 
-  // 13. 관리자회원으로 변경 (관리자)
+  // 15. 관리자회원으로 변경 (관리자)
   // PATCH : localhost:3000/users/admin/promote?userId=12345
   @Patch('admin/promote')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '관리자회원으로 변경 (관리자)' })
   @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiResponse({
     status: 200,
     description: '회원이 관리자 계정으로 변경되었습니다.',
   })
-  @Usertype(UserType.ADMIN)
   async promoteUser(@Query('userId') userId: string) {
     return await this.usersService.promoteUser(userId);
   }
 
-  // 14. 미확인 사업자등록증 확인처리 (관리자)
+  // 16. 미확인 사업자등록증 확인처리 (관리자)
   // PATCH : localhost:3000/users/admin/corp/verify?corporateId=12345
   @Patch('admin/corp/verify')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '미확인 사업자등록증 확인처리 (관리자)' })
   @ApiQuery({ name: 'corporateId', required: true, description: '기업 ID' })
   @ApiResponse({
     status: 200,
     description: '사업자등록증이 확인처리 되었습니다.',
   })
-  @Usertype(UserType.ADMIN)
   async verifyBusinessLicense(@Query('corporateId') corporateId: string) {
     return await this.usersService.verifyBusinessLicense(corporateId);
   }
 
-  // 15. 포인트 충전/차감 (관리자)
+  // 17. 포인트 충전/차감 (관리자)
   // PATCH : localhost:3000/users/admin/points?userId=12345
   @Patch('admin/points')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '포인트 충전/차감 (관리자)' })
   @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiBody({ type: UpdatePointsReqDto })
   @ApiResponse({ status: 200, description: '포인트가 업데이트되었습니다.' })
-  @Usertype(UserType.ADMIN)
   async updatePoints(
     @Query('userId') userId: string,
     @Body() updatePointsReqDto: UpdatePointsReqDto,
@@ -310,7 +369,7 @@ export class UsersController {
     return await this.usersService.updatePoints(userId, updatePointsReqDto);
   }
 
-  // 16. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
+  // 18. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
   // POST : localhost:3000/users/me/doublecheckpassword
   @Post('me/doublecheckpassword')
   @ApiOperation({ summary: '정보 수정, 삭제 시 비밀번호로 본인 일치 조회' })

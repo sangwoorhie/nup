@@ -13,6 +13,7 @@ import {
   BanUserReqDto,
   ChangePasswordReqDto,
   DeleteUserReqDto,
+  FindAdminUserReqDto,
   FindCorpUserReqDto,
   FindIndiUserReqDto,
   UpdateCorpUserReqDto,
@@ -21,8 +22,13 @@ import {
 } from './dto/req.dto';
 import * as bcrypt from 'bcrypt';
 import { PageResDto } from 'src/common/dto/res.dto';
-import { FindCorpUserResDto, FindIndiUserResDto } from './dto/res.dto';
-import { s3 } from '../../config/aws.config';
+import {
+  FindAdminUserResDto,
+  FindCorpUserResDto,
+  FindIndiUserResDto,
+} from './dto/res.dto';
+import { createTransporter } from 'src/config/mailer.config';
+import * as moment from 'moment';
 
 @Injectable()
 export class UsersService {
@@ -82,7 +88,6 @@ export class UsersService {
     return {
       id: user.id,
       corporate_name: corporate.corporate_name,
-      industry_code: corporate.industry_code,
       business_type: corporate.business_type,
       business_conditions: corporate.business_conditions,
       business_registration_number: corporate.business_registration_number,
@@ -135,7 +140,6 @@ export class UsersService {
 
     const {
       corporate_name,
-      industry_code,
       business_type,
       business_conditions,
       business_registration_number,
@@ -159,7 +163,6 @@ export class UsersService {
       // 기업 정보 업데이트
       if (
         corporate_name ||
-        industry_code ||
         business_type ||
         business_conditions ||
         business_registration_number ||
@@ -170,7 +173,6 @@ export class UsersService {
           { user: { id: userId } },
           {
             corporate_name: corporate_name,
-            industry_code: industry_code,
             business_type: business_type,
             business_conditions: business_conditions,
             business_registration_number: business_registration_number,
@@ -190,7 +192,6 @@ export class UsersService {
 
         Object.assign(updatedCorporate, {
           corporate_name,
-          industry_code,
           business_type,
           business_conditions,
           business_registration_number,
@@ -282,6 +283,7 @@ export class UsersService {
         'phone',
         'emergency_phone',
         'point',
+        'banned',
         'created_at',
       ],
     });
@@ -297,6 +299,7 @@ export class UsersService {
         phone: user.phone,
         emergency_phone: user.emergency_phone,
         point: user.point,
+        banned: user.banned,
         created_at: user.created_at,
       })),
     };
@@ -334,6 +337,7 @@ export class UsersService {
         'phone',
         'emergency_phone',
         'point',
+        'banned',
         'created_at',
       ],
     });
@@ -353,6 +357,7 @@ export class UsersService {
         phone: user.phone,
         emergency_phone: user.emergency_phone,
         point: user.point,
+        banned: user.banned,
         created_at: user.created_at,
       })),
     };
@@ -372,7 +377,6 @@ export class UsersService {
     const items = corporates.map((corporate) => ({
       id: corporate.id,
       corporate_name: corporate.corporate_name,
-      industry_code: corporate.industry_code,
       business_type: corporate.business_type,
       business_conditions: corporate.business_conditions,
       business_registration_number: corporate.business_registration_number,
@@ -385,6 +389,7 @@ export class UsersService {
       email: corporate.user.email,
       phone: corporate.user.phone,
       emergency_phone: corporate.user.emergency_phone,
+      banned: corporate.user.banned,
       created_at: corporate.user.created_at,
     }));
 
@@ -429,7 +434,6 @@ export class UsersService {
       select: [
         'id',
         'corporate_name',
-        'industry_code',
         'business_type',
         'business_conditions',
         'business_registration_number',
@@ -451,7 +455,6 @@ export class UsersService {
       items: corporates.map((corporate) => ({
         id: corporate.id,
         corporate_name: corporate.corporate_name,
-        industry_code: corporate.industry_code,
         business_type: corporate.business_type,
         business_conditions: corporate.business_conditions,
         business_registration_number: corporate.business_registration_number,
@@ -464,12 +467,104 @@ export class UsersService {
         email: corporate.user.email,
         phone: corporate.user.phone,
         emergency_phone: corporate.user.emergency_phone,
+        banned: corporate.user.banned,
         created_at: corporate.user.created_at,
       })),
     };
   }
 
-  // 11. 회원 계정정지 (관리자)
+  // 11. 관리자 회원 전체조회 (관리자)
+  async findAllAdmins(
+    page: number,
+    size: number,
+  ): Promise<PageResDto<FindAdminUserResDto>> {
+    const [users, total] = await this.userRepository.findAndCount({
+      skip: (page - 1) * size,
+      take: size,
+      where: { user_type: UserType.ADMIN },
+      select: [
+        'id',
+        'email',
+        'username',
+        'phone',
+        'emergency_phone',
+        'created_at',
+      ],
+    });
+
+    const items = users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      phone: user.phone,
+      emergency_phone: user.emergency_phone,
+      created_at: user.created_at,
+    }));
+
+    return {
+      page,
+      size,
+      total,
+      items: items,
+    };
+  }
+
+  // 12. 관리자 회원 단일조회 (관리자)
+  async findAdminUser(
+    findAdminUserReqDto: FindAdminUserReqDto,
+    page: number,
+    size: number,
+  ): Promise<PageResDto<FindAdminUserResDto>> {
+    const { criteria, email, username } = findAdminUserReqDto;
+    let whereCondition: any = {};
+
+    if (criteria === 'email' && email) {
+      whereCondition.email = email;
+    } else if (criteria === 'username' && username) {
+      whereCondition.username = username;
+    } else {
+      throw new BadRequestException('유효한 검색 기준과 값을 제공해야 합니다.');
+    }
+
+    const [users, total] = await this.userRepository.findAndCount({
+      where: {
+        ...whereCondition,
+        user_type: UserType.ADMIN,
+      },
+      skip: (page - 1) * size,
+      take: size,
+      select: [
+        'id',
+        'email',
+        'username',
+        'phone',
+        'emergency_phone',
+        'created_at',
+      ],
+    });
+
+    if (users.length === 0) {
+      throw new NotFoundException('해당 조건에 맞는 회원을 찾을 수 없습니다.');
+    }
+
+    const items = users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      phone: user.phone,
+      emergency_phone: user.emergency_phone,
+      created_at: user.created_at,
+    }));
+
+    return {
+      page,
+      size,
+      total,
+      items: items,
+    };
+  }
+
+  // 13. 회원 계정정지 (관리자)
   async banUser(
     userId: string,
     banUserReqDto: BanUserReqDto,
@@ -479,19 +574,17 @@ export class UsersService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
 
-    if (user.banned) {
-      throw new BadRequestException('이미 계정이 정지된 회원입니다.');
-    }
-
-    user.banned = true;
-    user.banned_reason = reason; // 계정정지 사유 저장
+    user.banned = !user.banned;
+    user.banned_reason = user.banned ? reason : null; // 계정정지 사유 저장 또는 제거
     const username = user.username;
     await this.userRepository.save(user);
 
-    return { message: `username: ${username} 계정이 정지되었습니다.` };
+    return {
+      message: `username: ${username} 계정이 ${user.banned ? '정지' : '정지 해제'}되었습니다.`,
+    };
   }
 
-  // 12. 회원 계정정지 취소 (관리자)
+  // 14. 회원 계정정지 취소 (관리자)
   async unbanUser(userId: string): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
@@ -508,7 +601,7 @@ export class UsersService {
     return { message: `username: ${username} 계정 정지가 해제되었습니다.` };
   }
 
-  // 13. 관리자회원으로 변경 (관리자)
+  // 15. 관리자회원으로 변경 (관리자)
   async promoteUser(userId: string): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
@@ -526,7 +619,7 @@ export class UsersService {
     };
   }
 
-  // 14. 미확인 사업자등록증 확인처리 (관리자)
+  // 16. 미확인 사업자등록증 확인처리 (관리자)
   async verifyBusinessLicense(
     corporateId: string,
   ): Promise<{ message: string }> {
@@ -548,7 +641,7 @@ export class UsersService {
     };
   }
 
-  // 15. 포인트 충전/차감 (관리자)
+  // 17. 포인트 충전/차감 (관리자)
   async updatePoints(
     userId: string,
     updatePointsReqDto: UpdatePointsReqDto,
@@ -582,7 +675,7 @@ export class UsersService {
     return { message };
   }
 
-  // 16. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
+  // 18. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
   async doubleCheckPassword(
     userId: string,
     password: string,

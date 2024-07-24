@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import MainHeader from '../../components/etc/ui/MainHeader';
-import SubHeaders from '../../components/etc/ui/SubHeaders';
-import Footer from '../../components/etc/ui/Footer';
+import MainHeader from '../../../components/etc/ui/MainHeader';
+import SubHeaders from '../../../components/etc/ui/SubHeaders';
+import Footer from '../../../components/etc/ui/Footer';
 import {
-  getCorporateUsers,
+  getUsers,
   promoteUser,
   banUser,
   unbanUser,
-  verifyBusinessLicense,
-} from '../../services/adminService';
+} from '../../../services/adminService';
 import { Paginator } from 'primereact/paginator';
-import refreshImage from '../../assets/img/refresh_icon.png';
+import refreshImage from '../../../assets/img/refresh_icon.png';
+import { FaCheck } from 'react-icons/fa'; // Import check icon
+import isPropValid from '@emotion/is-prop-valid';
 
-const CorporateUserManagement = () => {
+const IndividualUserManagement = () => {
   const [users, setUsers] = useState([]);
-  const [searchCriteria, setSearchCriteria] = useState('corporate_name');
+  const [searchCriteria, setSearchCriteria] = useState('email');
   const [searchValue, setSearchValue] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -23,11 +24,14 @@ const CorporateUserManagement = () => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
 
-  const fetchUsers = useCallback(async (criteria = '', value = '') => {
-    const { data } = await getCorporateUsers(page, pageSize, criteria, value);
-    setUsers(data.items);
-    setTotalRecords(data.total);
-  }, [page, pageSize]);
+  const fetchUsers = useCallback(
+    async (criteria = '', value = '') => {
+      const { data } = await getUsers(page, pageSize, criteria, value);
+      setUsers(data.items);
+      setTotalRecords(data.total);
+    },
+    [page, pageSize]
+  );
 
   useEffect(() => {
     fetchUsers();
@@ -41,6 +45,12 @@ const CorporateUserManagement = () => {
     }
   };
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   const handlePromote = async () => {
     if (selectedUserIds.length === 0) {
       alert('선택된 회원이 없습니다.');
@@ -49,7 +59,11 @@ const CorporateUserManagement = () => {
 
     if (window.confirm('관리자 회원으로 변경하시겠습니까?')) {
       for (const userId of selectedUserIds) {
-        await promoteUser(userId);
+        try {
+          await promoteUser(userId);
+        } catch (error) {
+          console.error('Error promoting user:', error);
+        }
       }
       fetchUsers(searchCriteria, searchValue);
       alert('선택한 회원이 관리자 회원으로 변경되었습니다.');
@@ -65,33 +79,23 @@ const CorporateUserManagement = () => {
     const selectedUsers = users.filter((user) =>
       selectedUserIds.includes(user.id)
     );
-    const allBanned = selectedUsers.every((user) => user.banned);
 
-    const action = allBanned ? '계정정지 취소' : '계정정지';
-    if (window.confirm(`${action} 하시겠습니까?`)) {
+    if (window.confirm('계정 정지/해제를 하시겠습니까?')) {
       for (const user of selectedUsers) {
-        if (user.banned) {
-          await unbanUser(user.id);
-        } else {
-          await banUser(user.id, { reason: '관리자에 의해 정지됨' });
+        try {
+          if (user.banned) {
+            await unbanUser(user.id);
+          } else {
+            await banUser(user.id, { reason: '관리자에 의해 정지됨' });
+          }
+        } catch (error) {
+          alert(
+            `사용자 ${user.username}의 상태를 변경할 수 없습니다. ${error.response?.data?.message || error.message}`
+          );
         }
       }
       fetchUsers(searchCriteria, searchValue);
-    }
-  };
-
-  const handleVerify = async () => {
-    if (selectedUserIds.length === 0) {
-      alert('선택된 회원이 없습니다.');
-      return;
-    }
-
-    if (window.confirm('사업자 등록증을 확인하시겠습니까?')) {
-      for (const userId of selectedUserIds) {
-        await verifyBusinessLicense(userId);
-      }
-      fetchUsers(searchCriteria, searchValue);
-      alert('선택한 회원의 사업자 등록증이 확인되었습니다.');
+      alert('선택한 회원의 계정 상태가 변경되었습니다.');
     }
   };
 
@@ -101,6 +105,10 @@ const CorporateUserManagement = () => {
         ? prevSelected.filter((id) => id !== userId)
         : [...prevSelected, userId]
     );
+  };
+
+  const handleRefresh = () => {
+    window.location.reload(); // Reload the page
   };
 
   return (
@@ -114,22 +122,22 @@ const CorporateUserManagement = () => {
               value={searchCriteria}
               onChange={(e) => setSearchCriteria(e.target.value)}
             >
-              <option value='corporate_name'>기업명</option>
-              <option value='business_registration_number'>사업자 등록번호</option>
+              <option value='email'>E-mail</option>
+              <option value='username'>이름</option>
             </select>
             <input
               type='text'
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder='검색어를 입력해 주세요'
             />
             <button onClick={handleSearch}>검색</button>
           </SearchSection>
           <ButtonContainer>
             <button onClick={handlePromote}>관리자 회원으로 변경</button>
-            <button onClick={handleBan}>계정 정지</button>
-            <button onClick={handleVerify}>사업자 등록증 확인</button>
-            <RefreshButton onClick={() => fetchUsers(searchCriteria, searchValue)}>
+            <button onClick={handleBan}>계정 정지/해제</button>
+            <RefreshButton onClick={handleRefresh}>
               <img src={refreshImage} alt='새로고침' />
             </RefreshButton>
           </ButtonContainer>
@@ -138,16 +146,15 @@ const CorporateUserManagement = () => {
           <thead>
             <tr>
               <th></th>
-              <th>기업명</th>
-              <th>업종명</th>
-              <th>업태명</th>
-              <th>사업자 등록번호</th>
-              <th>사업자 등록증</th>
-              <th>사업자 등록증 확인여부</th>
-              <th>주소</th>
-              <th>회원 정보</th>
+              <th>E-mail</th>
+              <th>이름</th>
+              <th>휴대전화</th>
+              <th>비상연락처</th>
               <th>포인트 충전 내역</th>
               <th>포인트 사용 내역</th>
+              <th>잔여 포인트</th>
+              <th>계정 정지여부</th>
+              <th>회원 가입일자</th>
             </tr>
           </thead>
           <tbody>
@@ -160,16 +167,21 @@ const CorporateUserManagement = () => {
                     onChange={() => handleCheckboxChange(user.id)}
                   />
                 </td>
-                <td>{user.corporate_name}</td>
-                <td>{user.business_type}</td>
-                <td>{user.business_conditions}</td>
-                <td>{user.business_registration_number}</td>
-                <td><a href={user.business_license} target='_blank'>PDF</a></td>
-                <td>{user.business_license_verified ? '확인' : '미확인'}</td>
-                <td>{user.address}</td>
-                <td><button>회원 정보</button></td>
-                <td><button>충전 내역</button></td>
-                <td><button>사용 내역</button></td>
+                <TdEmail banned={user.banned ? 'true' : undefined}>
+                  {user.email}
+                </TdEmail>
+                <td>{user.username}</td>
+                <td>{user.phone}</td>
+                <td>{user.emergency_phone}</td>
+                <td>
+                  <button>충전 내역</button>
+                </td>
+                <td>
+                  <button>사용 내역</button>
+                </td>
+                <td>{user.point}</td>
+                <td>{user.banned ? <FaCheck /> : ''}</td>
+                <td>{new Date(user.created_at).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>
@@ -194,7 +206,7 @@ const CorporateUserManagement = () => {
   );
 };
 
-export default CorporateUserManagement;
+export default IndividualUserManagement;
 
 const Container = styled.div`
   display: flex;
@@ -217,7 +229,7 @@ const SearchSection = styled.div`
   select {
     margin-right: 10px;
     padding: 5px;
-    width: 150px;
+    width: 100px;
   }
 
   input {
@@ -237,7 +249,7 @@ const SearchSection = styled.div`
 `;
 
 const Table = styled.table`
-  width: 100%;
+  width: 80%;
   margin: 0 auto;
   margin-top: 10px;
   border-collapse: collapse;
@@ -254,6 +266,12 @@ const Table = styled.table`
     background-color: #007bff;
     color: white;
   }
+`;
+
+const TdEmail = styled.td.withConfig({
+  shouldForwardProp: (prop) => isPropValid(prop) && prop !== 'banned',
+})`
+  color: ${({ banned }) => (banned === 'true' ? 'red' : 'black')};
 `;
 
 const ButtonContainer = styled.div`
@@ -276,6 +294,8 @@ const ActionBar = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  width: 80%;
+  margin: 0 auto;
 `;
 
 const RefreshButton = styled.button`

@@ -127,11 +127,6 @@ export class CorpSignUpReqDto {
   @IsNotEmpty()
   readonly corporate_name: string;
 
-  @ApiProperty({ required: true, description: '업종 코드' })
-  @IsNumber()
-  @IsNotEmpty()
-  readonly industry_code: number;
-
   @ApiProperty({ required: true, description: '업종 명' })
   @IsString()
   @IsNotEmpty()

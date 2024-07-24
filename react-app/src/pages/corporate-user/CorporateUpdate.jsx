@@ -76,13 +76,6 @@ const CorporateUpdate = () => {
             value={corporateData.corporate_name || ''}
             onChange={handleInputChange}
           />
-          <Label>업종 코드</Label>
-          <Input
-            type='text'
-            name='industry_code'
-            value={corporateData.industry_code || ''}
-            onChange={handleInputChange}
-          />
           <Label>업종 명</Label>
           <Input
             type='text'

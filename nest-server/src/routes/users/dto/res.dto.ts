@@ -49,10 +49,6 @@ export class FindCorpUserResDto {
   readonly corporate_name: string;
 
   @ApiProperty({ required: true })
-  @IsNumber()
-  readonly industry_code: number;
-
-  @ApiProperty({ required: true })
   @IsString()
   readonly business_type: string;
 
@@ -91,6 +87,33 @@ export class FindCorpUserResDto {
   @ApiProperty({ required: true })
   @IsString()
   readonly email: string;
+
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly phone: string;
+
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly emergency_phone: string;
+
+  @ApiProperty({ required: true })
+  @IsDate()
+  readonly created_at: Date;
+}
+
+// 관리자회원 단일조회 응답 DTO
+export class FindAdminUserResDto {
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly id: string;
+
+  @ApiProperty({ required: true })
+  @IsEmail()
+  readonly email: string;
+
+  @ApiProperty({ required: true })
+  @IsString()
+  readonly username: string;
 
   @ApiProperty({ required: true })
   @IsString()

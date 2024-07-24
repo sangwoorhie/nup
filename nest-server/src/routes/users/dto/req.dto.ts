@@ -115,11 +115,6 @@ export class UpdateCorpUserReqDto {
   @IsNotEmpty()
   readonly corporate_name: string;
 
-  @ApiProperty({ required: false, description: '업종 코드' })
-  @IsNumber()
-  @IsNotEmpty()
-  readonly industry_code: number;
-
   @ApiProperty({ required: false, description: '업종 명' })
   @IsString()
   @IsNotEmpty()
@@ -210,4 +205,33 @@ export class CheckPasswordReqDto {
   @IsString()
   @IsNotEmpty()
   readonly password: string;
+}
+
+// 유저 현금충전 요청 금액 DTO
+export class ChargeAmountReqDto {
+  @ApiProperty({ required: true, description: '유저 현금충전 요청 금액' })
+  @IsNumber()
+  @IsNotEmpty()
+  readonly amount: number;
+}
+
+// 관리자회원 단일조회 요청 DTO
+export class FindAdminUserReqDto {
+  @ApiProperty({
+    description: '조회 기준 (`이메일` 또는 `유저이름`)',
+    enum: ['email', 'username'],
+  })
+  @IsEnum(['email', 'username'])
+  @IsNotEmpty()
+  criteria: 'email' | 'username';
+
+  @ApiProperty({ required: false, description: '유저 이메일' })
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @ApiProperty({ required: false, description: '유저 이름' })
+  @IsString()
+  @IsOptional()
+  username?: string;
 }

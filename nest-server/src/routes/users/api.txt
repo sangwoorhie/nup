@@ -56,7 +56,6 @@ json
   "department": "Sales",
   "position": "Manager",
   "corporate_name": "Example Corp",
-  "industry_code": 1234,
   "business_type": "Retail",
   "business_conditions": "Good",
   "business_registration_number": 567890,
@@ -111,7 +110,6 @@ json
   "department": "Marketing",
   "position": "Executive",
   "corporate_name": "New Corp Name",
-  "industry_code": 5678,
   "business_type": "Wholesale",
   "business_conditions": "Excellent",
   "business_registration_number": 987654,
@@ -131,7 +129,6 @@ json
   "department": "Marketing",
   "position": "Executive",
   "corporate_name": "New Corp Name",
-  "industry_code": 5678,
   "business_type": "Wholesale",
   "business_conditions": "Excellent",
   "business_registration_number": 987654,
@@ -275,7 +272,6 @@ json
     {
       "id": "corporate_id",
       "corporate_name": "Example Corp",
-      "industry_code": 1234,
       "business_type": "Retail",
       "business_conditions": "Good",
       "business_registration_number": 567890,
@@ -322,7 +318,6 @@ json
     {
       "id": "23cce0a1-e19b-449d-b537-daedacdc73d9",
       "corporate_name": "string",
-      "industry_code": 1234,
       "business_type": "string",
       "business_conditions": "string",
       "business_registration_number": 1234,
@@ -340,7 +335,6 @@ json
     {
       "id": "5d735467-837f-4069-8326-916feccc4dfb",
       "corporate_name": "string",
-      "industry_code": 1234,
       "business_type": "string",
       "business_conditions": "string",
       "business_registration_number": 1234,
