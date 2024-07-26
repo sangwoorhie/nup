@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { Calendar } from 'primereact/calendar';
 import { FaCalendarAlt } from 'react-icons/fa';
 import MainHeader from '../../../components/etc/ui/MainHeader';
@@ -15,6 +16,8 @@ const CouponIssuing = () => {
   const [quantity, setQuantity] = useState('');
   const [point, setPoint] = useState('');
   const [expirationDate, setExpirationDate] = useState(null);
+
+  const navigate = useNavigate(); // Initialize the navigate function
 
   const handleSubmit = async () => {
     const today = new Date().setHours(0, 0, 0, 0);
@@ -35,8 +38,11 @@ const CouponIssuing = () => {
           expiration_date: expirationDate,
         });
         alert('쿠폰이 발행되었습니다.');
+        navigate('/coupon-view'); // Navigate to CouponTemplateList page
       } catch (error) {
-        alert('쿠폰 발행에 실패했습니다.');
+        const backendMessage =
+          error.response?.data?.message || '쿠폰 발행에 실패했습니다.';
+        alert(backendMessage);
         console.error(error);
       }
     }

@@ -30,6 +30,8 @@ import {
   SignInReqDto,
   ApiKeySignInReqDto,
   ResetPasswordReqDto,
+  VerifyAuthNumberDto,
+  SendAuthNumberDto,
 } from './dto/req.dto';
 import {
   CorpSignUpResDto,
@@ -203,6 +205,32 @@ export class AuthController {
   async emailCheck(@Query() checkEmailReqDto: CheckEmailReqDto) {
     const { email } = checkEmailReqDto;
     return await this.usersService.emailCheck(email);
+  }
+
+  // 9. 회원가입시 이메일로 인증번호 전송
+  // POST : localhost:3000/auth/send-auth-number
+  @Post('send-auth-number')
+  @Public()
+  @ApiOperation({ summary: '회원가입시 이메일로 인증번호 전송' })
+  async sendAuthNumber(
+    @Body() sendAuthNumberDto: SendAuthNumberDto,
+  ): Promise<{ message: string }> {
+    return await this.authService.sendAuthenticationNumber(
+      sendAuthNumberDto.email,
+    );
+  }
+
+  // 10. 회원가입시 이메일로 전송된 인증번호 확인
+  // POST : localhost:3000/auth/verify-auth-number
+  @Post('verify-auth-number')
+  @Public()
+  @ApiOperation({ summary: '회원가입시 이메일로 전송된 인증번호 확인' })
+  async verifyAuthNumber(
+    @Body() verifyAuthNumberDto: VerifyAuthNumberDto,
+  ): Promise<{ message: string }> {
+    return await this.authService.verifyAuthenticationNumber(
+      verifyAuthNumberDto,
+    );
   }
 }
 

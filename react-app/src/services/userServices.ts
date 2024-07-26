@@ -35,3 +35,8 @@ export const sendChargeEmail = async (
     throw new Error(message);
   }
 };
+
+// 사용된 쿠폰목록 조회
+export const getUsedCoupons = async (page: number, size: number) => {
+  return httpClient.get(`/coupons/used?page=${page}&size=${size}`);
+};

@@ -74,7 +74,6 @@ const SubHeaders = ({ activeHeader, userType }) => {
         return [
           { label: '쿠폰 발행', path: '/coupon-issue' },
           { label: '쿠폰 조회', path: '/coupon-view' },
-          { label: '폐기 쿠폰 관리', path: '/discarded-coupons' },
         ];
       } else if (activeHeader === 'AI모델 관리') {
         return [

@@ -9,6 +9,7 @@ import Footer from '../../components/etc/ui/Footer';
 const VerifyPassword = ({ onSuccess, userType }) => {
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [activeHeader, setActiveHeader] = useState('User');
   const navigate = useNavigate();
   const location = useLocation();
   const email = localStorage.getItem('userEmail') || '';
@@ -37,8 +38,8 @@ const VerifyPassword = ({ onSuccess, userType }) => {
 
   return (
     <Container>
-      <MainHeader setActiveHeader={() => {}} userType={userType} />
-      <SubHeaders activeHeader='User' userType={userType} />
+      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <SubHeaders activeHeader={activeHeader} userType={userType} />
       <Content>
         <Title>회원정보 확인</Title>
         <div>본인 인증이 필요한 기능입니다.</div>

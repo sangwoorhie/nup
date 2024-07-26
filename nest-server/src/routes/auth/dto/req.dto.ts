@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsBoolean,
   IsEnum,
+  Length,
 } from 'class-validator';
 import { IsStrongPassword } from 'src/decorators/strong-password.decorator';
 
@@ -190,4 +191,21 @@ export class ResetPasswordReqDto {
   @IsString()
   @IsNotEmpty()
   readonly username: string;
+}
+
+// 회원가입시 이메일로 인증번호 전송 요청 DTO
+export class VerifyAuthNumberDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Length(6, 6)
+  authNumber: string;
+}
+
+export class SendAuthNumberDto {
+  @IsEmail()
+  email: string;
 }

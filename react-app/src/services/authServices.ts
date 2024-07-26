@@ -146,3 +146,16 @@ export const logout = (navigate?: NavigateFunction) => {
 export const checkEmailAvailability = async (email: string) => {
   return await httpClient.get(`/auth/checkemail?email=${email}`);
 };
+
+// 인증번호 확인
+export const verifyAuthNumber = async (email: string, authNumber: string) => {
+  return await httpClient.post('/auth/verify-auth-number', {
+    email,
+    authNumber,
+  });
+};
+
+// 인증번호 전송
+export const sendAuthNumber = async (email: string) => {
+  return await httpClient.post('/auth/send-auth-number', { email });
+};

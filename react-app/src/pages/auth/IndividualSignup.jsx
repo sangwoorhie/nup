@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import smileIcon from '../../assets/img/smile.png';
 import {
   signupIndividual,
-  checkEmailAvailability,
+  // checkEmailAvailability,
+  sendAuthNumber,
+  verifyAuthNumber,
 } from '../../services/authServices';
 import Footer from '../../components/etc/ui/Footer';
 
@@ -25,6 +27,7 @@ const IndividualSignup = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [phone, setPhone] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [inputAuthNumber, setInputAuthNumber] = useState('');
   const navigate = useNavigate();
 
   const handleCheckboxChange = (e, setFunction) => {
@@ -117,13 +120,33 @@ const IndividualSignup = () => {
     setEmail(e.target.value.replace('@', '').toLowerCase());
   };
 
-  const handleCheckEmailClick = async () => {
+  // const handleCheckEmailClick = async () => {
+  //   try {
+  //     const fullEmail = `${email}${emailProvider}`;
+  //     const response = await checkEmailAvailability(fullEmail);
+  //     alert(response.data);
+  //   } catch (error) {
+  //     alert(error.response?.data?.message || 'Error checking email.');
+  //   }
+  // };
+
+  const handleSendAuthNumber = async () => {
     try {
       const fullEmail = `${email}${emailProvider}`;
-      const response = await checkEmailAvailability(fullEmail);
-      alert(response.data);
+      await sendAuthNumber(fullEmail);
+      alert('인증번호가 전송되었습니다.');
     } catch (error) {
-      alert(error.response?.data?.message || 'Error checking email.');
+      alert(error.response?.data?.message || 'Error sending auth number.');
+    }
+  };
+
+  const handleVerifyAuthNumber = async () => {
+    try {
+      const fullEmail = `${email}${emailProvider}`;
+      await verifyAuthNumber(fullEmail, inputAuthNumber);
+      alert('인증번호가 확인되었습니다.');
+    } catch (error) {
+      alert('올바른 인증번호가 아닙니다.');
     }
   };
 
@@ -254,9 +277,12 @@ const IndividualSignup = () => {
                         </Select>
                       )}
                     </EmailProviderWrapper>
-                    <CheckButton type='button' onClick={handleCheckEmailClick}>
-                      중복확인
+                    <CheckButton type='button' onClick={handleSendAuthNumber}>
+                      인증번호 발송
                     </CheckButton>
+                    {/* <CheckButton type='button' onClick={handleCheckEmailClick}>
+                      중복확인
+                    </CheckButton> */}
                   </InputWrapper>
                   <Description>
                     *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
@@ -264,6 +290,26 @@ const IndividualSignup = () => {
                     비밀번호 발급 등 중요한 알림을 수신하는 데 사용되므로,
                     반드시 정확한 이메일 주소를 입력해주세요.
                   </Description>
+                </Cell>
+              </Row>
+              {/* New Row for 인증번호 확인 */}
+              <Row>
+                <Cell>
+                  <RequiredIndicator>▶</RequiredIndicator>
+                  <Label htmlFor='authNumber'>인증번호 확인</Label>
+                  <InputWrapper>
+                    <Input
+                      id='authNumber'
+                      type='text'
+                      value={inputAuthNumber}
+                      onChange={(e) => setInputAuthNumber(e.target.value)}
+                      required
+                    />
+
+                    <CheckButton type='button' onClick={handleVerifyAuthNumber}>
+                      인증번호 확인
+                    </CheckButton>
+                  </InputWrapper>
                 </Cell>
               </Row>
               <Row>

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { CouponTemplatesService } from './coupon_templates.service';
 import {
@@ -20,6 +21,7 @@ import {
 } from './dto/req.dto';
 import {
   CreateCouponResDto,
+  FindCouponResDto,
   FindCouponTemplateResDto,
   FindOneCouponTemplateResDto,
 } from './dto/res.dto';
@@ -34,6 +36,7 @@ import { Usertype } from 'src/decorators/usertype.decorators';
 import { UserType } from 'src/enums/enums';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
+import { CouponsService } from '../coupons/coupons.service';
 
 @ApiTags('Coupon_Template')
 @ApiExtraModels(
@@ -48,14 +51,15 @@ import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 export class CouponTemplatesController {
   constructor(
     private readonly couponTemplatesService: CouponTemplatesService,
+    private readonly couponService: CouponsService,
   ) {}
 
   // 1. 쿠폰 템플릿 생성 (관리자)
   // POST : localhost:3000/coupon-templates
   @Post()
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '쿠폰 템플릿 생성 (관리자)' })
   @ApiResponse({ status: 200, description: '성공', type: CreateCouponResDto })
-  @Usertype(UserType.ADMIN)
   async createCouponTemplate(
     @User() user: UserAfterAuth,
     @Body() createCouponReqDto: CreateCouponReqDto,
@@ -69,6 +73,7 @@ export class CouponTemplatesController {
   // 2. 쿠폰 템플릿 조회 - 전체조회 or 유효쿠폰조회 or 만료쿠폰조회 (관리자)
   // GET : localhost:3000/coupon-templates?page=1&size=20&criteria=all
   @Get()
+  @Usertype(UserType.ADMIN)
   @ApiOperation({
     summary:
       '쿠폰 템플릿 필터 조회 (전체조회 or 유효쿠폰조회 or 만료쿠폰조회) (관리자)',
@@ -83,7 +88,6 @@ export class CouponTemplatesController {
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: '성공' })
-  @Usertype(UserType.ADMIN)
   async findCouponTemplates(
     @Query() { page, size }: PageReqDto,
     @Query('criteria') criteria: 'all' | 'non-expired' | 'expired',
@@ -100,15 +104,14 @@ export class CouponTemplatesController {
 
   // 3. 쿠폰명으로 쿠폰 템플릿 조회 (관리자)
   // GET : localhost:3000/coupon-templates/name?coupon_name=DiscountCoupon
-
   @Get('name')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '쿠폰명으로 쿠폰 템플릿 조회 (관리자)' })
   @ApiResponse({
     status: 200,
     description: '성공',
     type: [FindOneCouponTemplateResDto],
   })
-  @Usertype(UserType.ADMIN)
   async findCouponTemplateByName(
     @Query() findByCouponNameReqDto: FindByCouponNameReqDto,
   ) {
@@ -120,9 +123,9 @@ export class CouponTemplatesController {
   // 4. 쿠폰 템플릿 발행수량 추가 (관리자)
   // PATCH : localhost:3000/coupon-templates/:template_id
   @Patch(':id')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '쿠폰 템플릿 발행수량 변경 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
-  @Usertype(UserType.ADMIN)
   async updateCouponTemplate(
     @Param('id') id: string,
     @Body() updateCouponReqDto: UpdateCouponReqDto,
@@ -136,17 +139,17 @@ export class CouponTemplatesController {
   // 5. 쿠폰 템플릿 삭제 (관리자)
   // DELETE : localhost:3000/coupon-templates/:template_id
   @Delete(':id')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '쿠폰 템플릿 삭제 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
-  @Usertype(UserType.ADMIN)
   async removeCouponTemplate(@Param('id') id: string) {
     return this.couponTemplatesService.removeCouponTemplate(id);
   }
 
   // 6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자)
   // GET : localhost:3000/coupon-templates/date-range?page=1&size=10&start_date=2023-01-01&end_date=2023-12-31
-
   @Get('date-range')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({
     summary: '쿠폰 발급일기준 기간조회 (관리자)',
   })
@@ -163,7 +166,6 @@ export class CouponTemplatesController {
     description: '쿠폰 발급 마감일',
   })
   @ApiResponse({ status: 200, description: '성공' })
-  @Usertype(UserType.ADMIN)
   async findCouponTemplatesByDateRange(
     @Query() { page, size }: PageReqDto,
     @Query('start_date') start_date: string,
@@ -184,7 +186,8 @@ export class CouponTemplatesController {
   // 7. 쿠폰 템플릿 단일 입력조회 - 쿠폰코드조회 또는 회원이름조회 (관리자)
   // GET : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=code&code=ABC123
   // GET : localhost:3000/coupon-templates/:template_id?page=1&size=20&criteria=username&username=Jake
-  @Get(':id')
+  @Get(':template_id')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({
     summary: '쿠폰코드 또는 회원이름으로 필터링 후 검색 조회 (관리자)',
   })
@@ -199,9 +202,8 @@ export class CouponTemplatesController {
   @ApiQuery({ name: 'code', required: false, description: '쿠폰 코드' })
   @ApiQuery({ name: 'username', required: false, description: '회원 이름' })
   @ApiResponse({ status: 200, description: '성공' })
-  @Usertype(UserType.ADMIN)
   async findCouponTemplateById(
-    @Param('id') id: string,
+    @Param('template_id') templateId: string,
     @Query() { page, size }: PageReqDto,
     @Query('criteria') criteria: 'code' | 'username',
     @Query('code') code?: string,
@@ -213,7 +215,7 @@ export class CouponTemplatesController {
     findCouponReqDto1.username = username;
 
     return this.couponTemplatesService.findCouponTemplateById(
-      id,
+      templateId,
       findCouponReqDto1,
       page,
       size,
@@ -222,7 +224,8 @@ export class CouponTemplatesController {
 
   // 8. 쿠폰 템플릿 단일조회 (상세조회) - 전체조회 or 사용쿠폰조회 or 미사용쿠폰조회 (관리자)
   // GET : localhost:3000/coupon-templates/:template_id/coupons?page=1&size=20&criteria=all
-  @Get(':id/coupons')
+  @Get(':template_id/coupons')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({
     summary:
       '쿠폰 템플릿 단일조회 - 전체, 사용쿠폰, 미사용쿠폰 필터조회 (관리자)',
@@ -237,9 +240,8 @@ export class CouponTemplatesController {
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: '성공' })
-  @Usertype(UserType.ADMIN)
   async findCouponsByTemplateId(
-    @Param('id') id: string,
+    @Param('template_id') templateId: string,
     @Query() { page, size }: PageReqDto,
     @Query('criteria') criteria: 'all' | 'used' | 'unused',
   ) {
@@ -247,7 +249,7 @@ export class CouponTemplatesController {
     findCouponReqDto2.criteria = criteria;
 
     return this.couponTemplatesService.findCouponsByTemplateId(
-      id,
+      templateId,
       findCouponReqDto2,
       page,
       size,
@@ -257,13 +259,30 @@ export class CouponTemplatesController {
   // 9. 단일 쿠폰 삭제 (관리자)
   // DELETE : localhost:3000/coupon-templates/:templateId/coupons/:couponId
   @Delete(':templateId/coupons/:couponId')
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '단일 쿠폰 삭제 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
-  @Usertype(UserType.ADMIN)
   async removeCoupon(
     @Param('templateId') templateId: string,
     @Param('couponId') couponId: string,
   ) {
     return this.couponTemplatesService.removeCoupon(templateId, couponId);
+  }
+
+  // 10. 쿠폰 상세정보 조회 (관리자)
+  // GET : localhost:3000/coupon-templates/:templateId/coupons/:couponId
+  @Get(':templateId/coupons/:couponId')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '단일 쿠폰 조회 (관리자)' })
+  @ApiResponse({ status: 200, description: '성공', type: FindCouponResDto })
+  async findCoupon(
+    @Param('templateId') templateId: string,
+    @Param('couponId') couponId: string,
+  ): Promise<FindCouponResDto> {
+    const coupon = await this.couponService.findCoupon(templateId, couponId);
+    if (!coupon) {
+      throw new NotFoundException('해당 쿠폰이 존재하지 않습니다.');
+    }
+    return coupon;
   }
 }

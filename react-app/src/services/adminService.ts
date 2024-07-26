@@ -75,3 +75,92 @@ export const verifyBusinessLicense = async (corporateId: string) => {
 export const createCouponTemplate = async (couponData: CouponData) => {
   return await httpClient.post('/coupon-templates', couponData);
 };
+
+// 쿠폰 템플릿 이름으로 조회하기
+export const getCouponsByName = async (coupon_name: string) => {
+  return await httpClient.get(`/coupon-templates/name`, {
+    params: { coupon_name },
+  });
+};
+
+// 쿠폰 탬플릿 발급일 기준으로 조회하기
+export const getCouponsByDateRange = async (
+  startDate: string,
+  endDate: string,
+  page: number,
+  size: number
+) => {
+  return await httpClient.get(`/coupon-templates/date-range`, {
+    params: {
+      start_date: startDate,
+      end_date: endDate,
+      page,
+      size,
+    },
+  });
+};
+
+// 쿠폰 템플릿 삭제하기
+export const deleteCouponTemplate = async (templateId: string) => {
+  return await httpClient.delete(`/coupon-templates/${templateId}`);
+};
+
+type Criteria = 'code' | 'username' | 'all' | 'used' | 'unused';
+
+// 쿠폰 목록조회 (쿠폰 탬플릿 내 쿠폰 목록)
+export const fetchCouponsByTemplateId = async (
+  templateId: string,
+  page: number,
+  size: number,
+  criteria: Criteria
+) => {
+  return await httpClient.get(`/coupon-templates/${templateId}/coupons`, {
+    params: { page, size, criteria },
+  });
+};
+
+// 쿠폰 코드 또는 사용회원 이름으로 쿠폰 조회
+export const searchCoupons = async (
+  templateId: string,
+  criteria: 'code' | 'username',
+  value: string,
+  page: number,
+  size: number
+) => {
+  let params: {
+    page: number;
+    size: number;
+    criteria: string;
+    code?: string;
+    username?: string;
+  } = { page, size, criteria };
+
+  if (criteria === 'code') {
+    params.code = value;
+  } else if (criteria === 'username') {
+    params.username = value;
+  }
+
+  return await httpClient.get(`/coupon-templates/${templateId}`, {
+    params,
+  });
+};
+
+// 단일 쿠폰 삭제
+export const deleteCoupons = async (
+  templateId: string,
+  couponIds: string[]
+) => {
+  await Promise.all(
+    couponIds.map((couponId) =>
+      httpClient.delete(`/coupon-templates/${templateId}/coupons/${couponId}`)
+    )
+  );
+};
+
+// 단일 쿠폰 조회
+export const findCoupon = async (templateId: string, couponId: string) => {
+  return await httpClient.get(
+    `/coupon-templates/${templateId}/coupons/${couponId}`
+  );
+};

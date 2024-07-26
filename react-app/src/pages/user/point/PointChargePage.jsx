@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import MainHeader from '../../components/etc/ui/MainHeader';
-import SubHeaders from '../../components/etc/ui/SubHeaders';
-import Footer from '../../components/etc/ui/Footer';
-import { sendChargeEmail } from '../../services/userServices';
+import MainHeader from '../../../components/etc/ui/MainHeader';
+import SubHeaders from '../../../components/etc/ui/SubHeaders';
+import Footer from '../../../components/etc/ui/Footer';
+import { sendChargeEmail } from '../../../services/userServices';
 
 const PointChargePage = () => {
   const [amount, setAmount] = useState('');
@@ -26,6 +26,10 @@ const PointChargePage = () => {
   };
 
   const handleChargeClick = () => {
+    if (chargeType === 'CARD' || chargeType === 'PAYPAL') {
+      alert('서비스 준비중입니다.');
+      return;
+    }
     const value = Number(amount.replace(/,/g, ''));
     if (value < 10000 || value % 10000 !== 0) {
       alert(

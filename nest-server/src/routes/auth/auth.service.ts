@@ -11,6 +11,7 @@ import {
   CorpSignUpReqDto,
   IndiSignUpReqDto,
   SignInReqDto,
+  VerifyAuthNumberDto,
 } from './dto/req.dto';
 import { validateOrReject } from 'class-validator';
 import { JwtService } from '@nestjs/jwt';
@@ -31,6 +32,8 @@ import { createTransporter } from 'src/config/mailer.config';
 
 @Injectable()
 export class AuthService {
+  private authNumbers = new Map<string, string>();
+
   constructor(
     private dataSource: DataSource,
     private usersService: UsersService,
@@ -403,6 +406,40 @@ export class AuthService {
       await queryRunner.release();
       if (error) throw error;
     }
+  }
+
+  // 8. 회원가입시 이메일로 인증번호 전송
+  async sendAuthenticationNumber(email: string): Promise<{ message: string }> {
+    const user = await this.usersService.findOneByEmail(email);
+    if (user) throw new BadRequestException('동일한 이메일이 이미 존재합니다');
+
+    const authNumber = Math.floor(100000 + Math.random() * 900000).toString();
+    this.authNumbers.set(email, authNumber);
+
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: '[KO-MAPPER AI] 회원가입 인증번호를 보내드립니다.',
+      text: `회원가입 인증번호 : ${authNumber}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return { message: '인증번호가 이메일로 전송되었습니다.' };
+  }
+
+  // 9. 회원가입시 이메일로 전송된 인증번호 확인
+  async verifyAuthenticationNumber({
+    email,
+    authNumber,
+  }: VerifyAuthNumberDto): Promise<{ message: string }> {
+    const storedNumber = this.authNumbers.get(email);
+    if (!storedNumber || storedNumber !== authNumber) {
+      throw new BadRequestException('유효하지 않은 인증번호입니다.');
+    }
+    this.authNumbers.delete(email);
+    return { message: '인증번호가 확인되었습니다.' };
   }
 
   // 이메일과 이름으로 유저 찾기

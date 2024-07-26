@@ -14,11 +14,13 @@ import CorporateProfile from './pages/corporate-user/CorporateProfile';
 import CorporateUpdate from './pages/corporate-user/CorporateUpdate';
 import IndividualUserManagement from './pages/admin/accounts/IndividualUserManagement';
 import CorporateUserManagement from './pages/admin/accounts/CorporateUserManagement';
-import PointChargePage from './pages/point/PointChargePage';
+import PointChargePage from './pages/user/point/PointChargePage';
 import AdminUserManagement from './pages/admin/accounts/AdminUserManagement';
 import ApiKeyManagement from './pages/admin/accounts/ApiKeyManagement';
 import CouponIssuing from './pages/admin/coupons/CouponIssuing';
 import CouponTemplateList from './pages/admin/coupons/CouponTemplateList';
+import CouponCharge from './pages/user/point/CouponCharge';
+import MyCoupon from './pages/user/point/MyCoupon';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -48,6 +50,8 @@ const MainRoutes = () => (
     <Route path='/api-key-view' element={<ApiKeyManagement />} />
     <Route path='/coupon-issue' element={<CouponIssuing />} />
     <Route path='/coupon-view' element={<CouponTemplateList />} />
+    <Route path='/coupon-register' element={<CouponCharge />} />
+    <Route path='/my-coupons' element={<MyCoupon />} />
     {/* </Route> */}
   </Routes>
 );

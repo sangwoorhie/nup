@@ -17,6 +17,10 @@ export class CouponDetailsResDto {
   @ApiProperty({ description: '쿠폰 유효기간' })
   @IsDate()
   readonly expiration_date: Date;
+
+  @ApiProperty({ description: '쿠폰 사용일시', required: false })
+  @IsDate()
+  readonly used_at?: Date;
 }
 
 export class ApplyCouponResDto extends CouponDetailsResDto {}

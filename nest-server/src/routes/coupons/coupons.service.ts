@@ -16,6 +16,7 @@ import {
 import { PageResDto } from 'src/common/dto/res.dto';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
 import { ChargeType, PaymentType } from 'src/enums/enums';
+import { FindCouponResDto } from '../coupon_templates/dto/res.dto';
 
 @Injectable()
 export class CouponsService {
@@ -118,6 +119,7 @@ export class CouponsService {
         code: coupon.code,
         point: coupon.coupon_template.point,
         expiration_date: coupon.coupon_template.expiration_date,
+        used_at: coupon.used_at,
       };
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -179,5 +181,29 @@ export class CouponsService {
     // 쿠폰 삭제
     await this.couponRepository.remove(coupon);
     return { message: `쿠폰 ID : ${id}가 성공적으로 삭제되었습니다.` };
+  }
+
+  // 5. 쿠폰 상세정보 조회 (관리자)
+  async findCoupon(
+    templateId: string,
+    couponId: string,
+  ): Promise<FindCouponResDto> {
+    const coupon = await this.couponRepository.findOne({
+      where: { id: couponId, coupon_template: { id: templateId } },
+      relations: ['user'],
+    });
+
+    if (!coupon) {
+      throw new NotFoundException('Coupon not found');
+    }
+
+    const result = new FindCouponResDto();
+    result.code = coupon.code;
+    result.is_used = coupon.is_used;
+    result.used_at = coupon.used_at ? coupon.used_at.toISOString() : null;
+    result.username = coupon.user ? coupon.user.username : null;
+    result.email = coupon.user ? coupon.user.email : null;
+
+    return result;
   }
 }

@@ -150,6 +150,7 @@ export class CouponTemplatesService {
         relations: ['user'],
         skip: (page - 1) * size,
         take: size,
+        order: { created_at: 'DESC' },
       });
 
     const items = couponTemplates.map((template) => ({
@@ -177,6 +178,7 @@ export class CouponTemplatesService {
     const couponTemplates = await this.couponTemplateRepository.find({
       where: { coupon_name },
       relations: ['user'],
+      order: { created_at: 'DESC' },
     });
     return couponTemplates.map((couponTemplate) => ({
       id: couponTemplate.id,
@@ -253,13 +255,19 @@ export class CouponTemplatesService {
     size: number,
     dateReqDto: DateReqDto,
   ): Promise<PageResDto<FindCouponTemplateResDto>> {
+    const startDate = new Date(dateReqDto.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(dateReqDto.end_date);
+    endDate.setHours(23, 59, 59, 999);
+
     const [couponTemplates, total] =
       await this.couponTemplateRepository.findAndCount({
         where: {
-          created_at: Between(dateReqDto.start_date, dateReqDto.end_date),
+          created_at: Between(startDate, endDate),
         },
         skip: (page - 1) * size,
         take: size,
+        order: { created_at: 'DESC' },
       });
 
     const items = couponTemplates.map((template) => ({
@@ -309,6 +317,7 @@ export class CouponTemplatesService {
       code: coupon.code,
       is_used: coupon.is_used,
       used_at: coupon.used_at ? coupon.used_at.toISOString() : null,
+      // used_at: coupon.used_at instanceof Date ? coupon.used_at.toISOString() : null,
       username: coupon.user ? coupon.user.username : null,
       email: coupon.user ? coupon.user.email : null,
     }));
@@ -354,6 +363,7 @@ export class CouponTemplatesService {
       code: coupon.code,
       is_used: coupon.is_used,
       used_at: coupon.used_at ? coupon.used_at.toISOString() : null,
+      // used_at: coupon.used_at instanceof Date ? coupon.used_at.toISOString() : null,
       username: coupon.user ? coupon.user.username : null,
       email: coupon.user ? coupon.user.email : null,
     }));
