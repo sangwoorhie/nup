@@ -67,7 +67,7 @@ const VerifyPassword = ({ onSuccess, userType }) => {
             </InputWrapper>
           </Label>
           <ButtonContainer>
-            <Button onClick={handleCancel} white>
+            <Button onClick={handleCancel} $white>
               취소
             </Button>
             <Button onClick={handlePasswordCheck}>확인</Button>
@@ -154,14 +154,14 @@ const ButtonContainer = styled.div`
 const Button = styled.button`
   padding: 10px 30px;
   margin: 5px;
-  background-color: ${(props) => (props.white ? 'white' : '#0056b3')};
-  color: ${(props) => (props.white ? '#0056b3' : 'white')};
-  border: ${(props) => (props.white ? '1px solid #ccc' : 'none')};
+  background-color: ${(props) => (props.$white ? 'white' : '#0056b3')};
+  color: ${(props) => (props.$white ? '#0056b3' : 'white')};
+  border: ${(props) => (props.$white ? '1px solid #ccc' : 'none')};
   border-radius: 5px;
   cursor: pointer;
   flex: 1;
   &:hover {
-    background-color: ${(props) => (props.white ? '#f0f0f0' : '#003f7f')};
+    background-color: ${(props) => (props.$white ? '#f0f0f0' : '#003f7f')};
   }
 `;
 

@@ -6,6 +6,8 @@ import AddressModal from '../../components/etc/modals/AddressModal';
 import {
   signupCorporate,
   checkEmailAvailability,
+  sendAuthNumber,
+  verifyAuthNumber
 } from '../../services/authServices';
 import Footer from '../../components/etc/ui/Footer';
 
@@ -35,6 +37,7 @@ const CorporateSignup = () => {
   const [address, setAddress] = useState('');
   const [detailedAddress, setDetailedAddress] = useState('');
   const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
+  const [inputAuthNumber, setInputAuthNumber] = useState('');
 
   const navigate = useNavigate();
 
@@ -156,13 +159,23 @@ const CorporateSignup = () => {
     setEmailProvider(e.target.value.toLowerCase());
   };
 
-  const handleCheckEmailClick = async () => {
+  const handleSendAuthNumber = async () => {
     try {
       const fullEmail = `${email}${emailProvider}`;
-      const response = await checkEmailAvailability(fullEmail);
-      alert(response.data);
+      await sendAuthNumber(fullEmail);
+      alert('인증번호가 전송되었습니다.');
     } catch (error) {
-      alert(error.response?.data?.message || 'Error checking email.');
+      alert(error.response?.data?.message || 'Error sending auth number.');
+    }
+  };
+
+  const handleVerifyAuthNumber = async () => {
+    try {
+      const fullEmail = `${email}${emailProvider}`;
+      await verifyAuthNumber(fullEmail, inputAuthNumber);
+      alert('인증번호가 확인되었습니다.');
+    } catch (error) {
+      alert('올바른 인증번호가 아닙니다.');
     }
   };
 
@@ -175,20 +188,20 @@ const CorporateSignup = () => {
     <Container>
       <Header>KO-MAPPER AI</Header>
       <Steps>
-        <Step active={currentStep === 1}>
-          <StepIcon>{currentStep > 1 ? '✓' : '1'}</StepIcon>
+        <Step $active={currentStep === 1}>
+          <StepIcon $active={currentStep > 1 ? '✓' : '1'}>{currentStep > 1 ? '✓' : '1'}</StepIcon>
           <StepLabel>약관동의</StepLabel>
         </Step>
-        <Step active={currentStep === 2}>
-          <StepIcon>{currentStep > 2 ? '✓' : '2'}</StepIcon>
+        <Step $active={currentStep === 2}>
+          <StepIcon $active={currentStep > 2 ? '✓' : '2'}>{currentStep > 2 ? '✓' : '2'}</StepIcon>
           <StepLabel>회원정보입력</StepLabel>
         </Step>
-        <Step active={currentStep === 3}>
-          <StepIcon>{currentStep > 3 ? '✓' : '3'}</StepIcon>
+        <Step $active={currentStep === 3}>
+          <StepIcon $active={currentStep > 3 ? '✓' : '3'}>{currentStep > 3 ? '✓' : '3'}</StepIcon>
           <StepLabel>기업정보입력</StepLabel>
         </Step>
-        <Step active={currentStep === 4}>
-          <StepIcon>{currentStep === 4 ? '✓' : '4'}</StepIcon>
+        <Step $active={currentStep === 4}>
+          <StepIcon $active={currentStep === 4 ? '✓' : '4'}>{currentStep === 4 ? '✓' : '4'}</StepIcon>
           <StepLabel>가입완료</StepLabel>
         </Step>
       </Steps>
@@ -248,7 +261,7 @@ const CorporateSignup = () => {
               </Section>
             </TermsContainer>
             <ButtonContainer>
-              <Button onClick={handleBackClick} secondary>
+              <Button onClick={handleBackClick} $secondary>
                 뒤로가기
               </Button>
               <Button onClick={handleNextClick}>확인</Button>
@@ -263,172 +276,197 @@ const CorporateSignup = () => {
               항목입니다.
             </SmallText>
             <Table>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='email'>E-mail</Label>
-                  <InputWrapper>
-                    <Input
-                      id='email'
-                      type='text'
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                    <EmailProviderWrapper>
-                      {isCustomEmailProvider ? (
-                        <CustomEmailInput
-                          type='text'
-                          value={emailProvider}
-                          onChange={handleCustomEmailProviderChange}
-                          placeholder='직접 입력'
-                          required
-                        />
-                      ) : (
-                        <Select
-                          value={emailProvider}
-                          onChange={handleEmailProviderChange}
-                        >
-                          <option value='@naver.com'>@naver.com</option>
-                          <option value='@gmail.com'>@gmail.com</option>
-                          <option value='@daum.net'>@daum.net</option>
-                          <option value='@hanmail.net'>@hanmail.net</option>
-                          <option value='@kakao.com'>@kakao.com</option>
-                          <option value='@hotmail.com'>@hotmail.com</option>
-                          <option value='@icloud.com'>@icloud.com</option>
-                          <option value='@nate.com'>@nate.com</option>
-                          <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
-                          <option value='직접입력'>직접입력</option>
-                        </Select>
-                      )}
-                    </EmailProviderWrapper>
-                    <CheckButton type='button' onClick={handleCheckEmailClick}>
-                      중복확인
-                    </CheckButton>
-                  </InputWrapper>
-                  <Description>
-                    *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
-                    현금영수증 등 각종 문서 수신 및 비밀번호 분실 시 임시
-                    비밀번호 발급 등 중요한 알림을 수신하는 데 사용되므로,
-                    반드시 정확한 이메일 주소를 입력해주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='password'>비밀번호</Label>
-                  <InputWrapper>
-                    <Input
-                      id='password'
-                      type={passwordVisible ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <ToggleVisibilityButton
-                      type='button'
-                      onClick={() =>
-                        togglePasswordVisibility(setPasswordVisible)
-                      }
-                    >
-                      {passwordVisible ? '👁' : '👁‍🗨'}
-                    </ToggleVisibilityButton>
-                  </InputWrapper>
-                  <Description>
-                    *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자
-                    이상, 최대 20자 이내로 구성된 비밀번호를 작성해 주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='confirmPassword'>비밀번호 확인</Label>
-                  <InputWrapper>
-                    <Input
-                      id='confirmPassword'
-                      type={confirmPasswordVisible ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                    <ToggleVisibilityButton
-                      type='button'
-                      onClick={() =>
-                        togglePasswordVisibility(setConfirmPasswordVisible)
-                      }
-                    >
-                      {confirmPasswordVisible ? '👁' : '👁‍🗨'}
-                    </ToggleVisibilityButton>
-                  </InputWrapper>
-                  <Description>*비밀번호를 한번 더 입력해주세요.</Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='name'>이름</Label>
-                  <InputWrapper>
-                    <Input
-                      id='name'
-                      type='text'
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>*실제 본명을 한글로 입력해 주세요.</Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='phone'>휴대전화</Label>
-                  <InputWrapper>
-                    <Input
-                      id='phone'
-                      type='tel'
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <OptionalIndicator>▶</OptionalIndicator>
-                  <Label htmlFor='profileImage'>프로필 이미지</Label>
-                  <InputWrapper>
-                    <Input
-                      id='profileImage'
-                      type='file'
-                      onChange={(e) => setProfileImage(e.target.files[0])}
-                    />
-                  </InputWrapper>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <OptionalIndicator>▶</OptionalIndicator>
-                  <Label htmlFor='emergencyPhone'>비상연락처</Label>
-                  <InputWrapper>
-                    <Input
-                      id='emergencyPhone'
-                      type='tel'
-                      value={emergencyPhone}
-                      onChange={(e) => setEmergencyPhone(e.target.value)}
-                    />
-                  </InputWrapper>
-                  <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
-                </Cell>
-                <br />
-              </Row>
+              <tbody>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='email'>E-mail</Label>
+                    <InputWrapper>
+                      <Input
+                        id='email'
+                        type='text'
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                      <EmailProviderWrapper>
+                        {isCustomEmailProvider ? (
+                          <CustomEmailInput
+                            type='text'
+                            value={emailProvider}
+                            onChange={handleCustomEmailProviderChange}
+                            placeholder='직접 입력'
+                            required
+                          />
+                        ) : (
+                          <Select
+                            value={emailProvider}
+                            onChange={handleEmailProviderChange}
+                          >
+                            <option value='@naver.com'>@naver.com</option>
+                            <option value='@gmail.com'>@gmail.com</option>
+                            <option value='@daum.net'>@daum.net</option>
+                            <option value='@hanmail.net'>@hanmail.net</option>
+                            <option value='@kakao.com'>@kakao.com</option>
+                            <option value='@hotmail.com'>@hotmail.com</option>
+                            <option value='@icloud.com'>@icloud.com</option>
+                            <option value='@nate.com'>@nate.com</option>
+                            <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
+                            <option value='직접입력'>직접입력</option>
+                          </Select>
+                        )}
+                      </EmailProviderWrapper>
+                      <CheckButton type='button' onClick={handleSendAuthNumber}>
+                        인증번호 발송
+                      </CheckButton>
+                      {/* <CheckButton type='button' onClick={handleCheckEmailClick}>
+                        중복확인
+                      </CheckButton> */}
+                    </InputWrapper>
+                    <Description>
+                      *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
+                      현금영수증 등 각종 문서 수신 및 비밀번호 분실 시 임시
+                      비밀번호 발급 등 중요한 알림을 수신하는 데 사용되므로,
+                      반드시 정확한 이메일 주소를 입력해주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='authNumber'>인증번호 확인</Label>
+                    <InputWrapper>
+                      <Input
+                        id='authNumber'
+                        type='text'
+                        value={inputAuthNumber}
+                        onChange={(e) => setInputAuthNumber(e.target.value)}
+                        required
+                      />
+                      <CheckButton type='button' onClick={handleVerifyAuthNumber}>
+                        인증번호 확인
+                      </CheckButton>
+                    </InputWrapper>
+                    <Description>
+                      *입력하신 이메일로 전송받은 인증번호를 입력해 주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='password'>비밀번호</Label>
+                    <InputWrapper>
+                      <Input
+                        id='password'
+                        type={passwordVisible ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <ToggleVisibilityButton
+                        type='button'
+                        onClick={() =>
+                          togglePasswordVisibility(setPasswordVisible)
+                        }
+                      >
+                        {passwordVisible ? '👁' : '👁‍🗨'}
+                      </ToggleVisibilityButton>
+                    </InputWrapper>
+                    <Description>
+                      *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자
+                      이상, 최대 20자 이내로 구성된 비밀번호를 작성해 주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='confirmPassword'>비밀번호 확인</Label>
+                    <InputWrapper>
+                      <Input
+                        id='confirmPassword'
+                        type={confirmPasswordVisible ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                      <ToggleVisibilityButton
+                        type='button'
+                        onClick={() =>
+                          togglePasswordVisibility(setConfirmPasswordVisible)
+                        }
+                      >
+                        {confirmPasswordVisible ? '👁' : '👁‍🗨'}
+                      </ToggleVisibilityButton>
+                    </InputWrapper>
+                    <Description>*비밀번호를 한번 더 입력해주세요.</Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='name'>이름</Label>
+                    <InputWrapper>
+                      <Input
+                        id='name'
+                        type='text'
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>*실제 본명을 한글로 입력해 주세요.</Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='phone'>휴대전화</Label>
+                    <InputWrapper>
+                      <Input
+                        id='phone'
+                        type='tel'
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <OptionalIndicator>▶</OptionalIndicator>
+                    <Label htmlFor='profileImage'>프로필 이미지</Label>
+                    <InputWrapper>
+                      <Input
+                        id='profileImage'
+                        type='file'
+                        onChange={(e) => setProfileImage(e.target.files[0])}
+                      />
+                    </InputWrapper>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <OptionalIndicator>▶</OptionalIndicator>
+                    <Label htmlFor='emergencyPhone'>비상연락처</Label>
+                    <InputWrapper>
+                      <Input
+                        id='emergencyPhone'
+                        type='tel'
+                        value={emergencyPhone}
+                        onChange={(e) => setEmergencyPhone(e.target.value)}
+                      />
+                    </InputWrapper>
+                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                  </Cell>
+                </Row>
+              </tbody>
             </Table>
             <ButtonContainer>
-              <Button onClick={handleBackClick} secondary>
+              <Button onClick={handleBackClick} $secondary>
                 뒤로가기
               </Button>
               <Button onClick={handleNextClick}>확인</Button>
@@ -443,138 +481,142 @@ const CorporateSignup = () => {
               항목입니다.
             </SmallText>
             <Table>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='corporateName'>기업명</Label>
-                  <InputWrapper>
-                    <Input
-                      id='corporateName'
-                      type='text'
-                      value={corporateName}
-                      onChange={(e) => setCorporateName(e.target.value)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>
-                    *사업자등록증에 기재되어 있는 기업 명(상호 명)을 입력해
-                    주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='businessType'>업종 명</Label>
-                  <InputWrapper>
-                    <Input
-                      id='businessType'
-                      type='text'
-                      value={businessType}
-                      onChange={(e) => setBusinessType(e.target.value)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>
-                    *사업자등록증에 기재되어 있는 업종 명을 입력해 주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='businessConditions'>업태 명</Label>
-                  <InputWrapper>
-                    <Input
-                      id='businessConditions'
-                      type='text'
-                      value={businessConditions}
-                      onChange={(e) => setBusinessConditions(e.target.value)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>
-                    *사업자등록증에 기재되어 있는 업태 명을 입력해 주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='businessRegistrationNumber'>
-                    사업자 등록번호
-                  </Label>
-                  <InputWrapper>
-                    <Input
-                      id='businessRegistrationNumber'
-                      type='text'
-                      value={businessRegistrationNumber}
-                      onChange={(e) =>
-                        setBusinessRegistrationNumber(e.target.value)
-                      }
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>
-                    *사업자등록증에 기재되어 있는 등록번호를 입력해 주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='businessLicense'>사업자등록증</Label>
-                  <InputWrapper>
-                    <Input
-                      id='businessLicense'
-                      type='file'
-                      onChange={(e) => setBusinessLicense(e.target.files[0])}
-                    />
-                  </InputWrapper>
-                  <Description>
-                    *사업자등록증 스캔본에 기재된 번호는 사업자 등록번호와
-                    동일해야 하며, 지원되는 파일 유형은 PDF, JPG, PNG입니다.
-                    파일 크기는 최대 10MB까지 가능합니다. 모든 글자가 또렷이
-                    보이도록 선명한 스캔본을 업로드해주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='address'>주소</Label>
-                  <InputWrapper>
-                    <Input
-                      id='address'
-                      type='text'
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      required
-                    />
-                    <CheckButton
-                      type='button'
-                      onClick={() => setIsAddressPopupVisible(true)}
-                    >
-                      주소 검색
-                    </CheckButton>
-                  </InputWrapper>
-                  <br />
-                  <InputWrapper>
-                    <Input
-                      id='detailedAddress'
-                      type='text'
-                      value={detailedAddress}
-                      onChange={(e) => setDetailedAddress(e.target.value)}
-                      placeholder='상세 주소를 입력하세요.'
-                      required
-                    />
-                  </InputWrapper>
-                </Cell>
-                <br />
-              </Row>
+              <tbody>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='corporateName'>기업명</Label>
+                    <InputWrapper>
+                      <Input
+                        id='corporateName'
+                        type='text'
+                        value={corporateName}
+                        onChange={(e) => setCorporateName(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>
+                      *사업자등록증에 기재되어 있는 기업 명(상호 명)을 입력해
+                      주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='businessType'>업종 명</Label>
+                    <InputWrapper>
+                      <Input
+                        id='businessType'
+                        type='text'
+                        value={businessType}
+                        onChange={(e) => setBusinessType(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>
+                      *사업자등록증에 기재되어 있는 업종 명을 입력해 주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='businessConditions'>업태 명</Label>
+                    <InputWrapper>
+                      <Input
+                        id='businessConditions'
+                        type='text'
+                        value={businessConditions}
+                        onChange={(e) => setBusinessConditions(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>
+                      *사업자등록증에 기재되어 있는 업태 명을 입력해 주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='businessRegistrationNumber'>
+                      사업자 등록번호
+                    </Label>
+                    <InputWrapper>
+                      <Input
+                        id='businessRegistrationNumber'
+                        type='text'
+                        value={businessRegistrationNumber}
+                        onChange={(e) =>
+                          setBusinessRegistrationNumber(e.target.value)
+                        }
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>
+                      *사업자등록증에 기재되어 있는 등록번호를 입력해 주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='businessLicense'>사업자등록증</Label>
+                    <InputWrapper>
+                      <Input
+                        id='businessLicense'
+                        type='file'
+                        onChange={(e) => setBusinessLicense(e.target.files[0])}
+                      />
+                    </InputWrapper>
+                    <Description>
+                      *사업자등록증 스캔본에 기재된 번호는 사업자 등록번호와
+                      동일해야 하며, 지원되는 파일 유형은 PDF, JPG, PNG입니다.
+                      파일 크기는 최대 10MB까지 가능합니다. 모든 글자가 또렷이
+                      보이도록 선명한 스캔본을 업로드해주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='address'>주소</Label>
+                    <InputWrapper>
+                      <Input
+                        id='address'
+                        type='text'
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        required
+                      />
+                      <CheckButton
+                        type='button'
+                        onClick={() => setIsAddressPopupVisible(true)}
+                      >
+                        주소 검색
+                      </CheckButton>
+                    </InputWrapper>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <InputWrapper>
+                      <Input
+                        id='detailedAddress'
+                        type='text'
+                        value={detailedAddress}
+                        onChange={(e) => setDetailedAddress(e.target.value)}
+                        placeholder='상세 주소를 입력하세요.'
+                        required
+                      />
+                    </InputWrapper>
+                  </Cell>
+                </Row>
+              </tbody>
             </Table>
             <ButtonContainer>
-              <Button onClick={handleBackClick} secondary>
+              <Button onClick={handleBackClick} $secondary>
                 뒤로가기
               </Button>
               <Button type='submit'>확인</Button>
@@ -637,13 +679,13 @@ const Step = styled.div`
   flex-direction: column;
   align-items: center;
   margin: 0 10px;
-  color: ${(props) => (props.active ? '#0056b3' : '#ccc')};
+  color: ${(props) => (props.$active ? '#0056b3' : '#ccc')};
 `;
 
 const StepIcon = styled.div`
   width: 50px;
   height: 50px;
-  border: 2px solid ${(props) => (props.active ? '#0056b3' : '#ccc')};
+  border: 2px solid ${(props) => (props.$active ? '#0056b3' : '#ccc')};
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -810,9 +852,9 @@ const Button = styled.button`
   flex: 1;
   margin: 0 10px;
   padding: 10px 20px;
-  background-color: ${(props) => (props.secondary ? 'white' : '#0056b3')};
-  color: ${(props) => (props.secondary ? '#0056b3' : 'white')};
-  border: ${(props) => (props.secondary ? '1px solid #0056b3' : 'none')};
+  background-color: ${(props) => (props.$secondary ? 'white' : '#0056b3')};
+  color: ${(props) => (props.$secondary ? '#0056b3' : 'white')};
+  border: ${(props) => (props.$secondary ? '1px solid #0056b3' : 'none')};
   cursor: pointer;
 `;
 

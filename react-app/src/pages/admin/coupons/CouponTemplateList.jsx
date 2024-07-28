@@ -15,13 +15,25 @@ import {
   fetchCouponsByTemplateId,
   searchCoupons,
   deleteCoupons,
-  // Remove the unused import
-  // findCoupon
 } from '../../../services/adminService';
 import httpClient from '../../../services/httpClient';
 
+const usePageChange = (callback) => {
+  const [pageChanged, setPageChanged] = useState(false);
+
+  useEffect(() => {
+    if (pageChanged) {
+      callback();
+      setPageChanged(false);
+    }
+  }, [pageChanged, callback]);
+
+  return () => setPageChanged(true);
+};
+
 const CouponTemplateList = () => {
   const [dates, setDates] = useState(null);
+  const [templates, setTemplates] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [page, setPage] = useState(1);
@@ -29,6 +41,7 @@ const CouponTemplateList = () => {
   const [criteria, setCriteria] = useState('all');
   const [activeHeader, setActiveHeader] = useState('쿠폰 관리');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState([]);
   const [selectedCouponIds, setSelectedCouponIds] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateName, setTemplateName] = useState('');
@@ -70,7 +83,7 @@ const CouponTemplateList = () => {
     const response = await httpClient.get('/coupon-templates', {
       params: { page, size: pageSize, criteria },
     });
-    setCoupons(response.data.items);
+    setTemplates(response.data.items);
     setTotalRecords(response.data.total);
   }, [page, pageSize, criteria]);
 
@@ -83,6 +96,7 @@ const CouponTemplateList = () => {
   const handlePageChange = (e) => {
     setPage(e.page + 1);
     setPageSize(e.rows);
+    resetSearchTerm();
   };
 
   const handleTemplateSearch = async () => {
@@ -95,30 +109,49 @@ const CouponTemplateList = () => {
     if (response.data.length === 0) {
       alert('해당 쿠폰명이 존재하지 않습니다.');
     } else {
-      setCoupons(response.data);
+      setTemplates(response.data);
     }
   };
 
   const handleCouponSearch = async () => {
     if (!searchTerm.trim()) return;
-    const response = await searchCoupons(
-      selectedTemplate,
-      searchCriteria,
-      searchTerm,
-      page,
-      pageSize
-    );
-    setCoupons(response.data.items);
-    setTotalRecords(response.data.total);
+
+    try {
+      const response = await searchCoupons(
+        selectedTemplate,
+        searchCriteria,
+        searchTerm,
+        page,
+        pageSize
+      );
+      if (response.data.items.length === 0) {
+        alert('해당 검색어와 일치하는 쿠폰이 존재하지 않습니다.');
+      } else {
+        setCoupons(response.data.items);
+        setTotalRecords(response.data.total);
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || '쿠폰을 검색하는 중 오류가 발생했습니다.';
+      alert(errorMessage);
+      console.error('Error searching coupons:', error, errorMessage);
+    }
   };
 
   const handleDateRangeChange = async (e) => {
     setDates(e.value);
     if (e.value && e.value.length === 2 && e.value[0] && e.value[1]) {
       const [start, end] = e.value;
+      const startDate = new Date(start);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(end);
+      endDate.setHours(23, 59, 59, 999);
+
+      const formattedStartDate = startDate.toISOString();
+      const formattedEndDate = endDate.toISOString();
+
       const response = await getCouponsByDateRange(
-        start.toISOString().split('T')[0],
-        end.toISOString().split('T')[0],
+        formattedStartDate,
+        formattedEndDate,
         page,
         pageSize
       );
@@ -128,14 +161,14 @@ const CouponTemplateList = () => {
   };
 
   const handleTemplateDelete = async () => {
-    if (selectedCouponIds.length === 0) {
+    if (selectedTemplateIds.length === 0) {
       alert('삭제하실 쿠폰을 선택해 주세요.');
       return;
     }
 
     if (window.confirm('정말 삭제하시겠습니까?')) {
       await Promise.all(
-        selectedCouponIds.map((id) => deleteCouponTemplate(id))
+        selectedTemplateIds.map((id) => deleteCouponTemplate(id))
       );
       alert('쿠폰 템플릿이 삭제되었습니다.');
 
@@ -160,13 +193,27 @@ const CouponTemplateList = () => {
     }
   };
 
-  const handleCheckboxChange = (id) => {
+  const handleTemplateCheckboxChange = (id) => {
+    setSelectedTemplateIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleCouponCheckboxChange = (id) => {
     setSelectedCouponIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  const handleSelectAllChange = () => {
+  const handleSelectAllTemplateChange = () => {
+    if (selectedTemplateIds.length === templates.length) {
+      setSelectedTemplateIds([]);
+    } else {
+      setSelectedTemplateIds(templates.map((template) => template.id));
+    }
+  };
+
+  const handleSelectAllCouponChange = () => {
     if (selectedCouponIds.length === coupons.length) {
       setSelectedCouponIds([]);
     } else {
@@ -178,12 +225,14 @@ const CouponTemplateList = () => {
     if (event.target.type === 'checkbox') return;
     setSelectedTemplate(template.id);
     setTemplateName(template.coupon_name);
+    resetSearchTerm();
   };
 
   const handleBackButtonClick = () => {
     setSelectedTemplate(null);
     setCoupons([]);
     setTemplateName('');
+    resetSearchTerm();
   };
 
   const formatDate = (dateString) => {
@@ -193,6 +242,8 @@ const CouponTemplateList = () => {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const resetSearchTerm = usePageChange(() => setSearchTerm(''));
 
   return (
     <Container>
@@ -250,7 +301,7 @@ const CouponTemplateList = () => {
                     <input
                       type='checkbox'
                       checked={selectedCouponIds.length === coupons.length}
-                      onChange={handleSelectAllChange}
+                      onChange={handleSelectAllCouponChange}
                     />
                   </th>
                   <th>번호</th>
@@ -263,12 +314,15 @@ const CouponTemplateList = () => {
               </thead>
               <tbody>
                 {coupons.map((coupon, index) => (
-                  <tr key={coupon.id}>
+                  <tr key={`${coupon.id}-${index}`}>
                     <td>
                       <input
                         type='checkbox'
                         checked={selectedCouponIds.includes(coupon.id)}
-                        onChange={() => handleCheckboxChange(coupon.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleCouponCheckboxChange(coupon.id);
+                        }}
                       />
                     </td>
                     <td>{(page - 1) * pageSize + index + 1}</td>
@@ -344,8 +398,8 @@ const CouponTemplateList = () => {
                   <th>
                     <input
                       type='checkbox'
-                      checked={selectedCouponIds.length === coupons.length}
-                      onChange={handleSelectAllChange}
+                      checked={selectedTemplateIds.length === templates.length}
+                      onChange={handleSelectAllTemplateChange}
                     />
                   </th>
                   <th>쿠폰 명</th>
@@ -357,27 +411,25 @@ const CouponTemplateList = () => {
                 </tr>
               </thead>
               <tbody>
-                {coupons.map((coupon) => (
+                {templates.map((template) => (
                   <CouponTemplateRow
-                    key={coupon.id}
-                    onClick={(e) => handleTemplateClick(coupon, e)}
+                    key={template.id}
+                    onClick={(e) => handleTemplateClick(template, e)}
                   >
                     <td>
                       <input
                         type='checkbox'
-                        checked={selectedCouponIds.includes(coupon.id)}
-                        onChange={() => handleCheckboxChange(coupon.id)}
+                        checked={selectedTemplateIds.includes(template.id)}
+                        onChange={() => handleTemplateCheckboxChange(template.id)}
                         onClick={(e) => e.stopPropagation()} // Prevent row click
                       />
                     </td>
-                    <td>{coupon.coupon_name}</td>
-                    <td>{coupon.quantity}</td>
-                    <td>{coupon.point}</td>
-                    <td>{new Date(coupon.created_at).toLocaleDateString()}</td>
-                    <td>
-                      {new Date(coupon.expiration_date).toLocaleDateString()}
-                    </td>
-                    <td>{coupon.username}</td>
+                    <td>{template.coupon_name}</td>
+                    <td>{template.quantity}</td>
+                    <td>{template.point}</td>
+                    <td>{new Date(template.created_at).toLocaleDateString()}</td>
+                    <td>{new Date(template.expiration_date).toLocaleDateString()}</td>
+                    <td>{template.username}</td>
                   </CouponTemplateRow>
                 ))}
               </tbody>

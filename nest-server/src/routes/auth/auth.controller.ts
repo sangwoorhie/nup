@@ -177,15 +177,15 @@ export class AuthController {
     return this.authService.signOut(user.id);
   }
 
-  // 7. 비밀번호 재설정 (개인회원/사업자회원/관리자회원)
+  // 7. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
   // POST : localhost:3000/auth/reset-password
   @Post('reset-password')
   @Public()
-  @ApiOperation({ summary: '비밀번호 재발급 이메일 전송' })
+  @ApiOperation({ summary: '임시 비밀번호 발급 이메일 전송' })
   @ApiBody({ type: ResetPasswordReqDto })
   @ApiResponse({
     status: 200,
-    description: '비밀번호 재발급 이메일 전송 성공',
+    description: '임시 비밀번호 발급 이메일 전송 성공',
     type: ResetPasswordResDto,
   })
   async resetPassword(

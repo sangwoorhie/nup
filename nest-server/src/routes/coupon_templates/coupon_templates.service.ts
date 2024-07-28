@@ -314,6 +314,7 @@ export class CouponTemplatesService {
     });
 
     const items = coupons.map((coupon) => ({
+      id: coupon.id,
       code: coupon.code,
       is_used: coupon.is_used,
       used_at: coupon.used_at ? coupon.used_at.toISOString() : null,
@@ -360,6 +361,7 @@ export class CouponTemplatesService {
     });
 
     const items = coupons.map((coupon) => ({
+      id: coupon.id,
       code: coupon.code,
       is_used: coupon.is_used,
       used_at: coupon.used_at ? coupon.used_at.toISOString() : null,

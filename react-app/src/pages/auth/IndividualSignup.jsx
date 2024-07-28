@@ -1,3 +1,5 @@
+// IndividualSignup.jsx
+
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -154,15 +156,15 @@ const IndividualSignup = () => {
     <Container>
       <Header>KO-MAPPER AI</Header>
       <Steps>
-        <Step active={currentStep === 1}>
+        <Step $active={currentStep === 1}>
           <StepIcon>{currentStep > 1 ? '✓' : '1'}</StepIcon>
           <StepLabel>약관동의</StepLabel>
         </Step>
-        <Step active={currentStep === 2}>
+        <Step $active={currentStep === 2}>
           <StepIcon>{currentStep > 2 ? '✓' : '2'}</StepIcon>
           <StepLabel>회원정보입력</StepLabel>
         </Step>
-        <Step active={currentStep === 3}>
+        <Step $active={currentStep === 3}>
           <StepIcon>{currentStep === 3 ? '✓' : '3'}</StepIcon>
           <StepLabel>가입완료</StepLabel>
         </Step>
@@ -223,7 +225,7 @@ const IndividualSignup = () => {
               </Section>
             </TermsContainer>
             <ButtonContainer>
-              <Button onClick={handleBackClick} secondary>
+              <Button onClick={handleBackClick} $secondary>
                 뒤로가기
               </Button>
               <Button onClick={handleNextClick}>확인</Button>
@@ -238,195 +240,198 @@ const IndividualSignup = () => {
               항목입니다.
             </SmallText>
             <Table>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='email'>E-mail</Label>
-                  <InputWrapper>
-                    <Input
-                      id='email'
-                      type='text'
-                      value={email}
-                      onChange={handleEmailChange}
-                      required
-                    />
-                    <EmailProviderWrapper>
-                      {isCustomEmailProvider ? (
-                        <CustomEmailInput
-                          type='text'
-                          value={emailProvider}
-                          onChange={handleCustomEmailProviderChange}
-                          placeholder='직접 입력'
-                          required
-                        />
-                      ) : (
-                        <Select
-                          value={emailProvider}
-                          onChange={handleEmailProviderChange}
-                        >
-                          <option value='@naver.com'>@naver.com</option>
-                          <option value='@gmail.com'>@gmail.com</option>
-                          <option value='@daum.net'>@daum.net</option>
-                          <option value='@hanmail.net'>@hanmail.net</option>
-                          <option value='@kakao.com'>@kakao.com</option>
-                          <option value='@hotmail.com'>@hotmail.com</option>
-                          <option value='@icloud.com'>@icloud.com</option>
-                          <option value='@nate.com'>@nate.com</option>
-                          <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
-                          <option value='직접입력'>직접입력</option>
-                        </Select>
-                      )}
-                    </EmailProviderWrapper>
-                    <CheckButton type='button' onClick={handleSendAuthNumber}>
-                      인증번호 발송
-                    </CheckButton>
-                    {/* <CheckButton type='button' onClick={handleCheckEmailClick}>
-                      중복확인
-                    </CheckButton> */}
-                  </InputWrapper>
-                  <Description>
-                    *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
-                    현금영수증 등 각종 문서 수신 및 비밀번호 분실 시 임시
-                    비밀번호 발급 등 중요한 알림을 수신하는 데 사용되므로,
-                    반드시 정확한 이메일 주소를 입력해주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              {/* New Row for 인증번호 확인 */}
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='authNumber'>인증번호 확인</Label>
-                  <InputWrapper>
-                    <Input
-                      id='authNumber'
-                      type='text'
-                      value={inputAuthNumber}
-                      onChange={(e) => setInputAuthNumber(e.target.value)}
-                      required
-                    />
+              <tbody>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='email'>E-mail</Label>
+                    <InputWrapper>
+                      <Input
+                        id='email'
+                        type='text'
+                        value={email}
+                        onChange={handleEmailChange}
+                        required
+                      />
+                      <EmailProviderWrapper>
+                        {isCustomEmailProvider ? (
+                          <CustomEmailInput
+                            type='text'
+                            value={emailProvider}
+                            onChange={handleCustomEmailProviderChange}
+                            placeholder='직접 입력'
+                            required
+                          />
+                        ) : (
+                          <Select
+                            value={emailProvider}
+                            onChange={handleEmailProviderChange}
+                          >
+                            <option value='@naver.com'>@naver.com</option>
+                            <option value='@gmail.com'>@gmail.com</option>
+                            <option value='@daum.net'>@daum.net</option>
+                            <option value='@hanmail.net'>@hanmail.net</option>
+                            <option value='@kakao.com'>@kakao.com</option>
+                            <option value='@hotmail.com'>@hotmail.com</option>
+                            <option value='@icloud.com'>@icloud.com</option>
+                            <option value='@nate.com'>@nate.com</option>
+                            <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
+                            <option value='직접입력'>직접입력</option>
+                          </Select>
+                        )}
+                      </EmailProviderWrapper>
+                      <CheckButton type='button' onClick={handleSendAuthNumber}>
+                        인증번호 발송
+                      </CheckButton>
+                      {/* <CheckButton type='button' onClick={handleCheckEmailClick}>
+                        중복확인
+                      </CheckButton> */}
+                    </InputWrapper>
+                    <Description>
+                      *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
+                      현금영수증 등 각종 문서 수신 및 비밀번호 분실 시 임시
+                      비밀번호 발급 등 중요한 알림을 수신하는 데 사용되므로,
+                      반드시 정확한 이메일 주소를 입력해주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='authNumber'>인증번호 확인</Label>
+                    <InputWrapper>
+                      <Input
+                        id='authNumber'
+                        type='text'
+                        value={inputAuthNumber}
+                        onChange={(e) => setInputAuthNumber(e.target.value)}
+                        required
+                      />
 
-                    <CheckButton type='button' onClick={handleVerifyAuthNumber}>
-                      인증번호 확인
-                    </CheckButton>
-                  </InputWrapper>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='password'>비밀번호</Label>
-                  <InputWrapper>
-                    <Input
-                      id='password'
-                      type={passwordVisible ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <ToggleVisibilityButton
-                      type='button'
-                      onClick={() =>
-                        togglePasswordVisibility(setPasswordVisible)
-                      }
-                    >
-                      {passwordVisible ? '👁' : '👁‍🗨'}
-                    </ToggleVisibilityButton>
-                  </InputWrapper>
-                  <Description>
-                    *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자
-                    이상, 최대 20자 이내로 구성된 비밀번호를 작성해 주세요.
-                  </Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='confirmPassword'>비밀번호 확인</Label>
-                  <InputWrapper>
-                    <Input
-                      id='confirmPassword'
-                      type={confirmPasswordVisible ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                    <ToggleVisibilityButton
-                      type='button'
-                      onClick={() =>
-                        togglePasswordVisibility(setConfirmPasswordVisible)
-                      }
-                    >
-                      {confirmPasswordVisible ? '👁' : '👁‍🗨'}
-                    </ToggleVisibilityButton>
-                  </InputWrapper>
-                  <Description>*비밀번호를 한번 더 입력해주세요.</Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='name'>이름</Label>
-                  <InputWrapper>
-                    <Input
-                      id='name'
-                      type='text'
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>*실제 본명을 한글로 입력해 주세요.</Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <RequiredIndicator>▶</RequiredIndicator>
-                  <Label htmlFor='phone'>휴대전화</Label>
-                  <InputWrapper>
-                    <Input
-                      id='phone'
-                      type='tel'
-                      value={phone}
-                      onChange={(e) => handlePhoneChange(e, setPhone)}
-                      required
-                    />
-                  </InputWrapper>
-                  <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <OptionalIndicator>▶</OptionalIndicator>
-                  <Label htmlFor='profileImage'>프로필 이미지</Label>
-                  <InputWrapper>
-                    <Input
-                      id='profileImage'
-                      type='file'
-                      onChange={(e) => setProfileImage(e.target.files[0])}
-                    />
-                  </InputWrapper>
-                </Cell>
-              </Row>
-              <Row>
-                <Cell>
-                  <OptionalIndicator>▶</OptionalIndicator>
-                  <Label htmlFor='emergencyPhone'>비상연락처</Label>
-                  <InputWrapper>
-                    <Input
-                      id='emergencyPhone'
-                      type='tel'
-                      value={emergencyPhone}
-                      onChange={(e) => handlePhoneChange(e, setEmergencyPhone)}
-                    />
-                  </InputWrapper>
-                  <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
-                </Cell>
-                <br />
-              </Row>
+                      <CheckButton type='button' onClick={handleVerifyAuthNumber}>
+                        인증번호 확인
+                      </CheckButton>
+                    </InputWrapper>
+                    <Description>
+                      *입력하신 이메일로 전송받은 인증번호를 입력해 주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='password'>비밀번호</Label>
+                    <InputWrapper>
+                      <Input
+                        id='password'
+                        type={passwordVisible ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <ToggleVisibilityButton
+                        type='button'
+                        onClick={() =>
+                          togglePasswordVisibility(setPasswordVisible)
+                        }
+                      >
+                        {passwordVisible ? '👁' : '👁‍🗨'}
+                      </ToggleVisibilityButton>
+                    </InputWrapper>
+                    <Description>
+                      *영문 대문자, 소문자, 숫자 및 특수기호를 포함하여 최소 8자
+                      이상, 최대 20자 이내로 구성된 비밀번호를 작성해 주세요.
+                    </Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='confirmPassword'>비밀번호 확인</Label>
+                    <InputWrapper>
+                      <Input
+                        id='confirmPassword'
+                        type={confirmPasswordVisible ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                      <ToggleVisibilityButton
+                        type='button'
+                        onClick={() =>
+                          togglePasswordVisibility(setConfirmPasswordVisible)
+                        }
+                      >
+                        {confirmPasswordVisible ? '👁' : '👁‍🗨'}
+                      </ToggleVisibilityButton>
+                    </InputWrapper>
+                    <Description>*비밀번호를 한번 더 입력해주세요.</Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='name'>이름</Label>
+                    <InputWrapper>
+                      <Input
+                        id='name'
+                        type='text'
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>*실제 본명을 한글로 입력해 주세요.</Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <RequiredIndicator>▶</RequiredIndicator>
+                    <Label htmlFor='phone'>휴대전화</Label>
+                    <InputWrapper>
+                      <Input
+                        id='phone'
+                        type='tel'
+                        value={phone}
+                        onChange={(e) => handlePhoneChange(e, setPhone)}
+                        required
+                      />
+                    </InputWrapper>
+                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <OptionalIndicator>▶</OptionalIndicator>
+                    <Label htmlFor='profileImage'>프로필 이미지</Label>
+                    <InputWrapper>
+                      <Input
+                        id='profileImage'
+                        type='file'
+                        onChange={(e) => setProfileImage(e.target.files[0])}
+                      />
+                    </InputWrapper>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
+                    <OptionalIndicator>▶</OptionalIndicator>
+                    <Label htmlFor='emergencyPhone'>비상연락처</Label>
+                    <InputWrapper>
+                      <Input
+                        id='emergencyPhone'
+                        type='tel'
+                        value={emergencyPhone}
+                        onChange={(e) => handlePhoneChange(e, setEmergencyPhone)}
+                      />
+                    </InputWrapper>
+                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                  </Cell>
+                </Row>
+              </tbody>
             </Table>
             <ButtonContainer>
-              <Button onClick={handleBackClick} secondary>
+              <Button onClick={handleBackClick} $secondary>
                 뒤로가기
               </Button>
               <Button type='submit' onClick={handleSubmit}>
@@ -488,13 +493,13 @@ const Step = styled.div`
   flex-direction: column;
   align-items: center;
   margin: 0 10px;
-  color: ${(props) => (props.active ? '#0056b3' : '#ccc')};
+  color: ${(props) => (props.$active ? '#0056b3' : '#ccc')};
 `;
 
 const StepIcon = styled.div`
   width: 50px;
   height: 50px;
-  border: 2px solid ${(props) => (props.active ? '#0056b3' : '#ccc')};
+  border: 2px solid ${(props) => (props.$active ? '#0056b3' : '#ccc')};
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -661,9 +666,9 @@ const Button = styled.button`
   flex: 1;
   margin: 0 10px;
   padding: 10px 20px;
-  background-color: ${(props) => (props.secondary ? 'white' : '#0056b3')};
-  color: ${(props) => (props.secondary ? '#0056b3' : 'white')};
-  border: ${(props) => (props.secondary ? '1px solid #0056b3' : 'none')};
+  background-color: ${(props) => (props.$secondary ? 'white' : '#0056b3')};
+  color: ${(props) => (props.$secondary ? '#0056b3' : 'white')};
+  border: ${(props) => (props.$secondary ? '1px solid #0056b3' : 'none')};
   cursor: pointer;
 `;
 

@@ -198,6 +198,7 @@ export class CouponsService {
     }
 
     const result = new FindCouponResDto();
+    result.id = coupon.id;
     result.code = coupon.code;
     result.is_used = coupon.is_used;
     result.used_at = coupon.used_at ? coupon.used_at.toISOString() : null;

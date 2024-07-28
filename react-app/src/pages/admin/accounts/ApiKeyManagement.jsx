@@ -32,9 +32,6 @@ const ApiKeyManagement = () => {
         const { data } = await (criteria && value
           ? listApiKeysSearchAdmin(page, size, criteria, value)
           : listApiKeysAdmin(page, size));
-        if (data.items.length === 0) {
-          alert('검색어와 일치하는 API 키가 존재하지 않습니다.');
-        }
         setApiKeys(data.items);
         setTotalRecords(data.total);
       } catch (error) {
@@ -66,7 +63,12 @@ const ApiKeyManagement = () => {
 
   const handleSearch = async () => {
     try {
-      await fetchApiKeys(page, pageSize, searchCriteria, searchValue);
+      const { data } = await listApiKeysSearchAdmin(page, pageSize, searchCriteria, searchValue);
+      if (data.items.length === 0) {
+        alert('검색어와 일치하는 API 키가 존재하지 않습니다.');
+      }
+      setApiKeys(data.items);
+      setTotalRecords(data.total);
     } catch (error) {
       console.error('Failed to search API keys:', error);
     }

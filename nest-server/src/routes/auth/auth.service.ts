@@ -357,7 +357,7 @@ export class AuthService {
     return { message: '로그아웃 되었습니다.' };
   }
 
-  // 7. 비밀번호 재설정 (개인회원/사업자회원/관리자회원)
+  // 7. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
   async resetPassword(
     email: string,
     username: string,
@@ -388,9 +388,9 @@ export class AuthService {
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
         to: email,
-        subject: '비밀번호 재설정 안내 - Komapper A.I.',
+        subject: '[KO-MAPPER AI] 임시 비밀번호 발급 안내',
         html: `<p>안녕하세요, ${user.username}님.</p>
-               <p>요청하신 비밀번호가 재설정되었습니다. 새로운 비밀번호는 아래와 같습니다:</p>
+               <p>요청하신 임시 비밀번호가 발급되었습니다. 새로운 비밀번호는 아래와 같습니다:</p>
                <p><strong>${newPassword}</strong></p>
                <p>로그인 후 비밀번호를 변경하는 것을 권장드립니다.</p>
                <p>감사합니다.</p>`,

@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsNumber,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 // 쿠폰 생성 응답 DTO
@@ -90,6 +91,10 @@ export class FindOneCouponTemplateResDto {
 
 // 쿠폰 템플릿 상세조회 응답 DTO
 export class FindCouponResDto {
+  @ApiProperty({ description: '쿠폰 ID' })
+  @IsUUID()
+  id: string;
+
   @ApiProperty({ description: '쿠폰코드' })
   @IsString()
   code: string;
