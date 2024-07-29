@@ -61,9 +61,9 @@ const CouponCharge = () => {
           <SubmitButton onClick={handleCouponSubmit}>등록</SubmitButton>
         </Form>
         <CouponGuidelines>
-          <li>쿠폰은 한 번 사용 후 재사용이 불가능합니다.</li>
-          <li>쿠폰 등록 시 유효한 포인트로 전환됩니다.</li>
-          <li>쿠폰 유효기간 이후에는 사용할 수 없습니다.</li>
+          <li>* 쿠폰은 한 번 사용 후 재사용이 불가능합니다.</li>
+          <li>* 쿠폰 등록 시 유효한 포인트로 전환됩니다.</li>
+          <li>* 쿠폰 유효기간 이후에는 사용할 수 없습니다.</li>
         </CouponGuidelines>
         {showModal && (
           <CouponModal
@@ -125,7 +125,7 @@ const CouponGuidelines = styled.ul`
 `;
 
 const Form = styled.div`
-  margin-top: 20px;
+  margin-top: 30px;
   background: #f9f9f9;
   width: 400px;
   height: 250px;

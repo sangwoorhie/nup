@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { AiModel } from './ai_model.entity';
@@ -64,6 +65,11 @@ export class PaymentRecord {
   @ApiProperty({ description: '거래 발생시각' })
   @CreateDateColumn({ type: 'date' })
   created_at: Date;
+
+  // 거래 삭제시각
+  @ApiProperty({ description: '거래 삭제시각' })
+  @DeleteDateColumn({ type: 'date', nullable: true })
+  deleted_at: Date;
 
   // PaymentRecord : User = N : 1 관계
   @ApiProperty({ description: '회원' })

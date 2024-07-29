@@ -40,3 +40,34 @@ export const sendChargeEmail = async (
 export const getUsedCoupons = async (page: number, size: number) => {
   return httpClient.get(`/coupons/used?page=${page}&size=${size}`);
 };
+
+// 유저 본인 포인트충전 기록 조회
+export const getChargeHistory = async (page: number, size: number) => {
+  try {
+    const response = await httpClient.get(
+      `/payment-records/charge?page=${page}&size=${size}`
+    );
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to fetch charge history';
+    throw new Error(message);
+  }
+};
+
+// 포인트충전 기록 삭제
+export const deleteChargeHistory = async (id: string) => {
+  try {
+    if (!id) throw new Error('Invalid ID');
+    const response = await httpClient.delete(`/payment-records/charge/${id}`);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to delete charge history';
+    throw new Error(message);
+  }
+};

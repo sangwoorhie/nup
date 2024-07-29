@@ -15,7 +15,7 @@ import {
 } from './dto/res.dto';
 import { PageResDto } from 'src/common/dto/res.dto';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
-import { ChargeType, PaymentType } from 'src/enums/enums';
+import { ChargeStatus, ChargeType, PaymentType } from 'src/enums/enums';
 import { FindCouponResDto } from '../coupon_templates/dto/res.dto';
 
 @Injectable()
@@ -102,6 +102,7 @@ export class CouponsService {
       // PaymentRecord 생성
       const paymentRecord = new PaymentRecord();
       paymentRecord.payment_type = PaymentType.CHARGE;
+      paymentRecord.charge_status = ChargeStatus.CONFIRMED;
       paymentRecord.charge_type = ChargeType.COUPON;
       paymentRecord.point = coupon.coupon_template.point;
       paymentRecord.user_point = user.point;
