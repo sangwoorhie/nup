@@ -311,6 +311,7 @@ export class CouponTemplatesService {
       relations: ['user'],
       skip: (page - 1) * size,
       take: size,
+      withDeleted: true, // Include soft-deleted records
     });
 
     const items = coupons.map((coupon) => ({
@@ -321,6 +322,7 @@ export class CouponTemplatesService {
       // used_at: coupon.used_at instanceof Date ? coupon.used_at.toISOString() : null,
       username: coupon.user ? coupon.user.username : null,
       email: coupon.user ? coupon.user.email : null,
+      // deleted_at: coupon.deleted_at ? coupon.deleted_at.toISOString() : null, // Add deleted_at field
     }));
 
     return {
@@ -358,6 +360,7 @@ export class CouponTemplatesService {
       relations: ['user'],
       skip: (page - 1) * size,
       take: size,
+      withDeleted: true, // Include soft-deleted records
     });
 
     const items = coupons.map((coupon) => ({
@@ -368,6 +371,7 @@ export class CouponTemplatesService {
       // used_at: coupon.used_at instanceof Date ? coupon.used_at.toISOString() : null,
       username: coupon.user ? coupon.user.username : null,
       email: coupon.user ? coupon.user.email : null,
+      // deleted_at: coupon.deleted_at ? coupon.deleted_at.toISOString() : null, // Add deleted_at field
     }));
 
     return {

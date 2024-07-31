@@ -276,6 +276,7 @@ const IndividualSignup = () => {
                             <option value='@icloud.com'>@icloud.com</option>
                             <option value='@nate.com'>@nate.com</option>
                             <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
+                            <option value='@komapper.ai'>@komapper.ai</option>
                             <option value='직접입력'>직접입력</option>
                           </Select>
                         )}
@@ -308,7 +309,10 @@ const IndividualSignup = () => {
                         required
                       />
 
-                      <CheckButton type='button' onClick={handleVerifyAuthNumber}>
+                      <CheckButton
+                        type='button'
+                        onClick={handleVerifyAuthNumber}
+                      >
                         인증번호 확인
                       </CheckButton>
                     </InputWrapper>
@@ -381,7 +385,9 @@ const IndividualSignup = () => {
                         required
                       />
                     </InputWrapper>
-                    <Description>*실제 본명을 한글로 입력해 주세요.</Description>
+                    <Description>
+                      *실제 본명을 한글로 입력해 주세요.
+                    </Description>
                   </Cell>
                 </Row>
                 <Row>
@@ -397,7 +403,9 @@ const IndividualSignup = () => {
                         required
                       />
                     </InputWrapper>
-                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                    <Description>
+                      *'-'를 제외한 숫자만 입력해주세요.
+                    </Description>
                   </Cell>
                 </Row>
                 <Row>
@@ -422,10 +430,14 @@ const IndividualSignup = () => {
                         id='emergencyPhone'
                         type='tel'
                         value={emergencyPhone}
-                        onChange={(e) => handlePhoneChange(e, setEmergencyPhone)}
+                        onChange={(e) =>
+                          handlePhoneChange(e, setEmergencyPhone)
+                        }
                       />
                     </InputWrapper>
-                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                    <Description>
+                      *'-'를 제외한 숫자만 입력해주세요.
+                    </Description>
                   </Cell>
                 </Row>
               </tbody>
@@ -499,7 +511,7 @@ const Step = styled.div`
 const StepIcon = styled.div`
   width: 50px;
   height: 50px;
-  border: 2px solid ${(props) => (props.$active ? '#0056b3' : '#ccc')};
+  border: 1px solid ${(props) => (props.$active ? '#0056b3' : '#ccc')};
   border-radius: 50%;
   display: flex;
   justify-content: center;

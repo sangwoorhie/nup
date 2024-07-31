@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Paginator } from 'primereact/paginator';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
-import { getUsedCoupons } from '../../../services/userServices';
+import { getUsedCoupons, removeCoupon } from '../../../services/userServices';
 import MainHeader from '../../../components/etc/ui/MainHeader';
 import SubHeaders from '../../../components/etc/ui/SubHeaders';
 import Footer from '../../../components/etc/ui/Footer';
@@ -44,6 +44,20 @@ const MyCoupon = () => {
     window.location.reload();
   };
 
+  const handleDelete = async (id) => {
+    console.log('Coupon ID to be deleted:', id);
+    const confirmed = window.confirm('정말 삭제하시겠습니까?');
+    if (confirmed) {
+      try {
+        await removeCoupon(id);
+        alert('쿠폰이 삭제되었습니다.');
+        fetchCoupons(first / rows + 1, rows);
+      } catch (error) {
+        console.error('Failed to delete coupon:', error);
+      }
+    }
+  };
+
   return (
     <Container>
       <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
@@ -78,7 +92,9 @@ const MyCoupon = () => {
                 <Td>{new Date(coupon.used_at).toLocaleDateString()}</Td>
                 <Td>{new Date(coupon.expiration_date).toLocaleDateString()}</Td>
                 <Td>
-                  <DeleteButton>삭제</DeleteButton>
+                  <DeleteButton onClick={() => handleDelete(coupon.id)}>
+                    삭제
+                  </DeleteButton>
                 </Td>
               </Tr>
             ))}

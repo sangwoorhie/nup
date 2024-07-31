@@ -143,6 +143,7 @@ export class CouponsService {
     });
 
     const items = coupons.map((coupon) => ({
+      id: coupon.id,
       coupon_name: coupon.coupon_template.coupon_name,
       code: coupon.code,
       point: coupon.coupon_template.point,
@@ -161,7 +162,7 @@ export class CouponsService {
   // 4. 단일 쿠폰 삭제
   async removeCoupon(id: string, userId: string): Promise<{ message: string }> {
     const coupon = await this.couponRepository.findOne({
-      where: { id },
+      where: { id, deleted_at: null },
       relations: ['user', 'payment_records'],
     });
 
@@ -173,14 +174,9 @@ export class CouponsService {
       throw new BadRequestException('본인이 사용한 쿠폰만 삭제할 수 있습니다.');
     }
 
-    // 결제 기록의 쿠폰 관계 제거
-    await this.paymentRecordRepository.update(
-      { coupons: coupon },
-      { coupons: null },
-    );
+    coupon.deleted_at = new Date();
 
-    // 쿠폰 삭제
-    await this.couponRepository.remove(coupon);
+    await this.couponRepository.save(coupon);
     return { message: `쿠폰 ID : ${id}가 성공적으로 삭제되었습니다.` };
   }
 

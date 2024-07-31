@@ -164,3 +164,51 @@ export const findCoupon = async (templateId: string, couponId: string) => {
     `/coupon-templates/${templateId}/coupons/${couponId}`
   );
 };
+
+// 현금충전 요청 조회
+export const getCashChargeRequests = async (page: number, size: number) => {
+  const response = await httpClient.get(
+    `/payment-records/admin/charge?page=${page}&size=${size}`
+  );
+  return response.data;
+};
+
+// 현금충전 확인 또는 취소 처리
+export const confirmCharges = async (chargeUpdates: any) => {
+  return await httpClient.patch(`/payment-records/admin/charge`, chargeUpdates);
+};
+
+// 현금충전 요청 조회 (날짜별)
+export const getCashChargeRequestsByDateRange = async (
+  page: number,
+  size: number,
+  startDate: string,
+  endDate: string
+) => {
+  const response = await httpClient.get('/payment-records/admin/date-range', {
+    params: {
+      page,
+      size,
+      start_date: startDate,
+      end_date: endDate,
+    },
+  });
+  return response.data;
+};
+
+// 현금충전 요청 삭제
+export const deleteChargeRequests = async (ids: string[]) => {
+  return await httpClient.delete('/payment-records/admin/charge', {
+    data: { ids },
+  });
+};
+
+// 회원 충전요청내역 조회 (관리자)
+export const getUserChargeRequest = async (
+  userId: string,
+  page: number,
+  size: number
+) => {
+  const url = `/payment-records/admin/charge-request/${userId}?page=${page}&size=${size}`;
+  return await httpClient.get(url);
+};

@@ -1,9 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const SubHeaders = ({ activeHeader, userType }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleNavigation = (destination) => {
     if (
@@ -68,6 +69,7 @@ const SubHeaders = ({ activeHeader, userType }) => {
         return [
           { label: '개인 회원', path: '/individual-payments' },
           { label: '사업자 회원', path: '/corporate-payments' },
+          { label: '현금충전 요청', path: '/cash-charge-request' },
           { label: '환불 처리', path: '/refund-process' },
         ];
       } else if (activeHeader === '쿠폰 관리') {
@@ -86,6 +88,7 @@ const SubHeaders = ({ activeHeader, userType }) => {
   };
 
   const subOptions = renderSubOptions();
+  const currentPath = location.pathname;
 
   return (
     <Container>
@@ -93,6 +96,7 @@ const SubHeaders = ({ activeHeader, userType }) => {
         <SubOption
           key={option.label}
           onClick={() => handleNavigation(option.path)}
+          active={currentPath === option.path}
         >
           {option.label}
         </SubOption>
@@ -113,6 +117,8 @@ const SubOption = styled.div`
   cursor: pointer;
   padding: 5px 10px;
   transition: background-color 0.3s;
+  background-color: ${({ active }) =>
+    active ? 'rgba(0, 0, 0, 0.1)' : 'transparent'};
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);

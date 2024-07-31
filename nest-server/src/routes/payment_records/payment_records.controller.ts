@@ -9,13 +9,14 @@ import {
   Delete,
 } from '@nestjs/common';
 import { PaymentRecordsService } from './payment_records.service';
-import { AdminChargeDto, CreateChargeReqDto } from './dto/req.dto';
+import { AdminChargeDto, CreateChargeReqDto, DateReqDto } from './dto/req.dto';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { Usertype } from 'src/decorators/usertype.decorators';
 import { UserType } from 'src/enums/enums';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { PageResDto } from 'src/common/dto/res.dto';
+import { DeleteRecordsDto } from './dto/req.dto';
 
 @ApiTags('Payment-Record')
 @Controller('payment-records')
@@ -80,16 +81,80 @@ export class PaymentRecordsController {
     return await this.paymentRecordsService.getPendingCharges(page, size);
   }
 
-  // 5. 포인트 충전 또는 취소 처리 (관리자)
-  // PATCH : localhost:3000/payment-records/admin/charge/:payment_record_id
-  @Patch('admin/charge/:id')
+  // 5. 포인트 충전 요청 목록 날짜별 조회 (관리자)
+  // GET : localhost:3000/payment-records/admin/date-range?page=1&size=10&start_date=2023-01-01&end_date=2023-12-31
+  @Get('admin/date-range')
   @Usertype(UserType.ADMIN)
-  @ApiOperation({ summary: '사용자 포인트 충전 또는 취소 처리 (관리자)' })
+  @ApiOperation({
+    summary: '포인트 충전요청 기간조회 (관리자)',
+  })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiQuery({
+    name: 'start_date',
+    required: true,
+    description: '충전 요청 시작일',
+  })
+  @ApiQuery({
+    name: 'end_date',
+    required: true,
+    description: '충전 요청 마감일',
+  })
   @ApiResponse({ status: 200, description: '성공' })
-  async confirmCharge(
-    @Param('id') id: string,
-    @Body() adminChargeDto: AdminChargeDto,
+  async findChargeRequestByDateRange(
+    @Query() { page, size }: PageReqDto,
+    @Query('start_date') start_date: string,
+    @Query('end_date') end_date: string,
   ) {
-    return await this.paymentRecordsService.confirmCharge(id, adminChargeDto);
+    const dateReqDto: DateReqDto = {
+      start_date: new Date(start_date),
+      end_date: new Date(end_date),
+    };
+
+    return await this.paymentRecordsService.findChargeRequestByDateRange(
+      page,
+      size,
+      dateReqDto,
+    );
+  }
+
+  // 6. 포인트 충전 또는 취소(반려) 처리 (관리자)
+  // PATCH : localhost:3000/payment-records/admin/charge
+  @Patch('admin/charge')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '사용자 포인트 충전 또는 취소(반려) 처리 (관리자)' })
+  @ApiResponse({ status: 200, description: '성공' })
+  async confirmCharges(@Body() adminChargeDtos: AdminChargeDto[]) {
+    return await this.paymentRecordsService.confirmCharges(adminChargeDtos);
+  }
+
+  // 7. 충전요청내역 삭제처리 (관리자)
+  // DELETE : localhost:3000/payment-records/admin/charge
+  @Delete('admin/charge')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '포인트 충전요청 내역 삭제처리 (관리자)' })
+  @ApiResponse({ status: 200, description: '성공' })
+  async deleteRecords(@Body() deleteRecordsDto: DeleteRecordsDto) {
+    return await this.paymentRecordsService.deleteRecords(deleteRecordsDto);
+  }
+
+  // 8. 회원 충전요청내역 조회 (관리자)
+  // GET : localhost:3000/payment-records/admin/charge-request/:userId?page=1&size=20
+  @Get('admin/charge-request/:userId')
+  @Usertype(UserType.ADMIN)
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiOperation({ summary: '회원 충전요청내역 조회 (관리자)' })
+  @ApiResponse({ status: 200, description: '성공' })
+  async getUserChargeRequest(
+    @Param('userId') userId: string,
+    @Query() pageReqDto: PageReqDto,
+  ) {
+    const { page, size } = pageReqDto;
+    return await this.paymentRecordsService.getUserChargeRequest(
+      userId,
+      page,
+      size,
+    );
   }
 }

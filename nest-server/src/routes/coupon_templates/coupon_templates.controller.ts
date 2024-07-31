@@ -64,7 +64,7 @@ export class CouponTemplatesController {
     @User() user: UserAfterAuth,
     @Body() createCouponReqDto: CreateCouponReqDto,
   ) {
-    return this.couponTemplatesService.createCouponTemplate(
+    return await this.couponTemplatesService.createCouponTemplate(
       createCouponReqDto,
       user.id,
     );
@@ -95,7 +95,7 @@ export class CouponTemplatesController {
     const findCouponTemplateReqDto = new FindCouponTemplateReqDto();
     findCouponTemplateReqDto.criteria = criteria;
 
-    return this.couponTemplatesService.findCouponTemplates(
+    return await this.couponTemplatesService.findCouponTemplates(
       findCouponTemplateReqDto,
       page,
       size,
@@ -115,7 +115,7 @@ export class CouponTemplatesController {
   async findCouponTemplateByName(
     @Query() findByCouponNameReqDto: FindByCouponNameReqDto,
   ) {
-    return this.couponTemplatesService.findCouponTemplateByName(
+    return await this.couponTemplatesService.findCouponTemplateByName(
       findByCouponNameReqDto.coupon_name,
     );
   }
@@ -130,7 +130,7 @@ export class CouponTemplatesController {
     @Param('id') id: string,
     @Body() updateCouponReqDto: UpdateCouponReqDto,
   ) {
-    return this.couponTemplatesService.updateCouponTemplate(
+    return await this.couponTemplatesService.updateCouponTemplate(
       id,
       updateCouponReqDto,
     );
@@ -143,7 +143,7 @@ export class CouponTemplatesController {
   @ApiOperation({ summary: '쿠폰 템플릿 삭제 (관리자)' })
   @ApiResponse({ status: 200, description: '성공' })
   async removeCouponTemplate(@Param('id') id: string) {
-    return this.couponTemplatesService.removeCouponTemplate(id);
+    return await this.couponTemplatesService.removeCouponTemplate(id);
   }
 
   // 6. 쿠폰 발급 시작일부터 쿠폰 발급 마감일 사이에 생성된 쿠폰 템플릿 조회하기 (관리자)
@@ -176,7 +176,7 @@ export class CouponTemplatesController {
       end_date: new Date(end_date),
     };
 
-    return this.couponTemplatesService.findCouponTemplatesByDateRange(
+    return await this.couponTemplatesService.findCouponTemplatesByDateRange(
       page,
       size,
       dateReqDto,
@@ -214,7 +214,7 @@ export class CouponTemplatesController {
     findCouponReqDto1.code = code;
     findCouponReqDto1.username = username;
 
-    return this.couponTemplatesService.findCouponTemplateById(
+    return await this.couponTemplatesService.findCouponTemplateById(
       templateId,
       findCouponReqDto1,
       page,
@@ -248,7 +248,7 @@ export class CouponTemplatesController {
     const findCouponReqDto2 = new FindCouponReqDto2();
     findCouponReqDto2.criteria = criteria;
 
-    return this.couponTemplatesService.findCouponsByTemplateId(
+    return await this.couponTemplatesService.findCouponsByTemplateId(
       templateId,
       findCouponReqDto2,
       page,
@@ -266,7 +266,7 @@ export class CouponTemplatesController {
     @Param('templateId') templateId: string,
     @Param('couponId') couponId: string,
   ) {
-    return this.couponTemplatesService.removeCoupon(templateId, couponId);
+    return await this.couponTemplatesService.removeCoupon(templateId, couponId);
   }
 
   // 10. 쿠폰 상세정보 조회 (관리자)

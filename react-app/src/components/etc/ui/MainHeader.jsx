@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../services/authServices';
 import KMP_Logo from '../../../assets/img/kmplogo_fit.png';
+import 'primeicons/primeicons.css';
 
 const MainHeader = ({ setActiveHeader, userType }) => {
   const navigate = useNavigate();
@@ -49,7 +50,10 @@ const MainHeader = ({ setActiveHeader, userType }) => {
         </MainOptions>
       </LeftSection>
       <UserActions>
-        <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
+        <LogoutButton onClick={handleLogout}>
+          로그아웃
+          <i className='pi pi-sign-out' style={{ marginLeft: '10px' }}></i>
+        </LogoutButton>
         <UserIcon onClick={() => setActiveHeader('User')} />
       </UserActions>
     </Container>

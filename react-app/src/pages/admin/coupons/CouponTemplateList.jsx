@@ -6,7 +6,6 @@ import Footer from '../../../components/etc/ui/Footer';
 import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import { Paginator } from 'primereact/paginator';
-import { FaCalendarAlt } from 'react-icons/fa';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 import {
   getCouponsByName,
@@ -80,12 +79,28 @@ const CouponTemplateList = () => {
   }, [fetchCoupons, selectedTemplate]);
 
   const fetchCouponTemplates = useCallback(async () => {
-    const response = await httpClient.get('/coupon-templates', {
-      params: { page, size: pageSize, criteria },
-    });
+    let response;
+    if (dates && dates.length === 2 && dates[0] && dates[1]) {
+      const [start, end] = dates;
+      const startDate = new Date(start);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(end);
+      endDate.setHours(23, 59, 59, 999);
+
+      response = await getCouponsByDateRange(
+        startDate.toISOString(),
+        endDate.toISOString(),
+        page,
+        pageSize
+      );
+    } else {
+      response = await httpClient.get('/coupon-templates', {
+        params: { page, size: pageSize, criteria },
+      });
+    }
     setTemplates(response.data.items);
     setTotalRecords(response.data.total);
-  }, [page, pageSize, criteria]);
+  }, [page, pageSize, criteria, dates]);
 
   useEffect(() => {
     if (!selectedTemplate) {
@@ -131,33 +146,16 @@ const CouponTemplateList = () => {
         setTotalRecords(response.data.total);
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || '쿠폰을 검색하는 중 오류가 발생했습니다.';
+      const errorMessage =
+        error.response?.data?.message ||
+        '쿠폰을 검색하는 중 오류가 발생했습니다.';
       alert(errorMessage);
       console.error('Error searching coupons:', error, errorMessage);
     }
   };
 
-  const handleDateRangeChange = async (e) => {
+  const handleDateRangeChange = (e) => {
     setDates(e.value);
-    if (e.value && e.value.length === 2 && e.value[0] && e.value[1]) {
-      const [start, end] = e.value;
-      const startDate = new Date(start);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(end);
-      endDate.setHours(23, 59, 59, 999);
-
-      const formattedStartDate = startDate.toISOString();
-      const formattedEndDate = endDate.toISOString();
-
-      const response = await getCouponsByDateRange(
-        formattedStartDate,
-        formattedEndDate,
-        page,
-        pageSize
-      );
-      setCoupons(response.data.items);
-      setTotalRecords(response.data.total);
-    }
   };
 
   const handleTemplateDelete = async () => {
@@ -381,8 +379,9 @@ const CouponTemplateList = () => {
                     readOnlyInput
                     hideOnRangeSelection
                     dateFormat='yy-mm-dd'
+                    showIcon
+                    icon={() => <i className='pi pi-calendar' />} // Add icon here
                   />
-                  <FaCalendarIcon />
                 </CalendarContainer>
                 <ActionButton onClick={handleTemplateDelete}>
                   쿠폰 삭제
@@ -420,15 +419,21 @@ const CouponTemplateList = () => {
                       <input
                         type='checkbox'
                         checked={selectedTemplateIds.includes(template.id)}
-                        onChange={() => handleTemplateCheckboxChange(template.id)}
+                        onChange={() =>
+                          handleTemplateCheckboxChange(template.id)
+                        }
                         onClick={(e) => e.stopPropagation()} // Prevent row click
                       />
                     </td>
                     <td>{template.coupon_name}</td>
                     <td>{template.quantity}</td>
                     <td>{template.point}</td>
-                    <td>{new Date(template.created_at).toLocaleDateString()}</td>
-                    <td>{new Date(template.expiration_date).toLocaleDateString()}</td>
+                    <td>
+                      {new Date(template.created_at).toLocaleDateString()}
+                    </td>
+                    <td>
+                      {new Date(template.expiration_date).toLocaleDateString()}
+                    </td>
                     <td>{template.username}</td>
                   </CouponTemplateRow>
                 ))}
@@ -557,7 +562,7 @@ const CalendarContainer = styled.div`
   position: relative;
   display: flex;
   align-items: center;
-  width: 300px; /* Adjust the width to fit your requirement */
+  width: 250px; /* Adjust the width to fit your requirement */
 `;
 
 const StyledCalendar = styled(Calendar)`
@@ -576,20 +581,12 @@ const StyledCalendar = styled(Calendar)`
   .p-datepicker-trigger {
     position: absolute;
     top: 50%;
-    right: 10px;
+    right: 0; /* Remove right spacing */
     transform: translateY(-50%);
     cursor: pointer;
     color: #007bff; /* Match the button color */
+    border: 1px solid #ced4da; /* Match the border color of StyledCalendar */
   }
-`;
-
-const FaCalendarIcon = styled(FaCalendarAlt)`
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #007bff; /* Match the button color */
 `;
 
 const Table = styled.table`

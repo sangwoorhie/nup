@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsDate, IsNumber } from 'class-validator';
+import { IsString, IsDate, IsNumber, IsUUID } from 'class-validator';
 
 export class CouponDetailsResDto {
   @ApiProperty({ description: '쿠폰 명' })
@@ -26,6 +26,10 @@ export class CouponDetailsResDto {
 export class ApplyCouponResDto extends CouponDetailsResDto {}
 
 export class CouponListResDto {
+  @ApiProperty({ description: '쿠폰 ID' })
+  @IsUUID()
+  id: string;
+
   @ApiProperty({ description: '쿠폰 명' })
   @IsString()
   readonly coupon_name: string;

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, MoreThan, Repository } from 'typeorm';
+import { Between, DataSource, In, IsNull, MoreThan, Repository } from 'typeorm';
 import {
   ChargeStatus,
   ChargeType,
@@ -9,12 +9,22 @@ import {
 } from 'src/enums/enums';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
 import { User } from 'src/entities/user.entity';
-import { AdminChargeDto, CreateChargeReqDto } from './dto/req.dto';
+import {
+  AdminChargeDto,
+  CreateChargeReqDto,
+  DateReqDto,
+  DeleteRecordsDto,
+} from './dto/req.dto';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { PageResDto } from 'src/common/dto/res.dto';
-import { AdminChargeResDto, ChargeResDto } from './dto/res.dto';
+import {
+  AdminChargeResDto,
+  ChargeResAdminDto,
+  ChargeResDto,
+} from './dto/res.dto';
 import { createTransporter } from 'src/config/mailer.config';
-import * as moment from 'moment';
+import * as moment from 'moment-timezone';
+import { format } from 'date-fns';
 
 @Injectable()
 export class PaymentRecordsService {
@@ -39,6 +49,9 @@ export class PaymentRecordsService {
 
     const { amount, account_holder_name } = createChargeReqDto;
 
+    const now = moment().tz('Asia/Seoul');
+    const formattedDate = now.format('YYYY-MM-DD HH:mm');
+
     const newCharge = this.paymentRecordRepository.create({
       payment_type: PaymentType.CHARGE,
       charge_type: ChargeType.CASH,
@@ -47,14 +60,14 @@ export class PaymentRecordsService {
       user_point: user.point, // 요청 시점에서는 증가하지 않음
       user: user,
       charge_status: ChargeStatus.PENDING,
-      created_at: new Date(),
+      created_at: formattedDate,
     });
 
     await this.paymentRecordRepository.save(newCharge);
 
     // Send email notification
     const transporter = createTransporter();
-    const depositDeadline = moment().add(2, 'days').format('YYYY.MM.DD 23:59');
+    const depositDeadline = now.add(2, 'days').format('YYYY.MM.DD 23:59');
     const formattedAmount = amount.toLocaleString('en-US');
 
     const mailOptions = {
@@ -116,7 +129,9 @@ export class PaymentRecordsService {
         amount: amount,
         point: item.point,
         user_point: user.point,
-        created_at: item.created_at,
+        created_at: moment(item.created_at)
+          .tz('Asia/Seoul')
+          .format('YYYY-MM-DD HH:mm'),
       };
     });
 
@@ -159,18 +174,20 @@ export class PaymentRecordsService {
       where: {
         // 조회 조건
         payment_type: PaymentType.CHARGE, // 충전의 경우만
-        charge_status: ChargeStatus.PENDING, // pending 상태만
+        // charge_status: ChargeStatus.PENDING, // pending 상태만
         charge_type: ChargeType.CASH, // 현금충전의 경우만
         // deleted_at: IsNull(),
       },
       relations: ['user', 'user.corporate'],
       skip: (page - 1) * size,
       take: size,
+      order: { created_at: 'DESC' },
     });
 
     const mappedItems = items.map((item) => {
       const isCorporate = item.user.user_type === UserType.CORPORATE;
       return {
+        id: item.id,
         charge_type: item.charge_type,
         account_holder_name: item.account_holder_name,
         point: item.point,
@@ -181,6 +198,7 @@ export class PaymentRecordsService {
           ? item.user.corporate.corporate_name
           : item.user.username,
         phone: item.user.phone,
+        email: item.user.email,
       };
     });
 
@@ -192,36 +210,93 @@ export class PaymentRecordsService {
     };
   }
 
-  // 5. 포인트 충전 처리 (관리자)
-  async confirmCharge(
-    id: string,
-    adminChargeDto: AdminChargeDto,
-  ): Promise<PaymentRecord> {
+  // 5. 포인트 충전 요청 목록 날짜별 조회 (관리자)
+  async findChargeRequestByDateRange(
+    page: number,
+    size: number,
+    dateReqDto: DateReqDto,
+  ): Promise<PageResDto<AdminChargeResDto>> {
+    const startDate = new Date(dateReqDto.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(dateReqDto.end_date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.CHARGE,
+        charge_type: ChargeType.CASH,
+        created_at: Between(startDate, endDate),
+      },
+      relations: ['user', 'user.corporate'],
+      skip: (page - 1) * size,
+      take: size,
+      order: { created_at: 'DESC' },
+    });
+
+    const mappedItems = items.map((item) => {
+      const isCorporate = item.user.user_type === UserType.CORPORATE;
+      return {
+        id: item.id,
+        charge_type: item.charge_type,
+        account_holder_name: item.account_holder_name,
+        point: item.point,
+        user_point: item.user_point,
+        charge_status: item.charge_status,
+        created_at: item.created_at,
+        username: isCorporate
+          ? item.user.corporate.corporate_name
+          : item.user.username,
+        phone: item.user.phone,
+        email: item.user.email,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 6. 포인트 충전 처리 (관리자)
+  async confirmCharges(
+    adminChargeDtos: AdminChargeDto[],
+  ): Promise<PaymentRecord[]> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     let error;
+    const charges = [];
+
     try {
-      const charge = await queryRunner.manager.findOne(PaymentRecord, {
-        where: { id, deleted_at: IsNull() },
-        relations: ['user'],
-      });
+      for (const adminChargeDto of adminChargeDtos) {
+        const { id, status } = adminChargeDto;
+        const charge = await queryRunner.manager.findOne(PaymentRecord, {
+          where: { id, deleted_at: IsNull() },
+          relations: ['user'],
+        });
 
-      if (!charge) throw new Error('Charge not found');
-      if (charge.charge_status !== ChargeStatus.PENDING)
-        throw new Error('Charge is already processed');
-      charge.charge_status = adminChargeDto.status;
+        if (!charge) throw new Error(`Charge with ID ${id} not found`);
+        if (charge.charge_status === ChargeStatus.CONFIRMED)
+          throw new Error('이미 충전 완료 처리 된 요청 건입니다.');
+        if (charge.charge_status === ChargeStatus.REJECTED)
+          throw new Error('이미 반려 처리 된 요청 건입니다.');
+        charge.charge_status = status;
 
-      if (charge.charge_status === ChargeStatus.CONFIRMED) {
-        charge.user.point += charge.point;
-        charge.user_point = charge.user.point;
-        await queryRunner.manager.save(charge.user);
+        if (charge.charge_status === ChargeStatus.CONFIRMED) {
+          charge.user.point += charge.point;
+          charge.user_point = charge.user.point;
+          await queryRunner.manager.save(charge.user);
+        }
+
+        await queryRunner.manager.save(charge);
+        charges.push(charge);
       }
 
-      await queryRunner.manager.save(charge);
       await queryRunner.commitTransaction();
-      return charge;
+      return charges;
     } catch (e) {
       await queryRunner.rollbackTransaction();
       error = e;
@@ -229,5 +304,76 @@ export class PaymentRecordsService {
       await queryRunner.release();
       if (error) throw error;
     }
+  }
+
+  // 7. 충전요청내역 삭제처리 (관리자)
+  async deleteRecords(deleteRecordsDto: DeleteRecordsDto) {
+    const { ids } = deleteRecordsDto;
+
+    const records = await this.paymentRecordRepository.find({
+      where: { id: In(ids), deleted_at: IsNull() },
+    });
+
+    if (records.length === 0) {
+      throw new BadRequestException('삭제할 요청내역을 선택해 주세요.');
+    }
+
+    const now = new Date();
+    records.forEach((record) => (record.deleted_at = now));
+
+    await this.paymentRecordRepository.save(records);
+
+    return {
+      message: `${records.length} records have been successfully deleted.`,
+    };
+  }
+
+  // 8.회원 충전요청내역 조회 (관리자)
+  async getUserChargeRequest(
+    userId: string,
+    page: number,
+    size: number,
+  ): Promise<PageResDto<ChargeResAdminDto>> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    const username = user.username;
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.CHARGE,
+        user: { id: userId },
+        deleted_at: IsNull(),
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    const mappedItems = items.map((item) => {
+      const amount = item.point;
+      return {
+        id: item.id,
+        username: username,
+        charge_type: item.charge_type,
+        charge_status: item.charge_status,
+        amount: amount,
+        point: item.point,
+        user_point: item.user_point,
+        created_at: moment(item.created_at)
+          .tz('Asia/Seoul')
+          .format('YYYY-MM-DD HH:mm'),
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
   }
 }

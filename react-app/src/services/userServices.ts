@@ -71,3 +71,18 @@ export const deleteChargeHistory = async (id: string) => {
     throw new Error(message);
   }
 };
+
+// 단일 쿠폰 삭제
+export const removeCoupon = async (id: string) => {
+  try {
+    if (!id) throw new Error('Invalid ID');
+    const response = await httpClient.delete(`/coupons/${id}`);
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to delete coupon';
+    throw new Error(message);
+  }
+};

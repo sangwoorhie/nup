@@ -8,35 +8,65 @@ import {
   promoteUser,
   banUser,
   unbanUser,
+  getUserChargeRequest,
 } from '../../../services/adminService';
 import { Paginator } from 'primereact/paginator';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 import { FaCheck } from 'react-icons/fa'; // Import check icon
 import isPropValid from '@emotion/is-prop-valid';
 
+// Helper functions
+const formatPoints = (points) =>
+  points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'P';
+const formatCurrency = (amount) =>
+  amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
+
 const IndividualUserManagement = () => {
+  // State management
   const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [searchCriteria, setSearchCriteria] = useState('email');
   const [searchValue, setSearchValue] = useState('');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
+  const [chargeHistory, setChargeHistory] = useState([]);
+  const [chargeTotal, setChargeTotal] = useState(0);
+  const [chargePage, setChargePage] = useState(0);
+  const [chargePageSize, setChargePageSize] = useState(10);
+  const [chargeTotalRecords, setChargeTotalRecords] = useState(0);
 
+  // Fetch functions
   const fetchUsers = useCallback(
     async (criteria = '', value = '') => {
-      const { data } = await getUsers(page, pageSize, criteria, value);
+      const { data } = await getUsers(page + 1, pageSize, criteria, value); // Page is 1-based index
       setUsers(data.items);
       setTotalRecords(data.total);
     },
     [page, pageSize]
   );
 
+  const fetchChargeHistory = useCallback(
+    async (userId) => {
+      const { data } = await getUserChargeRequest(
+        userId,
+        chargePage + 1, // Page is 1-based index
+        chargePageSize
+      );
+      setChargeHistory(data.items);
+      setChargeTotal(data.total);
+      setChargeTotalRecords(data.total);
+    },
+    [chargePage, chargePageSize]
+  );
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
+  // Handlers
   const handleSearch = async () => {
     try {
       await fetchUsers(searchCriteria, searchValue);
@@ -46,9 +76,7 @@ const IndividualUserManagement = () => {
   };
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      handleSearch();
-    }
+    if (event.key === 'Enter') handleSearch();
   };
 
   const handlePromote = async () => {
@@ -110,6 +138,97 @@ const IndividualUserManagement = () => {
   const handleRefresh = () => {
     window.location.reload(); // Reload the page
   };
+
+  const handleViewChargeHistory = async (user) => {
+    setSelectedUser(user);
+    await fetchChargeHistory(user.id);
+  };
+
+  const handleBackToUserList = () => {
+    setSelectedUser(null);
+  };
+
+  // JSX rendering
+  if (selectedUser) {
+    return (
+      <Container>
+        <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+        <SubHeaders activeHeader={activeHeader} userType='admin' />
+        <Header>
+          <h2>{selectedUser.username} 회원의 포인트 충전 내역</h2>
+          <div>잔여 포인트: {formatPoints(selectedUser.point)}</div>
+        </Header>
+        <UserContent>
+          <MiddleWrapper>
+            <TotalCount>총 {chargeTotal}건</TotalCount>
+            <ButtonContainer>
+              <button onClick={handleBackToUserList}>뒤로가기</button>
+            </ButtonContainer>
+          </MiddleWrapper>
+          <TableWrapper>
+            <Table>
+              <thead>
+                <tr>
+                  <th>충전 일시</th>
+                  <th>충전 상태</th>
+                  <th>충전 유형</th>
+                  <th>온라인 영수증</th>
+                  <th>충전 금액</th>
+                  <th>충전 포인트</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chargeHistory.map((record) => (
+                  <tr key={record.id}>
+                    <td>{record.created_at}</td>
+                    <td>
+                      {record.charge_status === 'pending'
+                        ? '대기중'
+                        : record.charge_status === 'confirmed'
+                          ? '충전 완료'
+                          : '반려'}
+                    </td>
+                    <td>
+                      {record.charge_type === 'card'
+                        ? '카드 충전'
+                        : record.charge_type === 'cash'
+                          ? '현금 충전'
+                          : record.charge_type === 'paypal'
+                            ? '페이팔 충전'
+                            : '쿠폰 충전'}
+                    </td>
+                    <td>
+                      <button>온라인 영수증</button>
+                    </td>
+                    <td>
+                      {record.charge_type === 'coupon'
+                        ? '-'
+                        : formatCurrency(record.amount)}
+                    </td>
+                    <td>{formatPoints(record.point)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <Pagination>
+              <Paginator
+                first={chargePage * chargePageSize}
+                rows={chargePageSize}
+                totalRecords={chargeTotalRecords}
+                rowsPerPageOptions={[10, 20, 30]}
+                onPageChange={(e) => {
+                  setChargePage(e.page);
+                  setChargePageSize(e.rows);
+                  fetchChargeHistory(selectedUser.id);
+                }}
+              />
+            </Pagination>
+          </TableWrapper>
+        </UserContent>
+        <Footer />
+      </Container>
+    );
+  }
 
   return (
     <Container>
@@ -174,27 +293,28 @@ const IndividualUserManagement = () => {
                 <td>{user.phone}</td>
                 <td>{user.emergency_phone}</td>
                 <td>
-                  <button>충전 내역</button>
+                  <button onClick={() => handleViewChargeHistory(user)}>
+                    충전 내역
+                  </button>
                 </td>
                 <td>
                   <button>사용 내역</button>
                 </td>
-                <td>{user.point}</td>
+                <td>{formatPoints(user.point)}</td>
                 <td>{user.banned ? <FaCheck /> : ''}</td>
                 <td>{new Date(user.created_at).toLocaleDateString()}</td>
               </tr>
             ))}
           </tbody>
         </Table>
-
         <Pagination>
           <Paginator
-            first={(page - 1) * pageSize}
+            first={page * pageSize}
             rows={pageSize}
             totalRecords={totalRecords}
             rowsPerPageOptions={[10, 20, 30]}
             onPageChange={(e) => {
-              setPage(e.first / e.rows + 1);
+              setPage(e.page);
               setPageSize(e.rows);
               fetchUsers(searchCriteria, searchValue);
             }}
@@ -314,4 +434,50 @@ const RefreshButton = styled.button`
 const Pagination = styled.div`
   display: flex;
   justify-content: center;
+`;
+
+const Header = styled.div`
+  text-align: center;
+  background-color: #33556d;
+  padding: 50px;
+
+  h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+  }
+  div {
+    margin-top: 20px;
+    font-size: 16px;
+    color: white;
+  }
+`;
+
+const TotalCount = styled.div`
+  font-size: 16px;
+  display: inline-block;
+`;
+
+const MiddleWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 80%;
+  margin: 0 auto;
+`;
+
+const UserContent = styled.div`
+  flex: 1;
+  padding: 20px;
+  margin-top: 10px;
+  background-color: white;
+  width: 100%;
+  margin: 0 auto;
+`;
+
+const TableWrapper = styled.div`
+  margin: 0 auto;
+  width: 100%;
 `;

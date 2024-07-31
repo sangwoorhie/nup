@@ -22,6 +22,7 @@ import CouponTemplateList from './pages/admin/coupons/CouponTemplateList';
 import CouponCharge from './pages/user/point/CouponCharge';
 import MyCoupon from './pages/user/point/MyCoupon';
 import ChargeHistory from './pages/user/point/ChargeHistory';
+import CashChargeRequest from './pages/admin/charge/CashChargeRequest';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -54,6 +55,7 @@ const MainRoutes = () => (
     <Route path='/coupon-register' element={<CouponCharge />} />
     <Route path='/my-coupons' element={<MyCoupon />} />
     <Route path='/charge-history' element={<ChargeHistory />} />
+    <Route path='/cash-charge-request' element={<CashChargeRequest />} />
     {/* </Route> */}
   </Routes>
 );

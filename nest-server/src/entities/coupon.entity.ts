@@ -6,6 +6,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { CouponTemplate } from './coupon_template.entity';
 import { PaymentRecord } from './payment_record.entity';
@@ -43,6 +44,11 @@ export class Coupon {
   @ApiProperty({ description: '쿠폰 수정 시각' })
   @UpdateDateColumn({ type: 'date' })
   updated_at: Date;
+
+  // 쿠폰 삭제시각
+  @ApiProperty({ description: '쿠폰 삭제시각' })
+  @DeleteDateColumn({ type: 'date', nullable: true })
+  deleted_at: Date;
 
   // Coupon : CouponTemplate = N : 1 관계
   @ApiProperty({ description: '쿠폰 템플릿' })

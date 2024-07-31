@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import { RadioButton } from 'primereact/radiobutton';
 import smileIcon from '../../assets/img/smile.png';
-import AddressModal from '../../components/etc/modals/AddressModal';
 import {
   signupCorporate,
-  checkEmailAvailability,
   sendAuthNumber,
-  verifyAuthNumber
+  verifyAuthNumber,
 } from '../../services/authServices';
 import Footer from '../../components/etc/ui/Footer';
+import AddressModal from '../../components/etc/modals/AddressModal';
 
 const CorporateSignup = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -38,6 +38,7 @@ const CorporateSignup = () => {
   const [detailedAddress, setDetailedAddress] = useState('');
   const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
   const [inputAuthNumber, setInputAuthNumber] = useState('');
+  const [memberType, setMemberType] = useState('기업회원'); // Default to 기업회원
 
   const navigate = useNavigate();
 
@@ -184,24 +185,71 @@ const CorporateSignup = () => {
     setIsAddressPopupVisible(false);
   };
 
+  const renderLabel = (label) => {
+    const mapping = {
+      기업명: '기관명',
+      '업종 명': '기관 유형',
+      '업태 명': '기관 세부유형',
+      '사업자 등록번호': '기관 고유번호',
+      '사업자 등록증': '기관 등록증',
+      주소: '주소',
+    };
+
+    return memberType === '기업회원' ? label : mapping[label];
+  };
+
+  const getDescription = (label) => {
+    const descriptions = {
+      기관명: '*기관 등록증에 기재되어 있는 기관명을 입력해 주세요.',
+      '기관 유형': '*기관 유형을 입력해 주세요.',
+      '기관 세부유형': '*기관 세부 유형을 입력해 주세요.',
+      '기관 고유번호':
+        '*기관 등록번호 (사업자등록번호, 법인등록번호, 교육기관번호, 의료기관번호, 고유번호 등)을 입력해 주세요.',
+      '기관 등록증':
+        '기관 등록증 또는 증빙서류를 업로드 해주세요. 지원되는 파일 유형은 PDF, JPG, PNG이며, 파일 크기는 최대 10MB까지 가능합니다. 모든 글자가 또렷이 보이도록 선명한 스캔본을 업로드해주세요.',
+    };
+
+    const corporateDescriptions = {
+      기업명: '*사업자등록증에 기재되어 있는 기업명을 입력해 주세요.',
+      '업종 명': '*사업자등록증에 기재되어 있는 업종 명을 입력해 주세요.',
+      '업태 명': '*사업자등록증에 기재되어 있는 업태 명을 입력해 주세요.',
+      '사업자 등록번호':
+        '*사업자등록증에 기재되어 있는 등록번호를 입력해 주세요.',
+      '사업자 등록증':
+        '*사업자등록증 스캔본에 기재된 번호는 사업자 등록번호와 동일해야 하며, 지원되는 파일 유형은 PDF, JPG, PNG입니다. 파일 크기는 최대 10MB까지 가능합니다. 모든 글자가 또렷이 보이도록 선명한 스캔본을 업로드해주세요.',
+    };
+
+    return memberType === '기관회원'
+      ? descriptions[label]
+      : corporateDescriptions[label];
+  };
+
   return (
     <Container>
       <Header>KO-MAPPER AI</Header>
       <Steps>
         <Step $active={currentStep === 1}>
-          <StepIcon $active={currentStep > 1 ? '✓' : '1'}>{currentStep > 1 ? '✓' : '1'}</StepIcon>
+          <StepIcon $active={currentStep > 1 ? '✓' : '1'}>
+            {currentStep > 1 ? '✓' : '1'}
+          </StepIcon>
           <StepLabel>약관동의</StepLabel>
         </Step>
         <Step $active={currentStep === 2}>
-          <StepIcon $active={currentStep > 2 ? '✓' : '2'}>{currentStep > 2 ? '✓' : '2'}</StepIcon>
+          <StepIcon $active={currentStep > 2 ? '✓' : '2'}>
+            {currentStep > 2 ? '✓' : '2'}
+          </StepIcon>
           <StepLabel>회원정보입력</StepLabel>
         </Step>
         <Step $active={currentStep === 3}>
-          <StepIcon $active={currentStep > 3 ? '✓' : '3'}>{currentStep > 3 ? '✓' : '3'}</StepIcon>
-          <StepLabel>기업정보입력</StepLabel>
+          <StepIcon $active={currentStep > 3 ? '✓' : '3'}>
+            {currentStep > 3 ? '✓' : '3'}
+          </StepIcon>
+          <StepLabel>사업자정보입력</StepLabel>
         </Step>
         <Step $active={currentStep === 4}>
-          <StepIcon $active={currentStep === 4 ? '✓' : '4'}>{currentStep === 4 ? '✓' : '4'}</StepIcon>
+          <StepIcon $active={currentStep === 4 ? '✓' : '4'}>
+            {currentStep === 4 ? '✓' : '4'}
+          </StepIcon>
           <StepLabel>가입완료</StepLabel>
         </Step>
       </Steps>
@@ -312,6 +360,7 @@ const CorporateSignup = () => {
                             <option value='@icloud.com'>@icloud.com</option>
                             <option value='@nate.com'>@nate.com</option>
                             <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
+                            <option value='@komapper.ai'>@komapper.ai</option>
                             <option value='직접입력'>직접입력</option>
                           </Select>
                         )}
@@ -319,9 +368,7 @@ const CorporateSignup = () => {
                       <CheckButton type='button' onClick={handleSendAuthNumber}>
                         인증번호 발송
                       </CheckButton>
-                      {/* <CheckButton type='button' onClick={handleCheckEmailClick}>
-                        중복확인
-                      </CheckButton> */}
+                      {/* <CheckButton type='button' onClick={handleCheckEmailClick}>중복확인</CheckButton> */}
                     </InputWrapper>
                     <Description>
                       *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
@@ -343,7 +390,10 @@ const CorporateSignup = () => {
                         onChange={(e) => setInputAuthNumber(e.target.value)}
                         required
                       />
-                      <CheckButton type='button' onClick={handleVerifyAuthNumber}>
+                      <CheckButton
+                        type='button'
+                        onClick={handleVerifyAuthNumber}
+                      >
                         인증번호 확인
                       </CheckButton>
                     </InputWrapper>
@@ -416,7 +466,9 @@ const CorporateSignup = () => {
                         required
                       />
                     </InputWrapper>
-                    <Description>*실제 본명을 한글로 입력해 주세요.</Description>
+                    <Description>
+                      *실제 본명을 한글로 입력해 주세요.
+                    </Description>
                   </Cell>
                 </Row>
                 <Row>
@@ -432,7 +484,9 @@ const CorporateSignup = () => {
                         required
                       />
                     </InputWrapper>
-                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                    <Description>
+                      *'-'를 제외한 숫자만 입력해주세요.
+                    </Description>
                   </Cell>
                 </Row>
                 <Row>
@@ -460,7 +514,9 @@ const CorporateSignup = () => {
                         onChange={(e) => setEmergencyPhone(e.target.value)}
                       />
                     </InputWrapper>
-                    <Description>*'-'를 제외한 숫자만 입력해주세요.</Description>
+                    <Description>
+                      *'-'를 제외한 숫자만 입력해주세요.
+                    </Description>
                   </Cell>
                 </Row>
               </tbody>
@@ -475,7 +531,7 @@ const CorporateSignup = () => {
         )}
         {currentStep === 3 && (
           <Form onSubmit={handleSubmit}>
-            <Title>기업정보 입력</Title>
+            <Title>사업자 정보 입력</Title>
             <SmallText>
               <RequiredIndicator>▶</RequiredIndicator>표시는 필수 입력
               항목입니다.
@@ -484,8 +540,40 @@ const CorporateSignup = () => {
               <tbody>
                 <Row>
                   <Cell>
+                    <RadioButtonContainer>
+                      <div className='flex align-items-center'>
+                        <RadioButton
+                          inputId='corporate'
+                          name='memberType'
+                          value='기업회원'
+                          onChange={(e) => setMemberType(e.value)}
+                          checked={memberType === '기업회원'}
+                        />
+                        <RadioButtonLabel htmlFor='corporate' className='ml-2'>
+                          기업회원 (사업자등록증을 소유하고 있는 기업)
+                        </RadioButtonLabel>
+                      </div>
+                      <div className='flex align-items-center'>
+                        <RadioButton
+                          inputId='institute'
+                          name='memberType'
+                          value='기관회원'
+                          onChange={(e) => setMemberType(e.value)}
+                          checked={memberType === '기관회원'}
+                        />
+                        <RadioButtonLabel htmlFor='institute' className='ml-2'>
+                          기관회원 (연구소, 학교, 공공기관 단체 등)
+                        </RadioButtonLabel>
+                      </div>
+                    </RadioButtonContainer>
+                  </Cell>
+                </Row>
+                <Row>
+                  <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor='corporateName'>기업명</Label>
+                    <Label htmlFor='corporateName'>
+                      {renderLabel('기업명')}
+                    </Label>
                     <InputWrapper>
                       <Input
                         id='corporateName'
@@ -496,15 +584,16 @@ const CorporateSignup = () => {
                       />
                     </InputWrapper>
                     <Description>
-                      *사업자등록증에 기재되어 있는 기업 명(상호 명)을 입력해
-                      주세요.
+                      {getDescription(renderLabel('기업명'))}
                     </Description>
                   </Cell>
                 </Row>
                 <Row>
                   <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor='businessType'>업종 명</Label>
+                    <Label htmlFor='businessType'>
+                      {renderLabel('업종 명')}
+                    </Label>
                     <InputWrapper>
                       <Input
                         id='businessType'
@@ -515,14 +604,16 @@ const CorporateSignup = () => {
                       />
                     </InputWrapper>
                     <Description>
-                      *사업자등록증에 기재되어 있는 업종 명을 입력해 주세요.
+                      {getDescription(renderLabel('업종 명'))}
                     </Description>
                   </Cell>
                 </Row>
                 <Row>
                   <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor='businessConditions'>업태 명</Label>
+                    <Label htmlFor='businessConditions'>
+                      {renderLabel('업태 명')}
+                    </Label>
                     <InputWrapper>
                       <Input
                         id='businessConditions'
@@ -533,7 +624,7 @@ const CorporateSignup = () => {
                       />
                     </InputWrapper>
                     <Description>
-                      *사업자등록증에 기재되어 있는 업태 명을 입력해 주세요.
+                      {getDescription(renderLabel('업태 명'))}
                     </Description>
                   </Cell>
                 </Row>
@@ -541,7 +632,7 @@ const CorporateSignup = () => {
                   <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
                     <Label htmlFor='businessRegistrationNumber'>
-                      사업자 등록번호
+                      {renderLabel('사업자 등록번호')}
                     </Label>
                     <InputWrapper>
                       <Input
@@ -555,14 +646,16 @@ const CorporateSignup = () => {
                       />
                     </InputWrapper>
                     <Description>
-                      *사업자등록증에 기재되어 있는 등록번호를 입력해 주세요.
+                      {getDescription(renderLabel('사업자 등록번호'))}
                     </Description>
                   </Cell>
                 </Row>
                 <Row>
                   <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor='businessLicense'>사업자등록증</Label>
+                    <Label htmlFor='businessLicense'>
+                      {renderLabel('사업자 등록증')}
+                    </Label>
                     <InputWrapper>
                       <Input
                         id='businessLicense'
@@ -571,17 +664,14 @@ const CorporateSignup = () => {
                       />
                     </InputWrapper>
                     <Description>
-                      *사업자등록증 스캔본에 기재된 번호는 사업자 등록번호와
-                      동일해야 하며, 지원되는 파일 유형은 PDF, JPG, PNG입니다.
-                      파일 크기는 최대 10MB까지 가능합니다. 모든 글자가 또렷이
-                      보이도록 선명한 스캔본을 업로드해주세요.
+                      {getDescription(renderLabel('사업자 등록증'))}
                     </Description>
                   </Cell>
                 </Row>
                 <Row>
                   <Cell>
                     <RequiredIndicator>▶</RequiredIndicator>
-                    <Label htmlFor='address'>주소</Label>
+                    <Label htmlFor='address'>{renderLabel('주소')}</Label>
                     <InputWrapper>
                       <Input
                         id='address'
@@ -685,7 +775,7 @@ const Step = styled.div`
 const StepIcon = styled.div`
   width: 50px;
   height: 50px;
-  border: 2px solid ${(props) => (props.$active ? '#0056b3' : '#ccc')};
+  border: 1px solid ${(props) => (props.$active ? '#0056b3' : '#ccc')};
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -880,6 +970,20 @@ const Icon = styled.img`
 const SmallText = styled.span`
   font-size: 12px;
   margin-right: auto;
+`;
+
+const RadioButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-inline-end: 80px;
+  margin-inline-start: 50px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+`;
+
+const RadioButtonLabel = styled.label`
+  margin-left: 3px;
+  font-size: 12px;
 `;
 
 export default CorporateSignup;
