@@ -241,6 +241,10 @@ const CouponTemplateList = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const formatPoints = (points) => {
+    return `${points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}P`;
+  };
+
   const resetSearchTerm = usePageChange(() => setSearchTerm(''));
 
   return (
@@ -427,7 +431,7 @@ const CouponTemplateList = () => {
                     </td>
                     <td>{template.coupon_name}</td>
                     <td>{template.quantity}</td>
-                    <td>{template.point}</td>
+                    <td>{formatPoints(template.point)}</td>
                     <td>
                       {new Date(template.created_at).toLocaleDateString()}
                     </td>

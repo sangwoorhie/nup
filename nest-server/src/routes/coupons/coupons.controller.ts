@@ -27,7 +27,7 @@ export class CouponsController {
   @ApiQuery({ name: 'code', required: true, description: '쿠폰 코드' })
   @ApiResponse({ status: 200, description: '성공', type: CouponDetailsResDto })
   async getCouponDetails(@Query() couponCodeReqDto: CouponCodeReqDto) {
-    return this.couponsService.getCouponDetails(couponCodeReqDto.code);
+    return await this.couponsService.getCouponDetails(couponCodeReqDto.code);
   }
 
   // 2. 쿠폰 코드 적용 (조회를 먼저 하고, 적용함) (사용자)
@@ -39,7 +39,10 @@ export class CouponsController {
     @User() user: UserAfterAuth,
     @Body() applyCouponReqDto: ApplyCouponReqDto,
   ) {
-    return this.couponsService.applyCoupon(user.id, applyCouponReqDto.code);
+    return await this.couponsService.applyCoupon(
+      user.id,
+      applyCouponReqDto.code,
+    );
   }
 
   // 3. 사용된 쿠폰 목록 조회 (사용자)
@@ -54,7 +57,10 @@ export class CouponsController {
     type: PageResDto,
   })
   async getUsedCoupons(@Query() pageReqDto: PageReqDto) {
-    return this.couponsService.getUsedCoupons(pageReqDto.page, pageReqDto.size);
+    return await this.couponsService.getUsedCoupons(
+      pageReqDto.page,
+      pageReqDto.size,
+    );
   }
 
   // 4. 단일 쿠폰 삭제 (사용자)
@@ -63,6 +69,6 @@ export class CouponsController {
   @ApiOperation({ summary: '단일 쿠폰 삭제 (사용자)' })
   @ApiResponse({ status: 200, description: '성공' })
   async removeCoupon(@Param('id') id: string, @User() user: UserAfterAuth) {
-    return this.couponsService.removeCoupon(id, user.id);
+    return await this.couponsService.removeCoupon(id, user.id);
   }
 }

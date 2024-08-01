@@ -34,7 +34,7 @@ export class ApiKeysController {
     @Body() createApiKeyReqDto: CreateApiKeyReqDto,
     @User() user: UserAfterAuth,
   ) {
-    return this.apiKeysService.createApiKey(user.id, createApiKeyReqDto);
+    return await this.apiKeysService.createApiKey(user.id, createApiKeyReqDto);
   }
 
   // 2. API Key 목록조회 (사용자)
@@ -48,7 +48,7 @@ export class ApiKeysController {
     @Query() { page, size }: PageReqDto,
     @User() user: UserAfterAuth,
   ) {
-    return this.apiKeysService.listApiKeys(user.id, page, size);
+    return await this.apiKeysService.listApiKeys(user.id, page, size);
   }
 
   // 3. API Key 활성/정지 (사용자)
@@ -63,7 +63,7 @@ export class ApiKeysController {
     @Query('api_key') apiKey: string,
     @User() user: UserAfterAuth,
   ) {
-    return this.apiKeysService.apiKeyStatus(user.id, apiKey);
+    return await this.apiKeysService.apiKeyStatus(user.id, apiKey);
   }
 
   // 4. IP 주소 수정 (사용자)
@@ -76,7 +76,7 @@ export class ApiKeysController {
     @Body() updateApiKeyReqDto: UpdateApiKeyReqDto,
     @User() user: UserAfterAuth,
   ) {
-    return this.apiKeysService.updateApiKeyIps(
+    return await this.apiKeysService.updateApiKeyIps(
       user.id,
       apiKey,
       updateApiKeyReqDto,
@@ -92,7 +92,7 @@ export class ApiKeysController {
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({ status: 200, description: 'API Key 전체 목록을 반환합니다.' })
   async listApiKeysAdmin(@Query() pageReqDto: PageReqDto) {
-    return this.apiKeysService.listApiKeysAdmin(
+    return await this.apiKeysService.listApiKeysAdmin(
       pageReqDto.page,
       pageReqDto.size,
     );
@@ -131,7 +131,7 @@ export class ApiKeysController {
     searchApikeyReqDto.username = username;
     searchApikeyReqDto.apikey = apikey;
 
-    return this.apiKeysService.searchApiKeysAdmin(
+    return await this.apiKeysService.searchApiKeysAdmin(
       searchApikeyReqDto,
       page,
       size,
@@ -148,7 +148,7 @@ export class ApiKeysController {
     description: 'API Key의 활성/비활성 상태가 변경되었습니다.',
   })
   async apiKeyStatusAdmin(@Query('api_key') apiKey: string) {
-    return this.apiKeysService.apiKeyStatusAdmin(apiKey);
+    return await this.apiKeysService.apiKeyStatusAdmin(apiKey);
   }
 
   // 8. 회원 IP 주소 수정 (관리자)
@@ -161,7 +161,10 @@ export class ApiKeysController {
     @Query('api_key') apiKey: string,
     @Body() updateApiKeyReqDto: UpdateApiKeyReqDto,
   ) {
-    return this.apiKeysService.updateApiKeyIpsAdmin(apiKey, updateApiKeyReqDto);
+    return await this.apiKeysService.updateApiKeyIpsAdmin(
+      apiKey,
+      updateApiKeyReqDto,
+    );
   }
 
   // 9. API Key 재발급 기능 (관리자)
@@ -171,6 +174,6 @@ export class ApiKeysController {
   @ApiOperation({ summary: 'API Key 재발급 (관리자)' })
   @ApiResponse({ status: 200, description: 'API Key가 재발급되었습니다.' })
   async regenerateApiKeyAdmin(@Param('id') id: string) {
-    return this.apiKeysService.regenerateApiKeyAdmin(id);
+    return await this.apiKeysService.regenerateApiKeyAdmin(id);
   }
 }

@@ -140,6 +140,7 @@ export class CouponsService {
       relations: ['coupon_template'],
       skip: (page - 1) * size,
       take: size,
+      order: { created_at: 'DESC' },
     });
 
     const items = coupons.map((coupon) => ({

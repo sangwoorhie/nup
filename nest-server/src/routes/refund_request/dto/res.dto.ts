@@ -1,5 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsNumber, IsString } from 'class-validator';
+import { ChargeType } from 'src/enums/enums';
+
+// 본인 현금충전 포인트 조회 DTO (사용자의 입장)
+export class AmountResDto {
+  @ApiProperty({ description: '이름' })
+  @IsString()
+  readonly username: string;
+
+  @ApiProperty({ description: '현재 유저의 전체 포인트' })
+  @IsNumber()
+  readonly total_point: number;
+
+  @ApiProperty({ description: '현재 유저의 현금충전 포인트' })
+  @IsNumber()
+  readonly cash_point: number;
+}
+
+// 포인트 충전 유형 조회 DTO (사용자의 입장)
+export class ChargeTypeDetailsDto {
+  @ApiProperty({ description: '충전 유형' })
+  readonly charge_type: ChargeType;
+
+  @ApiProperty({ description: '충전 포인트' })
+  @IsNumber()
+  readonly point: number;
+}
 
 // 환불 신청 응답 DTO (사용자의 입장)
 export class RefundResDto {

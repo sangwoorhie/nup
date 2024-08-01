@@ -121,7 +121,7 @@ export class AuthController {
   @ApiBody({ type: SignInReqDto })
   @ApiResponse({ status: 200, description: '로그인 성공', type: SigninResDto })
   async signIn(@Body() signInReqDto: SignInReqDto, @Req() request: Request) {
-    return this.authService.signIn(signInReqDto, request);
+    return await this.authService.signIn(signInReqDto, request);
   }
 
   // 4. 로그인 (API-Key)
@@ -135,7 +135,7 @@ export class AuthController {
     @Body() apiKeySignInReqDto: ApiKeySignInReqDto,
     @Req() request: Request,
   ) {
-    return this.authService.signInByApiKey(apiKeySignInReqDto, request);
+    return await this.authService.signInByApiKey(apiKeySignInReqDto, request);
   }
 
   // 5. 리프레시토큰 발급 (개인회원/사업자회원/관리자회원)
@@ -174,7 +174,7 @@ export class AuthController {
   @ApiOperation({ summary: '로그아웃' })
   @ApiResponse({ status: 200, description: '로그아웃 성공' })
   async signOut(@User() user: UserAfterAuth) {
-    return this.authService.signOut(user.id);
+    return await this.authService.signOut(user.id);
   }
 
   // 7. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
@@ -192,7 +192,7 @@ export class AuthController {
     @Body() resetPasswordReqDto: ResetPasswordReqDto,
   ): Promise<ResetPasswordResDto> {
     const { email, username } = resetPasswordReqDto;
-    return this.authService.resetPassword(email, username);
+    return await this.authService.resetPassword(email, username);
   }
 
   // 8. E-mail 중복확인 (사용자)

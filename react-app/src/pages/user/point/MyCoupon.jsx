@@ -58,6 +58,10 @@ const MyCoupon = () => {
     }
   };
 
+  const formatPoints = (points) => {
+    return points.toLocaleString() + 'P';
+  };
+
   return (
     <Container>
       <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
@@ -88,7 +92,7 @@ const MyCoupon = () => {
               <Tr key={coupon.code}>
                 <Td>{coupon.coupon_name}</Td>
                 <Td>{coupon.code}</Td>
-                <Td>{coupon.point}</Td>
+                <Td>{formatPoints(coupon.point)}</Td>
                 <Td>{new Date(coupon.used_at).toLocaleDateString()}</Td>
                 <Td>{new Date(coupon.expiration_date).toLocaleDateString()}</Td>
                 <Td>

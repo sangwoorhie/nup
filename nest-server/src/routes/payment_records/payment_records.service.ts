@@ -129,9 +129,10 @@ export class PaymentRecordsService {
         amount: amount,
         point: item.point,
         user_point: user.point,
-        created_at: moment(item.created_at)
-          .tz('Asia/Seoul')
-          .format('YYYY-MM-DD HH:mm'),
+        created_at: item.created_at,
+        // moment(item.created_at)
+        //   .tz('Asia/Seoul')
+        //   .format('YYYY-MM-DD HH:mm'),
       };
     });
 
@@ -143,7 +144,61 @@ export class PaymentRecordsService {
     };
   }
 
-  // 3. 본인 포인트 거래내역 삭제 (사용자)
+  // 3. 본인 포인트 거래내역 날짜별 조회 (사용자)
+  async findChargeByDateRange(
+    page: number,
+    size: number,
+    dateReqDto: DateReqDto,
+    userId: string,
+  ): Promise<PageResDto<ChargeResDto>> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const startDate = new Date(dateReqDto.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(dateReqDto.end_date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        created_at: Between(startDate, endDate),
+        payment_type: PaymentType.CHARGE,
+        point: MoreThan(0),
+        user: { id: userId },
+        deleted_at: IsNull(),
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: { created_at: 'DESC' },
+    });
+
+    const mappedItems = items.map((item) => {
+      if (item.charge_type === ChargeType.COUPON) {
+        item.charge_status = ChargeStatus.CONFIRMED;
+      }
+      const amount = item.charge_type === ChargeType.COUPON ? 0 : item.point;
+      return {
+        id: item.id,
+        charge_type: item.charge_type,
+        charge_status: item.charge_status,
+        amount: amount,
+        point: item.point,
+        user_point: user.point,
+        created_at: item.created_at,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 4. 본인 포인트 거래내역 삭제 (사용자)
   async deleteCharge(id: string, userId: string) {
     const record = await this.paymentRecordRepository.findOne({
       where: { id, user: { id: userId }, deleted_at: IsNull() },
@@ -165,7 +220,7 @@ export class PaymentRecordsService {
     return { message: '충전 내역이 삭제되었습니다.' };
   }
 
-  // 4. 포인트 충전 요청 목록 조회 (관리자)
+  // 5. 포인트 충전 요청 목록 조회 (관리자)
   async getPendingCharges(
     page: number,
     size: number,
@@ -210,7 +265,7 @@ export class PaymentRecordsService {
     };
   }
 
-  // 5. 포인트 충전 요청 목록 날짜별 조회 (관리자)
+  // 6. 포인트 충전 요청 목록 날짜별 조회 (관리자)
   async findChargeRequestByDateRange(
     page: number,
     size: number,
@@ -259,7 +314,7 @@ export class PaymentRecordsService {
     };
   }
 
-  // 6. 포인트 충전 처리 (관리자)
+  // 7. 포인트 충전 처리 (관리자)
   async confirmCharges(
     adminChargeDtos: AdminChargeDto[],
   ): Promise<PaymentRecord[]> {
@@ -306,7 +361,7 @@ export class PaymentRecordsService {
     }
   }
 
-  // 7. 충전요청내역 삭제처리 (관리자)
+  // 8. 충전요청내역 삭제처리 (관리자)
   async deleteRecords(deleteRecordsDto: DeleteRecordsDto) {
     const { ids } = deleteRecordsDto;
 
@@ -328,7 +383,7 @@ export class PaymentRecordsService {
     };
   }
 
-  // 8.회원 충전요청내역 조회 (관리자)
+  // 9.회원 충전요청내역 조회 (관리자)
   async getUserChargeRequest(
     userId: string,
     page: number,
@@ -363,9 +418,10 @@ export class PaymentRecordsService {
         amount: amount,
         point: item.point,
         user_point: item.user_point,
-        created_at: moment(item.created_at)
-          .tz('Asia/Seoul')
-          .format('YYYY-MM-DD HH:mm'),
+        created_at: item.created_at,
+        // created_at: moment(item.created_at)
+        //   .tz('Asia/Seoul')
+        //   .format('YYYY-MM-DD HH:mm'),
       };
     });
 

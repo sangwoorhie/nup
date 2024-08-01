@@ -1,3 +1,4 @@
+import { PaymentRecord } from './../../entities/payment_record.entity';
 import { Module } from '@nestjs/common';
 import { RefundRequestService } from './refund_request.service';
 import { RefundRequestController } from './refund_request.controller';
@@ -6,7 +7,7 @@ import { RefundRequest } from 'src/entities/refund_request.entity';
 import { User } from 'src/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RefundRequest, User])],
+  imports: [TypeOrmModule.forFeature([RefundRequest, User, PaymentRecord])],
   exports: [RefundRequestService],
   controllers: [RefundRequestController],
   providers: [RefundRequestService],

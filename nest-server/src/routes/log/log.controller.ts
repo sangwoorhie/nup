@@ -24,6 +24,6 @@ export class LogController {
   async findAllLogs(
     @Query() { page, size }: PageReqDto,
   ): Promise<PageResDto<LogResDto>> {
-    return this.logService.findAllLogs(page, size);
+    return await this.logService.findAllLogs(page, size);
   }
 }

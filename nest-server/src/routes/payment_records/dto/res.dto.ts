@@ -102,8 +102,8 @@ export class ChargeResDto {
 
   // 충전 일시
   @ApiProperty({ description: '충전 일시' })
-  // @IsDate()
-  readonly created_at: string; // Date()
+  @IsDate()
+  readonly created_at: Date;
 }
 
 // 관리자 입장에서 사용자의 충전내역 조회
@@ -143,6 +143,6 @@ export class ChargeResAdminDto {
 
   // 충전 일시
   @ApiProperty({ description: '충전 일시' })
-  // @IsDate()
-  readonly created_at: string; // Date()
+  @IsDate()
+  readonly created_at: Date;
 }

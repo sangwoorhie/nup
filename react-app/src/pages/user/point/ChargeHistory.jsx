@@ -3,14 +3,19 @@ import styled from 'styled-components';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Paginator } from 'primereact/paginator';
+import { Calendar } from 'primereact/calendar';
 import MainHeader from '../../../components/etc/ui/MainHeader';
 import SubHeaders from '../../../components/etc/ui/SubHeaders';
 import Footer from '../../../components/etc/ui/Footer';
 import {
   getChargeHistory,
   deleteChargeHistory,
-} from '../../../services/userServices';
+  getChargeHistoryByDateRange,
+  getUserPoints,
+  requestRefund, // Add this import
+} from '../../../services/userServices'; // Added getUserPoints
 import { Button } from 'primereact/button';
+import UserPointModal from '../../../components/etc/modals/UserPointModal';
 import 'primeicons/primeicons.css';
 
 const ChargeHistory = () => {
@@ -20,26 +25,62 @@ const ChargeHistory = () => {
   const [rows, setRows] = useState(10);
   const [userPoints, setUserPoints] = useState(0);
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
+  const [dates, setDates] = useState(null);
+  const [showModal, setShowModal] = useState(false); // State for showing modal
+  const [userData, setUserData] = useState(null); // State for storing user data
 
   const fetchChargeHistory = async (page = 1, size = 10) => {
     try {
       const data = await getChargeHistory(page, size);
       setChargeHistory(data.items);
       setTotalRecords(data.total);
-      setUserPoints(data.items[0]?.user_point || 0); // assuming user_points is available in the response
+      setUserPoints(data.items[0]?.user_point || 0);
     } catch (error) {
       console.error('Failed to fetch charge history:', error);
     }
   };
 
+  const fetchChargeHistoryByDateRange = async (
+    start_date,
+    end_date,
+    page = 1,
+    size = 10
+  ) => {
+    try {
+      const data = await getChargeHistoryByDateRange(
+        start_date,
+        end_date,
+        page,
+        size
+      );
+      setChargeHistory(data.items);
+      setTotalRecords(data.total);
+      setUserPoints(data.items[0]?.user_point || 0);
+    } catch (error) {
+      console.error('Failed to fetch charge history by date range:', error);
+    }
+  };
+
   useEffect(() => {
-    fetchChargeHistory(first / rows + 1, rows);
-  }, [first, rows]);
+    if (dates && dates[0] && dates[1]) {
+      const start_date = new Date(dates[0]);
+      start_date.setHours(0, 0, 0, 0);
+      const end_date = new Date(dates[1]);
+      end_date.setHours(23, 59, 59, 999);
+      fetchChargeHistoryByDateRange(
+        start_date.toISOString(),
+        end_date.toISOString(),
+        first / rows + 1,
+        rows
+      );
+    } else {
+      fetchChargeHistory(first / rows + 1, rows);
+    }
+  }, [first, rows, dates]);
 
   const onPageChange = (event) => {
     setFirst(event.first);
     setRows(event.rows);
-    fetchChargeHistory(event.page + 1, event.rows);
   };
 
   const formatNumber = (number) => {
@@ -47,6 +88,11 @@ const ChargeHistory = () => {
       return '0';
     }
     return number.toLocaleString('ko-KR');
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
   };
 
   const chargeStatusTemplate = (rowData) => {
@@ -69,7 +115,6 @@ const ChargeHistory = () => {
   };
 
   const chargeAmountTemplate = (data) => {
-    // console.log('data', data);
     if (data.charge_type === 'coupon') {
       return '-';
     }
@@ -101,6 +146,28 @@ const ChargeHistory = () => {
     );
   };
 
+  // Function to handle refund button click
+  const handleRefundButtonClick = async () => {
+    try {
+      const data = await getUserPoints(); // Fetch user points from the server
+      setUserData(data);
+      setShowModal(true); // Show the modal
+    } catch (error) {
+      console.error('Failed to fetch user points:', error);
+    }
+  };
+
+  const handleRefund = async (formData) => {
+    try {
+      await requestRefund(formData);
+      alert('환불 신청이 성공적으로 접수되었습니다.');
+      setShowModal(false);
+    } catch (error) {
+      console.error('Failed to request refund:', error);
+      alert('환불 신청에 실패했습니다.');
+    }
+  };
+
   return (
     <Container>
       <MainHeader setActiveHeader={setActiveHeader} userType='user' />
@@ -116,15 +183,31 @@ const ChargeHistory = () => {
         <MiddleWrapper>
           <TotalCount>총 {totalRecords}건</TotalCount>
           <RightAlignedWrapper>
-            <PeriodSelection>조회 기간 선택</PeriodSelection>
+            <StyledCalendar
+              value={dates}
+              onChange={(e) => setDates(e.value)}
+              selectionMode='range'
+              readOnlyInput
+              placeholder='충전일자 기간선택'
+              hideOnRangeSelection
+              dateFormat='yy-mm-dd'
+              showIcon
+            />
             <ButtonWrapper>
-              <Button label='환불 신청' />
+              <RefundButton
+                label='환불 신청'
+                onClick={handleRefundButtonClick}
+              />
             </ButtonWrapper>
           </RightAlignedWrapper>
         </MiddleWrapper>
         <TableWrapper>
           <DataTable value={chargeHistory} paginator={false}>
-            <Column field='created_at' header='충전 일시' />
+            <Column
+              field='created_at'
+              header='충전 일시'
+              body={(rowData) => formatDate(rowData.created_at)}
+            />
             <Column
               field='charge_status'
               header='충전 상태'
@@ -162,6 +245,13 @@ const ChargeHistory = () => {
         </TableWrapper>
       </Content>
       <Footer />
+      {showModal && (
+        <UserPointModal
+          user={userData}
+          onClose={() => setShowModal(false)}
+          onRefund={handleRefund}
+        />
+      )}
     </Container>
   );
 };
@@ -232,10 +322,6 @@ const TotalCount = styled.div`
   font-size: 16px;
 `;
 
-const PeriodSelection = styled.div`
-  font-size: 16px;
-`;
-
 const TableWrapper = styled.div`
   margin: 0 auto;
   width: 100%; /* Adjusted to ensure it aligns with other elements */
@@ -251,6 +337,14 @@ const SmallButton = styled(Button)`
   font-size: 12px;
 `;
 
+const RefundButton = styled(Button)`
+  padding: 8px 14px;
+  font-size: 12px;
+  background-color: white;
+  color: black;
+  border: 1px solid #afafaf;
+`;
+
 const IconOnlyButton = styled(Button)`
   background-color: transparent;
   color: black;
@@ -263,5 +357,13 @@ const IconOnlyButton = styled(Button)`
 
   &:hover {
     background-color: transparent;
+  }
+`;
+
+const StyledCalendar = styled(Calendar)`
+  font-size: 14px;
+
+  input::placeholder {
+    font-size: 14px;
   }
 `;

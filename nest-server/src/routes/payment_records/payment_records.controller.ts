@@ -39,7 +39,7 @@ export class PaymentRecordsController {
     return { message: '이메일로 입금 계좌정보가 전송되었습니다.' };
   }
 
-  // 2.본인 포인트 충전 내역 조회 (사용자)
+  // 2. 본인 포인트 충전 내역 조회 (사용자)
   // GET : localhost:3000/payment-records/charge?page=1&size=20
   @Get('charge')
   @ApiOperation({ summary: '본인 포인트 충전 내역 조회 (사용자)' })
@@ -58,7 +58,45 @@ export class PaymentRecordsController {
     return await this.paymentRecordsService.getCharge(page, size, user.id);
   }
 
-  // 3. 본인 포인트 거래내역 삭제 (사용자)
+  // 3. 본인 포인트 충전내역 날짜별 조회 (사용자)
+  // GET : localhost:3000/payment-records/charge/date-range?page=1&size=10&start_date=2023-01-01&end_date=2023-12-31
+  @Get('charge/date-range')
+  @ApiOperation({
+    summary: '본인 포인트 충전내역 날짜별 조회 (사용자)',
+  })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiQuery({
+    name: 'start_date',
+    required: true,
+    description: '충전 시작일',
+  })
+  @ApiQuery({
+    name: 'end_date',
+    required: true,
+    description: '충전 마감일',
+  })
+  @ApiResponse({ status: 200, description: '성공' })
+  async findChargeByDateRange(
+    @Query() { page, size }: PageReqDto,
+    @Query('start_date') start_date: string,
+    @Query('end_date') end_date: string,
+    @User() user: UserAfterAuth,
+  ) {
+    const dateReqDto: DateReqDto = {
+      start_date: new Date(start_date),
+      end_date: new Date(end_date),
+    };
+
+    return await this.paymentRecordsService.findChargeByDateRange(
+      page,
+      size,
+      dateReqDto,
+      user.id,
+    );
+  }
+
+  // 4. 본인 포인트 거래내역 삭제 (사용자)
   // DELETE : localhost:3000/payment-records/charge/:payment_record_id
   @Delete('charge/:id')
   @ApiOperation({ summary: '사용자 본인 포인트 내역 삭제 (사용자)' })
@@ -67,7 +105,7 @@ export class PaymentRecordsController {
     return await this.paymentRecordsService.deleteCharge(id, user.id);
   }
 
-  // 4. 포인트 충전 요청 목록 조회 (관리자)
+  // 5. 포인트 충전 요청 목록 조회 (관리자)
   // GET : localhost:3000/payment-records/admin/charge
   // GET : localhost:3000/payment-records/admin/charge?page=1&size=20
   @Get('admin/charge')
@@ -81,7 +119,7 @@ export class PaymentRecordsController {
     return await this.paymentRecordsService.getPendingCharges(page, size);
   }
 
-  // 5. 포인트 충전 요청 목록 날짜별 조회 (관리자)
+  // 6. 포인트 충전 요청 목록 날짜별 조회 (관리자)
   // GET : localhost:3000/payment-records/admin/date-range?page=1&size=10&start_date=2023-01-01&end_date=2023-12-31
   @Get('admin/date-range')
   @Usertype(UserType.ADMIN)
@@ -118,7 +156,7 @@ export class PaymentRecordsController {
     );
   }
 
-  // 6. 포인트 충전 또는 취소(반려) 처리 (관리자)
+  // 7. 포인트 충전 또는 취소(반려) 처리 (관리자)
   // PATCH : localhost:3000/payment-records/admin/charge
   @Patch('admin/charge')
   @Usertype(UserType.ADMIN)
@@ -128,7 +166,7 @@ export class PaymentRecordsController {
     return await this.paymentRecordsService.confirmCharges(adminChargeDtos);
   }
 
-  // 7. 충전요청내역 삭제처리 (관리자)
+  // 8. 충전요청내역 삭제처리 (관리자)
   // DELETE : localhost:3000/payment-records/admin/charge
   @Delete('admin/charge')
   @Usertype(UserType.ADMIN)
@@ -138,7 +176,7 @@ export class PaymentRecordsController {
     return await this.paymentRecordsService.deleteRecords(deleteRecordsDto);
   }
 
-  // 8. 회원 충전요청내역 조회 (관리자)
+  // 9. 회원 충전요청내역 조회 (관리자)
   // GET : localhost:3000/payment-records/admin/charge-request/:userId?page=1&size=20
   @Get('admin/charge-request/:userId')
   @Usertype(UserType.ADMIN)

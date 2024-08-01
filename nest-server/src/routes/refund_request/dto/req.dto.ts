@@ -5,11 +5,11 @@ import { IsNumber, IsString } from 'class-validator';
 export class RefundReqDto {
   @ApiProperty({ description: '환불 신청 포인트' })
   @IsNumber()
-  readonly requested_point: number;
+  requested_point: number;
 
   @ApiProperty({ description: '통장 사본' })
   @IsString()
-  readonly bank_account_copy: string;
+  bank_account_copy: string;
 
   @ApiProperty({ description: '환불요청 사유' })
   @IsString()

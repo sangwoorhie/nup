@@ -86,3 +86,56 @@ export const removeCoupon = async (id: string) => {
     throw new Error(message);
   }
 };
+
+// 본인 포인트 충전 요청 기록 날짜별 조회
+export const getChargeHistoryByDateRange = async (
+  start_date: string,
+  end_date: string,
+  page: number,
+  size: number
+) => {
+  try {
+    const response = await httpClient.get(
+      `/payment-records/charge/date-range?page=${page}&size=${size}&start_date=${start_date}&end_date=${end_date}`
+    );
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to fetch charge history by date range';
+    throw new Error(message);
+  }
+};
+
+// 유저 본인 포인트 조회 (사용자)
+export const getUserPoints = async () => {
+  try {
+    const response = await httpClient.get('/refund-request');
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to fetch user points';
+    throw new Error(message);
+  }
+};
+
+// 환불 요청
+export const requestRefund = async (formData: FormData) => {
+  try {
+    const response = await httpClient.post('/refund-request', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to request refund';
+    throw new Error(message);
+  }
+};

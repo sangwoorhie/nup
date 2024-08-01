@@ -114,7 +114,7 @@ const CashChargeRequest = () => {
     }
 
     const confirmMessage = window.confirm(
-      '반드시 정확한 충전 요청 금액의 입금 확인 및 계좌주 명을 확인 후, 포인트 충전을 진행하시기 바랍니다. 포인트 충전을 진행하시겠습니까?'
+      '해당 요청건에 대해 충전을 하기 전, 반드시 정확한 충전 요청 금액의 입금 확인 및 계좌주 명을 확인 후, 포인트 충전을 진행하시기 바랍니다. 포인트 충전을 진행하시겠습니까?'
     );
     if (confirmMessage) {
       try {

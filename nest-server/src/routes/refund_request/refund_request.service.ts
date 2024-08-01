@@ -8,8 +8,10 @@ import { RefundRequest } from 'src/entities/refund_request.entity';
 import { User } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { RefundReqDto } from './dto/req.dto';
-import { RefundResAdminDto, RefundResDto } from './dto/res.dto';
+import { AmountResDto, RefundResAdminDto, RefundResDto } from './dto/res.dto';
 import { PageResDto } from 'src/common/dto/res.dto';
+import { PaymentRecord } from 'src/entities/payment_record.entity';
+import { ChargeStatus, ChargeType, PaymentType } from 'src/enums/enums';
 
 @Injectable()
 export class RefundRequestService {
@@ -19,12 +21,51 @@ export class RefundRequestService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
+    @InjectRepository(PaymentRecord)
+    private readonly paymentRecordRepository: Repository<PaymentRecord>,
   ) {}
 
-  // 1. 환불요청 (사용자)
+  // 1. 본인 현금충전 포인트 조회 (사용자)
+  async userCurrentPoint(userId: string): Promise<AmountResDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) {
+        throw new BadRequestException('사용자를 찾을 수 없습니다.');
+      }
+
+      const total_point = user.point;
+      const paymentRecord = await this.paymentRecordRepository.find({
+        where: {
+          user: { id: user.id },
+          payment_type: PaymentType.CHARGE,
+          charge_status: ChargeStatus.CONFIRMED,
+        },
+      });
+      const cash_point = paymentRecord
+        .filter((record) => record.charge_type === ChargeType.CASH)
+        .reduce((sum, record) => sum + record.point, 0);
+
+      return {
+        username: user.username,
+        total_point: total_point,
+        cash_point: cash_point,
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // 2. 환불요청 (사용자)
   async requestRefund(
     userId: string,
     refundReqDto: RefundReqDto,
+    cash_point: number,
   ): Promise<RefundResDto> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
@@ -32,7 +73,10 @@ export class RefundRequestService {
       throw new BadRequestException('사용자를 찾을 수 없습니다.');
     }
 
-    if (refundReqDto.requested_point <= 0) {
+    if (
+      refundReqDto.requested_point <= 0 ||
+      isNaN(refundReqDto.requested_point)
+    ) {
       throw new BadRequestException('환불요청은 0원 이상이어야 합니다.');
     }
 
@@ -42,9 +86,9 @@ export class RefundRequestService {
       );
     }
 
-    if (user.point < refundReqDto.requested_point) {
+    if (cash_point < refundReqDto.requested_point) {
       throw new BadRequestException(
-        '환불 요청 포인트가 현재 포인트보다 큽니다.',
+        '환불 요청 포인트가 현금충전 포인트보다 큽니다.',
       );
     }
 
@@ -52,8 +96,9 @@ export class RefundRequestService {
     refundRequest.user = user;
     refundRequest.requested_point = refundReqDto.requested_point;
     refundRequest.rest_point = user.point - refundReqDto.requested_point;
-    refundRequest.bank_account_copy = refundReqDto.bank_account_copy;
-    refundRequest.refund_request_reason = refundReqDto.refund_request_reason;
+    refundRequest.bank_account_copy = refundReqDto.bank_account_copy.toString();
+    refundRequest.refund_request_reason =
+      refundReqDto.refund_request_reason.toString();
     refundRequest.is_refunded = false;
     refundRequest.requested_at = new Date();
 
@@ -66,7 +111,7 @@ export class RefundRequestService {
     };
   }
 
-  // 2. 본인 환불 요청 목록 조회 (사용자)
+  // 3. 본인 환불 요청 목록 조회 (사용자)
   async getMyRefundRequests(
     userId: string,
     page: number,
@@ -93,7 +138,7 @@ export class RefundRequestService {
     };
   }
 
-  // 3. 환불요청 취소 (사용자)
+  // 4. 환불요청 취소 (사용자)
   async cancelRefundRequest(
     userId: string,
     refundRequestId: string,
@@ -123,7 +168,7 @@ export class RefundRequestService {
     };
   }
 
-  // 4. 전체 회원 환불 요청 목록 조회 (관리자)
+  // 5. 전체 회원 환불 요청 목록 조회 (관리자)
   async getAllRefundRequests(
     page: number,
     size: number,
@@ -153,7 +198,7 @@ export class RefundRequestService {
     };
   }
 
-  // 5. 환불요청 완료 처리 (관리자)
+  // 6. 환불요청 완료 처리 (관리자)
   async completeRefundRequest(
     refundRequestId: string,
   ): Promise<{ message: string }> {
@@ -199,7 +244,7 @@ export class RefundRequestService {
     }
   }
 
-  // 6. 환불요청 삭제 (관리자)
+  // 7. 환불요청 삭제 (관리자)
   async deleteRefundRequest(
     refundRequestId: string,
   ): Promise<{ message: string }> {
