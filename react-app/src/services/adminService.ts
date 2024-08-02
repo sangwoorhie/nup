@@ -212,3 +212,26 @@ export const getUserChargeRequest = async (
   const url = `/payment-records/admin/charge-request/${userId}?page=${page}&size=${size}`;
   return await httpClient.get(url);
 };
+
+// 환불 요청 조회
+export const getRefundRequests = async (page: number, size: number) => {
+  const response = await httpClient.get('/refund-request/admin', {
+    params: {
+      page,
+      size,
+    },
+  });
+  return response.data;
+};
+
+// 환불 요청 완료 처리
+export const completeRefundRequest = async (ids: string[]) => {
+  return await httpClient.patch('/refund-request/admin/complete', { ids });
+};
+
+// 환불 요청 삭제
+export const deleteRefundRequestAdmin = async (ids: string[]) => {
+  return await httpClient.delete('/refund-request/admin/cancel', {
+    data: { ids },
+  });
+};

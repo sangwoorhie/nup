@@ -286,6 +286,7 @@ export class UsersService {
         'banned',
         'created_at',
       ],
+      order: { created_at: 'DESC' },
     });
 
     return {
@@ -340,6 +341,7 @@ export class UsersService {
         'banned',
         'created_at',
       ],
+      order: { created_at: 'DESC' },
     });
 
     if (users.length === 0) {
@@ -372,6 +374,7 @@ export class UsersService {
       skip: (page - 1) * size,
       take: size,
       relations: ['user'],
+      order: { created_at: 'DESC' },
     });
 
     const items = corporates.map((corporate) => ({
@@ -442,6 +445,7 @@ export class UsersService {
         'business_license_verified',
       ],
       relations: ['user'],
+      order: { created_at: 'DESC' },
     });
 
     if (corporates.length === 0) {
@@ -490,6 +494,7 @@ export class UsersService {
         'emergency_phone',
         'created_at',
       ],
+      order: { created_at: 'DESC' },
     });
 
     const items = users.map((user) => ({
@@ -541,6 +546,7 @@ export class UsersService {
         'emergency_phone',
         'created_at',
       ],
+      order: { created_at: 'DESC' },
     });
 
     if (users.length === 0) {

@@ -7,6 +7,11 @@ const SubHeaders = ({ activeHeader, userType }) => {
   const location = useLocation();
 
   const handleNavigation = (destination) => {
+    if (destination === '/stable-models' || destination === '/nightly-models') {
+      alert('서비스 준비중입니다.');
+      return;
+    }
+
     if (
       destination === '/user-update' ||
       destination === '/password-change' ||

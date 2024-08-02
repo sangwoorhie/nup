@@ -53,8 +53,13 @@ export class RefundRequest {
 
   // 환불신청 취소 시각
   @ApiProperty({ description: '환불 신청 취소 시각' })
-  @DeleteDateColumn({ type: 'date' })
-  cancelled_at: Date;
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  cancelled_at: Date | null;
+
+  // 환불 삭제 시각
+  @ApiProperty({ description: '환불 신청 삭제 시각' })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  deleted_at: Date | null;
 
   // RefundRequest : User = N : 1 관계
   @ApiProperty({ description: '회원' })

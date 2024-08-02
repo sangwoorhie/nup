@@ -18,12 +18,14 @@ const UserPointModal = ({ user, onClose, onRefund }) => {
 
   const handleRefund = () => {
     const formData = new FormData();
-    formData.append('requested_point', parseInt(requestedPoint, 10));
-    formData.append('bank_account_copy', bankAccountCopy);
+    formData.append('requested_point', Number(requestedPoint)); // Convert to number here
+    formData.append(
+      'bank_account_copy',
+      bankAccountCopy ? bankAccountCopy.name : ''
+    );
     formData.append('refund_request_reason', refundRequestReason);
     onRefund(formData);
   };
-
   return (
     <ModalOverlay>
       <ModalContainer>
@@ -80,9 +82,9 @@ const UserPointModal = ({ user, onClose, onRefund }) => {
           <DescriptionText>
             • 포인트와 금액은 1포인트 = 1원 비율입니다.
             <br />• 회원님께서 현금으로 충전하신 포인트만 환불 신청 가능합니다.
-            <br />• 통장 사본에는 반드시 계좌주, 은행명, 계좌번호가 표기되어
+            <br />• 통장 사본에는 반드시 계좌주명, 은행명, 계좌번호가 표기되어
             있어야 합니다.
-            <br />• 환불신청 후, 입금까지 영업일 기준 3-5일이 소요됩니다.
+            <br />• 환불신청 후, 입금까지 영업일 기준 약 3-5일이 소요됩니다.
           </DescriptionText>
 
           <ButtonContainer>
@@ -114,7 +116,7 @@ const ModalContainer = styled.div`
   background: white;
   padding: 20px;
   border-radius: 10px;
-  width: 450px;
+  width: 460px;
   max-width: 90%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: relative;
@@ -162,6 +164,7 @@ const Input = styled.input`
 
 const TextArea = styled.textarea`
   padding: 8px;
+  height: 140px;
   border: 1px solid #ddd;
   border-radius: 5px;
   width: 100%;

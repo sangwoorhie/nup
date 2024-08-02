@@ -23,6 +23,8 @@ import CouponCharge from './pages/user/point/CouponCharge';
 import MyCoupon from './pages/user/point/MyCoupon';
 import ChargeHistory from './pages/user/point/ChargeHistory';
 import CashChargeRequest from './pages/admin/charge/CashChargeRequest';
+import RefundManagement from './pages/admin/charge/RefundManagement';
+import RefundHistory from './pages/user/point/RefundHistory';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -56,6 +58,8 @@ const MainRoutes = () => (
     <Route path='/my-coupons' element={<MyCoupon />} />
     <Route path='/charge-history' element={<ChargeHistory />} />
     <Route path='/cash-charge-request' element={<CashChargeRequest />} />
+    <Route path='/refund-process' element={<RefundManagement />} />
+    <Route path='/refund-history' element={<RefundHistory />} />
     {/* </Route> */}
   </Routes>
 );

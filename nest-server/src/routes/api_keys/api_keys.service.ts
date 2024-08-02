@@ -259,6 +259,7 @@ export class ApiKeysService {
       relations: ['user', 'user.corporate'],
       skip: (page - 1) * size,
       take: size,
+      order: { created_at: 'DESC' },
     });
 
     const items = await Promise.all(

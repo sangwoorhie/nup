@@ -139,3 +139,43 @@ export const requestRefund = async (formData: FormData) => {
     throw new Error(message);
   }
 };
+
+// 환불 요청 목록 조회
+export const getRefundHistory = async (page: number, size: number) => {
+  const { data } = await httpClient.get(
+    `/refund-request/me?page=${page}&size=${size}`
+  );
+  return data;
+};
+
+// 환불 요청 목록 날짜별 조회
+export const getRefundHistoryByDateRange = async (
+  start_date: string,
+  end_date: string,
+  page: number,
+  size: number
+) => {
+  const { data } = await httpClient.get(`/refund-request/me/date-range`, {
+    params: {
+      page,
+      size,
+      start_date,
+      end_date,
+    },
+  });
+  return data;
+};
+
+// 환불 요청 취소
+export const cancelRefundRequests = async (ids: string) => {
+  const { data } = await httpClient.patch(`/refund-request/cancel`, { ids });
+  return data;
+};
+
+// 환불 요청 삭제
+export const deleteRefundRequests = async (ids: string) => {
+  const { data } = await httpClient.delete(`/refund-request/remove`, {
+    data: { ids },
+  });
+  return data;
+};

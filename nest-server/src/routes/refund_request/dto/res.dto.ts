@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsDate, IsNumber, IsString, IsUUID } from 'class-validator';
 import { ChargeType } from 'src/enums/enums';
 
 // 본인 현금충전 포인트 조회 DTO (사용자의 입장)
@@ -29,9 +29,17 @@ export class ChargeTypeDetailsDto {
 
 // 환불 신청 응답 DTO (사용자의 입장)
 export class RefundResDto {
+  @ApiProperty({ description: '환불 요청 ID' })
+  @IsUUID()
+  readonly id: string;
+
   @ApiProperty({ description: '환불 신청 시각' })
   @IsDate()
   readonly requested_at: Date;
+
+  @ApiProperty({ description: '환불 상태' })
+  @IsBoolean()
+  readonly is_refunded: boolean;
 
   @ApiProperty({ description: '환불신청 포인트' })
   @IsNumber()
@@ -40,13 +48,25 @@ export class RefundResDto {
   @ApiProperty({ description: '환불신청 후 포인트' })
   @IsNumber()
   readonly rest_point: number;
+
+  @ApiProperty({ description: '환불요청 사유' })
+  @IsString()
+  readonly refund_request_reason: string;
 }
 
 // 환불 신청 응답 DTO (관리자의 입장)
 export class RefundResAdminDto {
+  @ApiProperty({ description: '환불 요청 ID' })
+  @IsUUID()
+  readonly id: string;
+
   @ApiProperty({ description: '환불 신청 시각' })
   @IsDate()
   readonly requested_at: Date;
+
+  @ApiProperty({ description: '환불 상태' })
+  @IsBoolean()
+  readonly is_refunded: boolean;
 
   @ApiProperty({ description: '통장 사본' })
   @IsString()

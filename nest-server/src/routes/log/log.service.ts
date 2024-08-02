@@ -21,6 +21,7 @@ export class LogService {
       skip: (page - 1) * size,
       take: size,
       select: ['loginTimestamp', 'ip', 'userAgent'],
+      order: { loginTimestamp: 'DESC' },
     });
 
     return {
