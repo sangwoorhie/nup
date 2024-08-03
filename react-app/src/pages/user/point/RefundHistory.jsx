@@ -91,7 +91,7 @@ const RefundHistory = () => {
   };
 
   const refundStatusTemplate = (rowData) => {
-    if (rowData.cancelled_at) {
+    if (rowData.is_cancelled) {
       return '환불 취소';
     }
     return rowData.is_refunded ? '환불 완료' : '환불 대기';

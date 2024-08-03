@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   DeleteDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -46,6 +47,11 @@ export class RefundRequest {
   @Column({ type: 'boolean', default: false })
   is_refunded: boolean;
 
+  // 환불 취소 여부
+  @ApiProperty({ description: '환불 취소 여부' })
+  @Column({ type: 'boolean', default: false })
+  is_cancelled: boolean;
+
   // 환불 신청 시각
   @ApiProperty({ description: '환불 신청 시각' })
   @CreateDateColumn({ type: 'date' })
@@ -53,7 +59,7 @@ export class RefundRequest {
 
   // 환불신청 취소 시각
   @ApiProperty({ description: '환불 신청 취소 시각' })
-  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  @UpdateDateColumn({ type: 'timestamp', nullable: true })
   cancelled_at: Date | null;
 
   // 환불 삭제 시각

@@ -113,11 +113,11 @@ const RefundManagement = () => {
     setModalVisible(true);
   };
 
-  const formatRefundStatus = (isRefunded) => {
-    if (rowData.cancelled_at) {
+  const formatRefundStatus = (rowData) => {
+    if (rowData.is_cancelled) {
       return '환불 취소';
     }
-    return isRefunded ? '환불 완료' : '환불 대기';
+    return rowData.is_refunded ? '환불 완료' : '환불 대기';
   };
 
   return (
@@ -155,7 +155,7 @@ const RefundManagement = () => {
             <Column
               field='is_refunded'
               header='환불 상태'
-              body={(rowData) => formatRefundStatus(rowData.is_refunded)}
+              body={formatRefundStatus}
             />
             <Column field='username' header='이름' />
             <Column field='phone' header='연락처' />

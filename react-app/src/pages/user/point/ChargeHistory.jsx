@@ -160,7 +160,7 @@ const ChargeHistory = () => {
   const handleRefund = async (formData) => {
     try {
       await requestRefund(formData);
-      alert('환불 신청이 성공적으로 접수되었습니다.');
+      alert('환불 신청이 성공적으로 접수되었습니다. 환불 내역에서 확인 가능합니다.');
       setShowModal(false);
     } catch (error) {
       console.error('Failed to request refund:', error);

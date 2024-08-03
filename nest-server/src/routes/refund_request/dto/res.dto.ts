@@ -41,6 +41,10 @@ export class RefundResDto {
   @IsBoolean()
   readonly is_refunded: boolean;
 
+  @ApiProperty({ description: '취소 상태' })
+  @IsBoolean()
+  readonly is_cancelled: boolean;
+
   @ApiProperty({ description: '환불신청 포인트' })
   @IsNumber()
   readonly requested_point: number;
@@ -53,7 +57,7 @@ export class RefundResDto {
   @IsString()
   readonly refund_request_reason: string;
 
-  @ApiProperty({ description: '취소 여부' })
+  @ApiProperty({ description: '취소 시각' })
   @IsString()
   readonly cancelled_at: Date;
 }
@@ -71,6 +75,10 @@ export class RefundResAdminDto {
   @ApiProperty({ description: '환불 상태' })
   @IsBoolean()
   readonly is_refunded: boolean;
+
+  @ApiProperty({ description: '취소 상태' })
+  @IsBoolean()
+  readonly is_cancelled: boolean;
 
   @ApiProperty({ description: '통장 사본' })
   @IsString()
@@ -95,4 +103,8 @@ export class RefundResAdminDto {
   @ApiProperty({ description: '연락처' })
   @IsString()
   readonly phone: string;
+
+  @ApiProperty({ description: '취소 시각' })
+  @IsString()
+  readonly cancelled_at: Date;
 }
