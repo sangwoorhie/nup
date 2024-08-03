@@ -114,6 +114,9 @@ const RefundManagement = () => {
   };
 
   const formatRefundStatus = (isRefunded) => {
+    if (rowData.cancelled_at) {
+      return '환불 취소';
+    }
     return isRefunded ? '환불 완료' : '환불 대기';
   };
 

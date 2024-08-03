@@ -52,6 +52,10 @@ export class RefundResDto {
   @ApiProperty({ description: '환불요청 사유' })
   @IsString()
   readonly refund_request_reason: string;
+
+  @ApiProperty({ description: '취소 여부' })
+  @IsString()
+  readonly cancelled_at: Date;
 }
 
 // 환불 신청 응답 DTO (관리자의 입장)

@@ -109,6 +109,7 @@ export class RefundRequestService {
       requested_point: refundRequest.requested_point,
       rest_point: refundRequest.rest_point,
       refund_request_reason: refundRequest.refund_request_reason,
+      cancelled_at: refundRequest.cancelled_at
     };
   }
 
@@ -121,15 +122,13 @@ export class RefundRequestService {
     const queryBuilder = this.refundRequestRepository
       .createQueryBuilder('refundRequest')
       .where('refundRequest.userId = :userId', { userId })
-      .andWhere(
-        '(refundRequest.deleted_at IS NULL OR (refundRequest.cancelled_at IS NOT NULL AND refundRequest.deleted_at IS NULL))',
-      )
+      .andWhere('refundRequest.deleted_at IS NULL')
       .orderBy('refundRequest.requested_at', 'DESC')
       .skip((page - 1) * size)
       .take(size);
-
+  
     const [refundRequests, total] = await queryBuilder.getManyAndCount();
-
+  
     const items = refundRequests.map((refundRequest) => ({
       id: refundRequest.id,
       requested_at: refundRequest.requested_at,
@@ -137,8 +136,9 @@ export class RefundRequestService {
       requested_point: refundRequest.requested_point,
       rest_point: refundRequest.rest_point,
       refund_request_reason: refundRequest.refund_request_reason,
+      cancelled_at: refundRequest.cancelled_at,
     }));
-
+  
     return {
       page,
       size,
@@ -146,6 +146,7 @@ export class RefundRequestService {
       items,
     };
   }
+  
 
   // 4. 본인 환불 요청 목록 날짜별 조회 (사용자)
   async findRefundRequestByDateRange(
@@ -178,6 +179,7 @@ export class RefundRequestService {
       requested_point: refundRequest.requested_point,
       rest_point: refundRequest.rest_point,
       refund_request_reason: refundRequest.refund_request_reason,
+      cancelled_at: refundRequest.cancelled_at
     }));
 
     return {

@@ -91,6 +91,9 @@ const RefundHistory = () => {
   };
 
   const refundStatusTemplate = (rowData) => {
+    if (rowData.cancelled_at) {
+      return '환불 취소';
+    }
     return rowData.is_refunded ? '환불 완료' : '환불 대기';
   };
 
@@ -108,18 +111,30 @@ const RefundHistory = () => {
     if (confirmed) {
       try {
         await cancelRefundRequests(selectedRefunds.map((r) => r.id));
-        fetchRefundHistory(first / rows + 1, rows);
+        // Refresh the refund history
+        if (dates && dates[0] && dates[1]) {
+          const start_date = new Date(dates[0]);
+          start_date.setHours(0, 0, 0, 0);
+          const end_date = new Date(dates[1]);
+          end_date.setHours(23, 59, 59, 999);
+          fetchRefundHistoryByDateRange(
+            start_date.toISOString(),
+            end_date.toISOString(),
+            first / rows + 1,
+            rows
+          );
+        } else {
+          fetchRefundHistory(first / rows + 1, rows);
+        }
         setSelectedRefunds([]);
         alert('취소되었습니다.');
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message;
-
         alert(`Error: ${errorMessage}`);
         console.error(error);
       }
     }
   };
-
   const handleDeleteRefund = async () => {
     if (selectedRefunds.length === 0) {
       alert('환불 내역을 선택해주세요.');
