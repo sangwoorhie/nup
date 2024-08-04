@@ -176,8 +176,9 @@ const CashChargeRequest = () => {
         setSelectedRequests([]);
         alert('해당 요청건이 반려되었습니다.');
       } catch (error) {
-        alert(`Error: ${error.message}`);
-        console.error('Failed to reject charges:', error);
+        const errorMessage = error.response?.data?.message || error.message;
+        alert(errorMessage);
+        console.error('Failed to reject charges:', error, errorMessage);
       }
     }
   };
