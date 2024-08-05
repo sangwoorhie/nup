@@ -10,6 +10,8 @@ import {
   UseGuards,
   StreamableFile,
   Header,
+  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -388,17 +390,32 @@ export class UsersController {
   }
 
   // 19. 사업자등록증 다운로드 (사용자, 관리자)
-  // GET : localhost:3000/users/download
+  // GET localhost:3000/users/download?userId=12345
   @Get('download')
-  @Header('Content-Type', 'application/json')
-  @Header('Content-Disposition', 'attachment; filename="package.json"')
+  @Header('Content-Type', 'application/octet-stream')
+  @Header('Content-Disposition', 'attachment; filename="business_license"')
   @ApiOperation({ summary: '사업자등록증 다운로드' })
+  @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiResponse({
     status: 200,
     description: '사업자등록증이 다운로드 되었습니다.',
   })
-  downloadBusinessLicense(): StreamableFile {
-    const file = createReadStream(join(process.cwd(), 'package.json'));
+  async downloadBusinessLicense(
+    @Query('userId') userId: string,
+    @User() user: UserAfterAuth,
+  ): Promise<StreamableFile> {
+    // Check if the requested user ID matches the authenticated user ID or if the user is an admin
+    if (user.id !== userId && !await this.usersService.checkUserIsAdmin(user.id)) {
+      throw new UnauthorizedException('권한이 없습니다.');
+    }
+
+    const businessLicensePath = await this.usersService.getBusinessLicensePath(userId);
+    console.log('businessLicensePath', businessLicensePath)
+    if (!businessLicensePath) {
+      throw new NotFoundException('사업자등록증을 찾을 수 없습니다.');
+    }
+
+    const file = createReadStream(businessLicensePath);
     return new StreamableFile(file);
   }
 }

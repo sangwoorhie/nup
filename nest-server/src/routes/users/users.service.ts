@@ -29,6 +29,8 @@ import {
 } from './dto/res.dto';
 import { createTransporter } from 'src/config/mailer.config';
 import * as moment from 'moment';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class UsersService {
@@ -693,6 +695,26 @@ export class UsersService {
     if (!isMatch)
       throw new UnauthorizedException('올바른 비밀번호가 아닙니다.');
     if (isMatch) return { message: '비밀번호가 확인되었습니다.' };
+  }
+
+  // 19. 사업자등록증 다운로드 (사용자, 관리자)
+  async getBusinessLicensePath(userId: string): Promise<string | null> {
+    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['corporate'] });
+    if (!user || !user.corporate) {
+      throw new NotFoundException('해당 사용자 정보를 찾을 수 없습니다.');
+    }
+
+    const businessLicenseFilename = user.corporate.business_license;
+    if (!businessLicenseFilename) {
+      return null;
+    }
+  
+    const businessLicensePath = path.join(__dirname, '../../uploads/business_licenses', businessLicenseFilename);
+    if (!fs.existsSync(businessLicensePath)) {
+      return null;
+    }
+
+    return businessLicensePath;
   }
 
   // 이메일로 회원찾기

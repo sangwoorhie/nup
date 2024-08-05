@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsString,
   MinLength,
@@ -55,12 +56,11 @@ export class IndiSignUpReqDto {
 
   @ApiProperty({
     type: 'string',
-    format: 'binary',
     required: false,
-    description: '프로필 이미지',
+    description: '프로필 이미지 (base64 encoded)',
   })
   @IsOptional()
-  profile_image?: any;
+  profile_image?: string;
 }
 
 // 사업자 회원가입 요청 DTO
@@ -76,7 +76,7 @@ export class CorpSignUpReqDto {
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(20)
-  @IsStrongPassword() // 8-20자, 숫자 한 개, 대문자 한 개, 소문자 한 개, 특수 문자 한 개를 포함
+  @IsStrongPassword()
   readonly password: string;
 
   @ApiProperty({ required: true, description: '비밀번호 확인' })
@@ -106,10 +106,10 @@ export class CorpSignUpReqDto {
     type: 'string',
     format: 'binary',
     required: false,
-    description: '프로필 이미지',
+    description: '프로필 이미지 (base64 encoded)',
   })
   @IsOptional()
-  profile_image?: any;
+  profile_image?: string;
 
   @ApiProperty({ required: false, description: '부서 (사업자회원만 해당)' })
   @IsString()
@@ -137,6 +137,7 @@ export class CorpSignUpReqDto {
   readonly business_conditions: string;
 
   @ApiProperty({ required: true, description: '사업자 등록번호' })
+  @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
   readonly business_registration_number: number;
@@ -145,10 +146,10 @@ export class CorpSignUpReqDto {
     type: 'string',
     format: 'binary',
     required: true,
-    description: '사업자 등록증 사본',
+    description: '사업자 등록증 사본 (base64 encoded)',
   })
-  @IsNotEmpty()
-  business_license: any;
+  // @IsNotEmpty()
+  business_license: string;
 
   @ApiProperty({ required: true, description: '주소' })
   @IsString()

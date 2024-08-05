@@ -10,6 +10,7 @@ import {
   Req,
   UnauthorizedException,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -45,11 +46,10 @@ import { ApiPostResponse } from 'src/decorators/swagger.decorators';
 import { Public } from 'src/decorators/public.decorators';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { Request } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CheckEmailReqDto } from '../users/dto/req.dto';
 import { multerOptions } from 'src/common/multer.options';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { readFileSync } from 'fs';
 
 @ApiTags('Auth')
 @ApiExtraModels(
@@ -60,7 +60,7 @@ import { extname } from 'path';
   CorpSignUpResDto,
   SigninResDto,
   RefreshResDto,
-) // DTO들 입력
+)
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -83,10 +83,11 @@ export class AuthController {
   })
   async IndisignUp(
     @Body() indiSignUpReqDto: IndiSignUpReqDto,
-    @UploadedFile() profileImage: Express.MulterS3.File,
+    @UploadedFile() profileImage: Express.Multer.File,
   ): Promise<IndiSignUpResDto> {
     if (profileImage) {
-      indiSignUpReqDto.profile_image = profileImage.path; // assuming you store the path in the database
+      const base64Image = readFileSync(profileImage.path).toString('base64');
+      indiSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
     }
     const { id, accessToken, refreshToken } =
       await this.authService.IndisignUp(indiSignUpReqDto);
@@ -97,7 +98,11 @@ export class AuthController {
   // POST : localhost:3000/auth/signup2
   @Post('signup2')
   @Public()
-  @UseInterceptors(FileInterceptor('profile_image', multerOptions))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'profile_image', maxCount: 1 },
+    { name: 'business_license', maxCount: 1 }
+  ], multerOptions))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '회원가입 (사업자회원)' })
   @ApiBody({ type: CorpSignUpReqDto })
   @ApiResponse({
@@ -107,11 +112,19 @@ export class AuthController {
   })
   async CorpsignUp(
     @Body() corpSignUpReqDto: CorpSignUpReqDto,
-    @UploadedFile() profileImage: Express.MulterS3.File,
+    @UploadedFiles() files: { profile_image?: Express.Multer.File[], business_license?: Express.Multer.File[] },
   ): Promise<CorpSignUpResDto> {
+    const profileImage = files.profile_image?.[0];
+    const businessLicense = files.business_license?.[0];
     if (profileImage) {
-      corpSignUpReqDto.profile_image = profileImage.path;
+      const base64Image = readFileSync(profileImage.path).toString('base64');
+      corpSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
     }
+    if (businessLicense) {
+      const base64License = readFileSync(businessLicense.path).toString('base64');
+      corpSignUpReqDto.business_license = `data:${businessLicense.mimetype};base64,${base64License}`;
+    }
+    
     const { id, accessToken, refreshToken } =
       await this.authService.CorpsignUp(corpSignUpReqDto);
     return { id, accessToken, refreshToken };
