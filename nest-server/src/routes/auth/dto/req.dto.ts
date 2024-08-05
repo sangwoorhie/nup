@@ -54,12 +54,11 @@ export class IndiSignUpReqDto {
   readonly emergency_phone?: string;
 
   @ApiProperty({
-    required: false,
-    description: '프로필 이미지',
     type: 'string',
     format: 'binary',
+    required: false,
+    description: '프로필 이미지',
   })
-  @IsString()
   @IsOptional()
   profile_image?: any;
 }
@@ -104,12 +103,11 @@ export class CorpSignUpReqDto {
   readonly emergency_phone?: string;
 
   @ApiProperty({
-    required: false,
-    description: '프로필 이미지',
     type: 'string',
     format: 'binary',
+    required: false,
+    description: '프로필 이미지',
   })
-  @IsString()
   @IsOptional()
   profile_image?: any;
 
@@ -144,14 +142,13 @@ export class CorpSignUpReqDto {
   readonly business_registration_number: number;
 
   @ApiProperty({
-    required: true,
-    description: '사업자 등록증 사본',
     type: 'string',
     format: 'binary',
+    required: true,
+    description: '사업자 등록증 사본',
   })
-  @IsString()
   @IsNotEmpty()
-  readonly business_license: any;
+  business_license: any;
 
   @ApiProperty({ required: true, description: '주소' })
   @IsString()

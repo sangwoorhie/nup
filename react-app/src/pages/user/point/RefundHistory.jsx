@@ -212,7 +212,7 @@ const RefundHistory = () => {
             <Column selectionMode='multiple' />
             <Column
               field='requested_at'
-              header='환불 일시'
+              header='환불 요청 일시'
               body={(rowData) => formatDate(rowData.requested_at)}
             />
             <Column

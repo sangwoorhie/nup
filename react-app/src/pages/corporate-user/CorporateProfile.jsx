@@ -4,6 +4,7 @@ import httpClient from '../../services/httpClient';
 import MainHeader from '../../components/etc/ui/MainHeader';
 import SubHeaders from '../../components/etc/ui/SubHeaders';
 import Footer from '../../components/etc/ui/Footer';
+import { saveAs } from 'file-saver';
 
 const CorporateProfile = () => {
   const [CorporateProfile, setCorporateProfile] = useState(null);
@@ -22,6 +23,23 @@ const CorporateProfile = () => {
 
     fetchCorporateProfile();
   }, []);
+
+  const handleDownload = async () => {
+    try {
+      const filename = CorporateProfile.business_license;
+      const response = await httpClient.get(
+        `/users/business_license/${filename}`,
+        {
+          responseType: 'blob',
+        }
+      );
+      const contentType = response.headers['content-type'];
+      const blob = new Blob([response.data], { type: contentType });
+      saveAs(blob, filename);
+    } catch (error) {
+      console.error('Failed to download business license:', error);
+    }
+  };
 
   if (!CorporateProfile) {
     return <div>Loading...</div>;
@@ -68,13 +86,9 @@ const CorporateProfile = () => {
           </FormItem>
           <FormItem>
             <Label>사업자등록증 스캔본</Label>
-            <a
-              href={CorporateProfile.business_license}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
-              View Document
-            </a>
+            <ButtonLink onClick={handleDownload}>
+              Download Business License
+            </ButtonLink>
           </FormItem>
           <FormItem>
             <Label>주소</Label>
@@ -128,6 +142,16 @@ const Input = styled.input`
   border-radius: 5px;
   margin-top: 5px;
   background-color: #f9f9f9;
+`;
+
+const ButtonLink = styled.button`
+  background: none;
+  border: none;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
 `;
 
 export default CorporateProfile;

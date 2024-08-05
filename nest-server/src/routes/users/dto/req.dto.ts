@@ -60,22 +60,22 @@ export class UpdateIndiUserReqDto {
   @ApiProperty({ required: false, description: '회원이름' })
   @IsString()
   @IsNotEmpty()
-  readonly username: string;
+  username: string;
 
   @ApiProperty({ required: false, description: '연락처' })
   @IsString()
   @IsNotEmpty()
-  readonly phone: string;
+  phone: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
   @IsString()
   @IsOptional()
-  readonly emergency_phone?: string;
+  emergency_phone?: string;
 
   @ApiProperty({ required: false, description: '프로필 이미지' })
   @IsString()
   @IsOptional()
-  readonly profile_image?: string;
+  profile_image?: string;
 }
 
 // 사업자회원 정보수정 요청 DTO
@@ -83,78 +83,73 @@ export class UpdateCorpUserReqDto {
   @ApiProperty({ required: false, description: '회원이름' })
   @IsString()
   @IsNotEmpty()
-  readonly username: string;
+  username: string;
 
   @ApiProperty({ required: false, description: '연락처' })
   @IsString()
   @IsNotEmpty()
-  readonly phone: string;
+  phone: string;
 
   @ApiProperty({ required: false, description: '비상연락처' })
   @IsString()
   @IsOptional()
-  readonly emergency_phone?: string;
+  emergency_phone?: string;
 
   @ApiProperty({ required: false, description: '프로필 이미지' })
   @IsString()
   @IsOptional()
-  readonly profile_image?: string;
+  profile_image?: string;
 
   @ApiProperty({ required: false, description: '부서' })
   @IsString()
   @IsOptional()
-  readonly department?: string;
+  department?: string;
 
   @ApiProperty({ required: false, description: '직위' })
   @IsString()
   @IsOptional()
-  readonly position?: string;
+  position?: string;
 
   @ApiProperty({ required: false, description: '기업명' })
   @IsString()
   @IsNotEmpty()
-  readonly corporate_name: string;
+  corporate_name: string;
 
   @ApiProperty({ required: false, description: '업종 명' })
   @IsString()
   @IsNotEmpty()
-  readonly business_type: string;
+  business_type: string;
 
   @ApiProperty({ required: false, description: '업태 명' })
   @IsString()
   @IsNotEmpty()
-  readonly business_conditions: string;
+  business_conditions: string;
 
   @ApiProperty({ required: false, description: '사업자 등록번호' })
   @IsNumber()
   @IsNotEmpty()
-  readonly business_registration_number: number;
+  business_registration_number: number;
 
   @ApiProperty({ required: false, description: '사업자 등록증 사본' })
   @IsString()
   @IsNotEmpty()
-  readonly business_license: string;
+  business_license: string;
 
   @ApiProperty({ required: false, description: '주소' })
   @IsString()
   @IsNotEmpty()
-  readonly address: string;
+  address: string;
 }
 
 // 비밀번호 변경 요청 DTO
 export class ChangePasswordReqDto {
-  // @ApiProperty({ required: true, description: '현재 비밀번호' })
-  // @IsString()
-  // @IsNotEmpty()
-  // readonly currentPassword: string;
-
   @ApiProperty({ required: true, description: '새 비밀번호' })
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(20)
   @IsStrongPassword()
-  readonly newPassword: string;
+  newPassword: string;
 
   @ApiProperty({ required: true, description: '새 비밀번호 확인' })
   @IsString()
@@ -162,7 +157,7 @@ export class ChangePasswordReqDto {
   @MinLength(8)
   @MaxLength(20)
   @IsStrongPassword()
-  readonly newPasswordConfirm: string;
+  newPasswordConfirm: string;
 }
 
 // 회원탈퇴 요청 DTO
@@ -170,7 +165,7 @@ export class DeleteUserReqDto {
   @ApiProperty({ required: true, description: '비밀번호' })
   @IsString()
   @IsNotEmpty()
-  readonly password: string;
+  password: string;
 }
 
 // 회원 계정정지 요청 DTO
@@ -178,7 +173,7 @@ export class BanUserReqDto {
   @ApiProperty({ required: true, description: '계정정지 사유' })
   @IsString()
   @IsNotEmpty()
-  readonly reason: string;
+  reason: string;
 }
 
 // 포인트 충전/차감 요청 DTO
@@ -188,7 +183,7 @@ export class UpdatePointsReqDto {
     description: '포인트 값 (양수: 충전, 음수: 차감)',
   })
   @IsNumber()
-  readonly points: number;
+  points: number;
 }
 
 // 이메일 중복검사 요청 DTO
@@ -196,7 +191,7 @@ export class CheckEmailReqDto {
   @ApiProperty({ required: true, description: '이메일 중복확인' })
   @IsEmail()
   @IsNotEmpty()
-  readonly email: string;
+  email: string;
 }
 
 // 비밀번호로 본인확인 검사 DTO
@@ -204,7 +199,7 @@ export class CheckPasswordReqDto {
   @ApiProperty({ required: true, description: '비밀번호로 본인확인 검사' })
   @IsString()
   @IsNotEmpty()
-  readonly password: string;
+  password: string;
 }
 
 // 유저 현금충전 요청 금액 DTO
@@ -212,7 +207,7 @@ export class ChargeAmountReqDto {
   @ApiProperty({ required: true, description: '유저 현금충전 요청 금액' })
   @IsNumber()
   @IsNotEmpty()
-  readonly amount: number;
+  amount: number;
 }
 
 // 관리자회원 단일조회 요청 DTO

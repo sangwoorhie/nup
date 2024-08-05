@@ -8,6 +8,8 @@ import {
   Delete,
   Query,
   UseGuards,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -48,6 +50,8 @@ import {
   FindIndiUserResDto,
 } from './dto/res.dto';
 import { sortAndDeduplicateDiagnostics } from 'typescript';
+import { createReadStream } from 'fs';
+import { join } from 'path';
 
 @ApiTags('User')
 @ApiExtraModels(
@@ -381,6 +385,21 @@ export class UsersController {
   ) {
     const { password } = checkPasswordReqDto;
     return await this.usersService.doubleCheckPassword(user.id, password);
+  }
+
+  // 19. 사업자등록증 다운로드 (사용자, 관리자)
+  // GET : localhost:3000/users/download
+  @Get('download')
+  @Header('Content-Type', 'application/json')
+  @Header('Content-Disposition', 'attachment; filename="package.json"')
+  @ApiOperation({ summary: '사업자등록증 다운로드' })
+  @ApiResponse({
+    status: 200,
+    description: '사업자등록증이 다운로드 되었습니다.',
+  })
+  downloadBusinessLicense(): StreamableFile {
+    const file = createReadStream(join(process.cwd(), 'package.json'));
+    return new StreamableFile(file);
   }
 }
 

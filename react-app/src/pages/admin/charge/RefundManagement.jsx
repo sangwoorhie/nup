@@ -151,7 +151,7 @@ const RefundManagement = () => {
               style={{ width: '3em' }}
               body={() => <Checkbox />}
             />
-            <Column field='requested_at' header='환불 요청일' />
+            <Column field='requested_at' header='환불 요청 일시' />
             <Column
               field='is_refunded'
               header='환불 상태'

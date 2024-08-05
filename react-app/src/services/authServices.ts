@@ -77,10 +77,11 @@ export const loginWithApiKey = async (
 ) => {
   try {
     const { data } = await httpClient.post('/auth/signin/api-key', payload);
+    // console.log('data', data);
     storeAccessTokenToLocal(data.accessToken);
     storeRefreshTokenToLocal(data.refreshToken);
     localStorage.setItem('userType', data.userType); // Store user type
-    // localStorage.setItem('userEmail', payload.email); // Store user email
+    localStorage.setItem('userEmail', data.email); // Store user email
     alert('로그인 되었습니다.');
     navigate('/user-profile');
     return data;

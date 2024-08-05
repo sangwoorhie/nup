@@ -14,6 +14,9 @@ import { WinstonModule, utilities } from 'nest-winston';
 import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
 import * as basicAuth from 'express-basic-auth';
+import * as serveStatic from 'serve-static';
+import { join } from 'path';
+
 dotenv.config();
 config();
 
@@ -33,6 +36,8 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     credentials: true,
   });
+
+  app.use('/uploads', serveStatic(join(__dirname, '../uploads')));
 
   // Swagger
   const config = new DocumentBuilder()

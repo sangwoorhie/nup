@@ -13,16 +13,16 @@ const PointChargePage = () => {
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
 
   const handleAmountChange = (e) => {
-    const value = e.target.value.replace(/,/g, '');
+    const value = e.target.value.replace(/,/g, '').replace(/원/g, '');
     if (!isNaN(value) && Number(value) >= 0) {
-      setAmount(Number(value).toLocaleString());
+      setAmount(Number(value).toLocaleString() + '원');
     }
   };
 
   const handleButtonClick = (increment) => {
-    const value = amount.replace(/,/g, '');
+    const value = amount.replace(/,/g, '').replace(/원/g, '');
     const newValue = Number(value) + increment;
-    setAmount(newValue.toLocaleString());
+    setAmount(newValue.toLocaleString() + '원');
   };
 
   const handleChargeClick = () => {
@@ -30,7 +30,7 @@ const PointChargePage = () => {
       alert('서비스 준비중입니다.');
       return;
     }
-    const value = Number(amount.replace(/,/g, ''));
+    const value = Number(amount.replace(/,/g, '').replace(/원/g, ''));
     if (value < 10000 || value % 10000 !== 0) {
       alert(
         '충전할 수 있는 최소 금액은 10,000원 이며, 10,000원 단위로만 충전이 가능합니다.'
@@ -43,7 +43,7 @@ const PointChargePage = () => {
   const handleSendEmail = async () => {
     try {
       const data = await sendChargeEmail(
-        Number(amount.replace(/,/g, '')),
+        Number(amount.replace(/,/g, '').replace(/원/g, '')),
         accountHolderName
       );
       alert(data.message);
@@ -114,7 +114,7 @@ const PointChargePage = () => {
         ) : (
           <Step>
             <Title>현금 충전 안내</Title>
-            <AmountDisplay>충전 금액: {amount}원</AmountDisplay>
+            <AmountDisplay>충전 금액: {amount}</AmountDisplay>
             <InputArea>
               <label>입금자 명 (개인이름/회사이름)</label>
               <input
@@ -128,7 +128,7 @@ const PointChargePage = () => {
             <DepositInfo>
               <p>
                 입금자 정보는 정확한 입금 정보 확인을 위한 용도로 사용되오니,
-                정확히 기입해 주세요.
+                실제 계좌주 명을 기입해 주세요.
               </p>
               <p>
                 이메일 발송 버튼을 누르면 고객님의 이메일로 KO-MAPPER AI 전용
@@ -140,8 +140,8 @@ const PointChargePage = () => {
                 세금계산서가 자동 발급됩니다.
               </p>
               <p>
-                입금 확인 후 영업일 기준 최대 1-2일 이내에 고객님의 계정으로 포인트가 
-                적립되며, 포인트와 금액은 1포인트 = 1원 비율입니다.
+                입금 확인 후 영업일 기준 최대 1-2일 이내에 고객님의 계정으로
+                포인트가 적립되며, 포인트와 금액은 1포인트 = 1원 비율입니다.
               </p>
               <p>이메일에 기재된 입금 기한에 맞추어 입금 부탁드립니다.</p>
               <p>

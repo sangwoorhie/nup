@@ -16,6 +16,7 @@ import { AuthService } from './auth.service';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiExtraModels,
   ApiOperation,
@@ -46,7 +47,9 @@ import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CheckEmailReqDto } from '../users/dto/req.dto';
-// import { multerOptions } from 'src/common/multer.options';
+import { multerOptions } from 'src/common/multer.options';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 
 @ApiTags('Auth')
 @ApiExtraModels(
@@ -69,7 +72,8 @@ export class AuthController {
   // POST : localhost:3000/auth/signup1
   @Post('signup1')
   @Public()
-  // @UseInterceptors(FileInterceptor('profile_image', multerOptions))
+  @UseInterceptors(FileInterceptor('profile_image', multerOptions))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '회원가입 (개인회원)' })
   @ApiBody({ type: IndiSignUpReqDto })
   @ApiResponse({
@@ -79,11 +83,11 @@ export class AuthController {
   })
   async IndisignUp(
     @Body() indiSignUpReqDto: IndiSignUpReqDto,
-    // @UploadedFile() profileImage: Express.MulterS3.File,
+    @UploadedFile() profileImage: Express.MulterS3.File,
   ): Promise<IndiSignUpResDto> {
-    // if (profileImage) {
-    //   indiSignUpReqDto.profile_image = profileImage.location;
-    // }
+    if (profileImage) {
+      indiSignUpReqDto.profile_image = profileImage.path; // assuming you store the path in the database
+    }
     const { id, accessToken, refreshToken } =
       await this.authService.IndisignUp(indiSignUpReqDto);
     return { id, accessToken, refreshToken };
@@ -93,7 +97,7 @@ export class AuthController {
   // POST : localhost:3000/auth/signup2
   @Post('signup2')
   @Public()
-  // @UseInterceptors(FileInterceptor('profile_image', multerOptions))
+  @UseInterceptors(FileInterceptor('profile_image', multerOptions))
   @ApiOperation({ summary: '회원가입 (사업자회원)' })
   @ApiBody({ type: CorpSignUpReqDto })
   @ApiResponse({
@@ -103,11 +107,11 @@ export class AuthController {
   })
   async CorpsignUp(
     @Body() corpSignUpReqDto: CorpSignUpReqDto,
-    // @UploadedFile() profileImage: Express.MulterS3.File,
+    @UploadedFile() profileImage: Express.MulterS3.File,
   ): Promise<CorpSignUpResDto> {
-    // if (profileImage) {
-    //   corpSignUpReqDto.profile_image = profileImage.location;
-    // }
+    if (profileImage) {
+      corpSignUpReqDto.profile_image = profileImage.path;
+    }
     const { id, accessToken, refreshToken } =
       await this.authService.CorpsignUp(corpSignUpReqDto);
     return { id, accessToken, refreshToken };

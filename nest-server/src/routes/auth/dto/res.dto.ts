@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 
 // 개인 회원가입 응답 DTO
 export class IndiSignUpResDto {
@@ -40,6 +40,10 @@ export class SigninResDto {
   @ApiProperty({ required: true })
   @IsString()
   readonly refreshToken: string;
+
+  @ApiProperty({ required: true })
+  @IsEmail()
+  readonly email: string;
 }
 
 // 리프레시토큰 응답 DTO
