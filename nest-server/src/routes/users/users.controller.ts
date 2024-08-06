@@ -54,6 +54,7 @@ import {
 import { sortAndDeduplicateDiagnostics } from 'typescript';
 import { createReadStream } from 'fs';
 import { join } from 'path';
+import { Public } from 'src/decorators/public.decorators';
 
 @ApiTags('User')
 @ApiExtraModels(
@@ -405,12 +406,16 @@ export class UsersController {
     @User() user: UserAfterAuth,
   ): Promise<StreamableFile> {
     // Check if the requested user ID matches the authenticated user ID or if the user is an admin
-    if (user.id !== userId && !await this.usersService.checkUserIsAdmin(user.id)) {
+    if (
+      user.id !== userId &&
+      !(await this.usersService.checkUserIsAdmin(user.id))
+    ) {
       throw new UnauthorizedException('권한이 없습니다.');
     }
 
-    const businessLicensePath = await this.usersService.getBusinessLicensePath(userId);
-    console.log('businessLicensePath', businessLicensePath)
+    const businessLicensePath =
+      await this.usersService.getBusinessLicensePath(userId);
+    console.log('businessLicensePath', businessLicensePath);
     if (!businessLicensePath) {
       throw new NotFoundException('사업자등록증을 찾을 수 없습니다.');
     }

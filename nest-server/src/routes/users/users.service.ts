@@ -96,6 +96,7 @@ export class UsersService {
       business_license: corporate.business_license,
       business_license_verified: corporate.business_license_verified,
       address: corporate.address,
+      profile_image: user.profile_image,
       username: user.username,
       department: user.department,
       position: user.position,
@@ -699,7 +700,10 @@ export class UsersService {
 
   // 19. 사업자등록증 다운로드 (사용자, 관리자)
   async getBusinessLicensePath(userId: string): Promise<string | null> {
-    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['corporate'] });
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['corporate'],
+    });
     if (!user || !user.corporate) {
       throw new NotFoundException('해당 사용자 정보를 찾을 수 없습니다.');
     }
@@ -708,8 +712,12 @@ export class UsersService {
     if (!businessLicenseFilename) {
       return null;
     }
-  
-    const businessLicensePath = path.join(__dirname, '../../uploads/business_licenses', businessLicenseFilename);
+
+    const businessLicensePath = path.join(
+      __dirname,
+      '../../uploads/business_licenses',
+      businessLicenseFilename,
+    );
     if (!fs.existsSync(businessLicensePath)) {
       return null;
     }

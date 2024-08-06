@@ -32,7 +32,10 @@ import { createTransporter } from 'src/config/mailer.config';
 
 @Injectable()
 export class AuthService {
-  private authNumbers = new Map<string, string>();
+  private authNumbers = new Map<
+    string,
+    { authNumber: string; expiresAt: Date }
+  >();
 
   constructor(
     private dataSource: DataSource,
@@ -123,13 +126,13 @@ export class AuthService {
       username,
       phone,
       emergency_phone,
-      profile_image,
       corporate_name,
       business_type,
       business_conditions,
       business_registration_number,
-      business_license,
       address,
+      profile_image,
+      business_license,
     } = corpSignUpReqDto;
 
     let error;
@@ -174,8 +177,8 @@ export class AuthService {
       corporateEntity.business_conditions = business_conditions;
       corporateEntity.business_registration_number =
         business_registration_number;
-      corporateEntity.business_license = business_license;
       corporateEntity.address = address;
+      corporateEntity.business_license = business_license;
       corporateEntity.user = savedUser;
 
       // Corporate 엔티티 저장
@@ -218,7 +221,11 @@ export class AuthService {
     }
   }
 
-  // 3. 로그인 (Email, Password)
+  // 3. 회원가입 시 이미지 업로드 (개인회원, 사업자회원)
+
+  // 4. 회원가입 시 사업자등록증 업로드 (사업자회원)
+
+  // 5. 로그인 (Email, Password)
   async signIn(signInReqDto: SignInReqDto, request: Request) {
     const { email, password } = signInReqDto;
     const user = await this.validateUser(email, password);
@@ -237,7 +244,7 @@ export class AuthService {
     };
   }
 
-  // 4. 로그인 (API Key)
+  // 6. 로그인 (API Key)
   async signInByApiKey(
     apiKeySignInReqDto: ApiKeySignInReqDto,
     request: Request,
@@ -326,7 +333,7 @@ export class AuthService {
     await this.tokenUsageRepository.save(tokenUsage);
   }
 
-  // 5. 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
+  // 7. 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
   async refresh(token: string, userId: string) {
     const refreshTokenEntity = await this.refreshTokenRepository.findOne({
       where: { token, user: { id: userId } },
@@ -351,13 +358,13 @@ export class AuthService {
     return { accessToken, refreshToken, user };
   }
 
-  // 6. 로그아웃
+  // 8. 로그아웃
   async signOut(userId: string) {
     await this.refreshTokenRepository.delete({ user: { id: userId } });
     return { message: '로그아웃 되었습니다.' };
   }
 
-  // 7. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
+  // 9. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
   async resetPassword(
     email: string,
     username: string,
@@ -408,13 +415,15 @@ export class AuthService {
     }
   }
 
-  // 8. 회원가입시 이메일로 인증번호 전송
+  // 11. 회원가입시 이메일로 인증번호 전송 (5분 시간제한)
   async sendAuthenticationNumber(email: string): Promise<{ message: string }> {
     const user = await this.usersService.findOneByEmail(email);
     if (user) throw new BadRequestException('동일한 이메일이 이미 존재합니다');
 
     const authNumber = Math.floor(100000 + Math.random() * 900000).toString();
-    this.authNumbers.set(email, authNumber);
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5); // Set expiration time to 5 minutes from now
+    this.authNumbers.set(email, { authNumber, expiresAt });
 
     const transporter = createTransporter();
 
@@ -429,15 +438,28 @@ export class AuthService {
     return { message: '인증번호가 이메일로 전송되었습니다.' };
   }
 
-  // 9. 회원가입시 이메일로 전송된 인증번호 확인
+  // 12. 회원가입시 이메일로 전송된 인증번호 확인 (5분 시간제한)
   async verifyAuthenticationNumber({
     email,
     authNumber,
   }: VerifyAuthNumberDto): Promise<{ message: string }> {
-    const storedNumber = this.authNumbers.get(email);
-    if (!storedNumber || storedNumber !== authNumber) {
+    const storedData = this.authNumbers.get(email);
+    if (!storedData) {
       throw new BadRequestException('유효하지 않은 인증번호입니다.');
     }
+
+    const { authNumber: storedNumber, expiresAt } = storedData;
+    if (new Date() > expiresAt) {
+      this.authNumbers.delete(email);
+      throw new BadRequestException(
+        '인증번호 유효시간이 경과되어 만료되었습니다.',
+      );
+    }
+
+    if (storedNumber !== authNumber) {
+      throw new BadRequestException('유효하지 않은 인증번호입니다.');
+    }
+
     this.authNumbers.delete(email);
     return { message: '인증번호가 확인되었습니다.' };
   }

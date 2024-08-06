@@ -1,0 +1,6 @@
+
+포트원 (아임포트) 연동
+
+https://faq.portone.io/42030fae-7769-48fc-bbd8-b9d061c5d4cd
+
+https://developers.portone.io/docs/ko/pg/payment-gateway/readme?v=v2

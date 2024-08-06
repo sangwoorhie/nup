@@ -26,3 +26,6 @@ export const CardIssuerName = {
 } as const;
 
 export type CardIssuerCode = keyof typeof CardIssuerName;
+
+// https://velog.io/@from_numpy/%EC%A3%BC%EB%AC%B8-%EA%B2%B0%EC%A0%9C-2-toss-payments-%EA%B2%B0%EC%A0%9C-%ED%94%8C%EB%A1%9C%EC%9A%B0%EB%A5%BC-%EC%A0%81%EC%9A%A9%ED%95%B4%EB%B3%B4%EC%95%84%EC%9A%94-NestJS
+// https://sjh9708.tistory.com/50

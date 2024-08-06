@@ -1,12 +1,9 @@
-// IndividualSignup.jsx
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import smileIcon from '../../assets/img/smile.png';
 import {
   signupIndividual,
-  // checkEmailAvailability,
   sendAuthNumber,
   verifyAuthNumber,
 } from '../../services/authServices';
@@ -30,11 +27,29 @@ const IndividualSignup = () => {
   const [phone, setPhone] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
   const [inputAuthNumber, setInputAuthNumber] = useState('');
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [authSent, setAuthSent] = useState(false);
+  const [authVerified, setAuthVerified] = useState(false);
   const navigate = useNavigate();
 
   const handleCheckboxChange = (e, setFunction) => {
     setFunction(e.target.checked);
   };
+
+  useEffect(() => {
+    let timer;
+    if (authSent && !authVerified && timeLeft > 0) {
+      // Consider authVerified
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+    } else if (timeLeft <= 0) {
+      clearInterval(timer);
+      setAuthSent(false);
+      setTimeLeft(0);
+    }
+    return () => clearInterval(timer);
+  }, [authSent, authVerified, timeLeft]); // Add authVerified to dependencies
 
   const handleAllTermsChange = (e) => {
     const isChecked = e.target.checked;
@@ -86,17 +101,18 @@ const IndividualSignup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      email: (email + emailProvider).toLowerCase(),
-      password,
-      confirmPassword,
-      username: name,
-      phone,
-      emergency_phone: emergencyPhone ? emergencyPhone : null,
-      profile_image: profileImage ? URL.createObjectURL(profileImage) : '',
-    };
+    const formData = new FormData();
+    formData.append('email', (email + emailProvider).toLowerCase());
+    formData.append('password', password);
+    formData.append('confirmPassword', confirmPassword);
+    formData.append('username', name);
+    formData.append('phone', phone);
+    formData.append('emergency_phone', emergencyPhone ? emergencyPhone : '');
+    if (profileImage) {
+      formData.append('profile_image', profileImage);
+    }
 
-    await signupIndividual(payload, setCurrentStep);
+    await signupIndividual(formData, setCurrentStep);
   };
 
   const togglePasswordVisibility = (setVisibility) => {
@@ -122,21 +138,14 @@ const IndividualSignup = () => {
     setEmail(e.target.value.replace('@', '').toLowerCase());
   };
 
-  // const handleCheckEmailClick = async () => {
-  //   try {
-  //     const fullEmail = `${email}${emailProvider}`;
-  //     const response = await checkEmailAvailability(fullEmail);
-  //     alert(response.data);
-  //   } catch (error) {
-  //     alert(error.response?.data?.message || 'Error checking email.');
-  //   }
-  // };
-
   const handleSendAuthNumber = async () => {
     try {
       const fullEmail = `${email}${emailProvider}`;
       await sendAuthNumber(fullEmail);
       alert('인증번호가 전송되었습니다.');
+      setAuthSent(true);
+      setAuthVerified(false); // Reset authVerified state when sending a new auth number
+      setTimeLeft(300); // 5 minutes countdown
     } catch (error) {
       alert(error.response?.data?.message || 'Error sending auth number.');
     }
@@ -147,9 +156,16 @@ const IndividualSignup = () => {
       const fullEmail = `${email}${emailProvider}`;
       await verifyAuthNumber(fullEmail, inputAuthNumber);
       alert('인증번호가 확인되었습니다.');
+      setAuthVerified(true); // Set authVerified to true when verified
     } catch (error) {
       alert('올바른 인증번호가 아닙니다.');
     }
+  };
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
   return (
@@ -187,7 +203,7 @@ const IndividualSignup = () => {
                   checked={termsAccepted}
                   onChange={(e) => handleCheckboxChange(e, setTermsAccepted)}
                 />
-                <Label>이용 약관을 확인하였으며, 이에 동의합니다. (필수)</Label>
+                <Label>이용 약관을 확인하였으며, 이에 동이합니다. (필수)</Label>
               </Section>
               <Section>
                 <h3>II. 개인정보 수집 및 이용</h3>
@@ -284,9 +300,6 @@ const IndividualSignup = () => {
                       <CheckButton type='button' onClick={handleSendAuthNumber}>
                         인증번호 발송
                       </CheckButton>
-                      {/* <CheckButton type='button' onClick={handleCheckEmailClick}>
-                        중복확인
-                      </CheckButton> */}
                     </InputWrapper>
                     <Description>
                       *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
@@ -308,7 +321,12 @@ const IndividualSignup = () => {
                         onChange={(e) => setInputAuthNumber(e.target.value)}
                         required
                       />
-
+                      {authSent &&
+                        !authVerified && ( // Hide timer if auth is verified
+                          <Timer>
+                            인증번호 유효시간 : {formatTime(timeLeft)}
+                          </Timer>
+                        )}
                       <CheckButton
                         type='button'
                         onClick={handleVerifyAuthNumber}
@@ -317,7 +335,8 @@ const IndividualSignup = () => {
                       </CheckButton>
                     </InputWrapper>
                     <Description>
-                      *입력하신 이메일로 전송받은 인증번호를 입력해 주세요.
+                      *입력하신 이메일로 전송받은 인증번호를 유효시간 내에
+                      입력해 주세요.
                     </Description>
                   </Cell>
                 </Row>
@@ -419,6 +438,9 @@ const IndividualSignup = () => {
                         onChange={(e) => setProfileImage(e.target.files[0])}
                       />
                     </InputWrapper>
+                    <Description>
+                      *jpg, png, gif 등 이미지 파일만 등록해주세요.
+                    </Description>
                   </Cell>
                 </Row>
                 <Row>
@@ -706,6 +728,14 @@ const Icon = styled.img`
 const SmallText = styled.span`
   font-size: 12px;
   margin-right: auto;
+`;
+
+const Timer = styled.div`
+  margin-left: 10px;
+  font-size: 14px;
+  color: black;
+  pointer-events: none;
+  user-select: none;
 `;
 
 export default IndividualSignup;

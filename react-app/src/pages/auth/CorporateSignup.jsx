@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { RadioButton } from 'primereact/radiobutton';
@@ -39,12 +39,29 @@ const CorporateSignup = () => {
   const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
   const [inputAuthNumber, setInputAuthNumber] = useState('');
   const [memberType, setMemberType] = useState('기업회원'); // Default to 기업회원
-
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [authSent, setAuthSent] = useState(false);
+  const [authVerified, setAuthVerified] = useState(false);
   const navigate = useNavigate();
 
   const handleCheckboxChange = (e, setFunction) => {
     setFunction(e.target.checked);
   };
+
+  useEffect(() => {
+    let timer;
+    if (authSent && !authVerified && timeLeft > 0) {
+      // Consider authVerified
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+    } else if (timeLeft <= 0) {
+      clearInterval(timer);
+      setAuthSent(false);
+      setTimeLeft(0);
+    }
+    return () => clearInterval(timer);
+  }, [authSent, authVerified, timeLeft]); // Add authVerified to dependencies
 
   const handleAllTermsChange = (e) => {
     const isChecked = e.target.checked;
@@ -165,6 +182,9 @@ const CorporateSignup = () => {
       const fullEmail = `${email}${emailProvider}`;
       await sendAuthNumber(fullEmail);
       alert('인증번호가 전송되었습니다.');
+      setAuthSent(true);
+      setAuthVerified(false); // Reset authVerified state when sending a new auth number
+      setTimeLeft(300); // 5 minutes countdown
     } catch (error) {
       alert(error.response?.data?.message || 'Error sending auth number.');
     }
@@ -175,6 +195,7 @@ const CorporateSignup = () => {
       const fullEmail = `${email}${emailProvider}`;
       await verifyAuthNumber(fullEmail, inputAuthNumber);
       alert('인증번호가 확인되었습니다.');
+      setAuthVerified(true); // Set authVerified to true when verified
     } catch (error) {
       alert('올바른 인증번호가 아닙니다.');
     }
@@ -183,6 +204,12 @@ const CorporateSignup = () => {
   const handleAddressSelect = (data) => {
     setAddress(data.address);
     setIsAddressPopupVisible(false);
+  };
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
   const renderLabel = (label) => {
@@ -368,7 +395,6 @@ const CorporateSignup = () => {
                       <CheckButton type='button' onClick={handleSendAuthNumber}>
                         인증번호 발송
                       </CheckButton>
-                      {/* <CheckButton type='button' onClick={handleCheckEmailClick}>중복확인</CheckButton> */}
                     </InputWrapper>
                     <Description>
                       *E-mail을 통해 로그인할 수 있으며, 귀하의 거래명세서와
@@ -390,6 +416,12 @@ const CorporateSignup = () => {
                         onChange={(e) => setInputAuthNumber(e.target.value)}
                         required
                       />
+                      {authSent &&
+                        !authVerified && ( // Hide timer if auth is verified
+                          <Timer>
+                            인증번호 유효시간 : {formatTime(timeLeft)}
+                          </Timer>
+                        )}
                       <CheckButton
                         type='button'
                         onClick={handleVerifyAuthNumber}
@@ -500,6 +532,9 @@ const CorporateSignup = () => {
                         onChange={(e) => setProfileImage(e.target.files[0])}
                       />
                     </InputWrapper>
+                    <Description>
+                      *jpg, png, gif 등 이미지 파일만 등록해주세요.
+                    </Description>
                   </Cell>
                 </Row>
                 <Row>
@@ -984,6 +1019,14 @@ const RadioButtonContainer = styled.div`
 const RadioButtonLabel = styled.label`
   margin-left: 3px;
   font-size: 12px;
+`;
+
+const Timer = styled.div`
+  margin-left: 10px;
+  font-size: 14px;
+  color: black;
+  pointer-events: none;
+  user-select: none;
 `;
 
 export default CorporateSignup;

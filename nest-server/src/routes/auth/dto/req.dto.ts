@@ -63,6 +63,29 @@ export class IndiSignUpReqDto {
   profile_image?: string;
 }
 
+// 이미지 업로드 DTO
+export class ImageReqDto {
+  @ApiProperty({
+    type: 'string',
+    required: false,
+    description: '프로필 이미지 (base64 encoded)',
+  })
+  @IsOptional()
+  profile_image?: string;
+}
+
+// 사업자등록증 업로드 DTO
+export class BusinessLicenseReqDto {
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: true,
+    description: '사업자 등록증 사본 (base64 encoded)',
+  })
+  // @IsNotEmpty()
+  business_license: string;
+}
+
 // 사업자 회원가입 요청 DTO
 export class CorpSignUpReqDto {
   @ApiProperty({ required: true, description: '이메일' })
@@ -102,15 +125,6 @@ export class CorpSignUpReqDto {
   @IsOptional()
   readonly emergency_phone?: string;
 
-  @ApiProperty({
-    type: 'string',
-    format: 'binary',
-    required: false,
-    description: '프로필 이미지 (base64 encoded)',
-  })
-  @IsOptional()
-  profile_image?: string;
-
   @ApiProperty({ required: false, description: '부서 (사업자회원만 해당)' })
   @IsString()
   @IsOptional()
@@ -142,6 +156,19 @@ export class CorpSignUpReqDto {
   @IsNotEmpty()
   readonly business_registration_number: number;
 
+  @ApiProperty({ required: true, description: '주소' })
+  @IsString()
+  @IsNotEmpty()
+  readonly address: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: false,
+    description: '프로필 이미지 (base64 encoded)',
+  })
+  @IsOptional()
+  profile_image?: string;
+
   @ApiProperty({
     type: 'string',
     format: 'binary',
@@ -150,11 +177,6 @@ export class CorpSignUpReqDto {
   })
   // @IsNotEmpty()
   business_license: string;
-
-  @ApiProperty({ required: true, description: '주소' })
-  @IsString()
-  @IsNotEmpty()
-  readonly address: string;
 }
 
 // 로그인 요청 DTO
