@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../services/authServices';
 import KMP_Logo from '../../../assets/img/kmplogo_fit.png';
 import 'primeicons/primeicons.css';
+import userIcon from '../../../assets/img/individual.png';
 
 const MainHeader = ({ setActiveHeader, userType }) => {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ const MainHeader = ({ setActiveHeader, userType }) => {
           로그아웃
           <i className='pi pi-sign-out' style={{ marginLeft: '10px' }}></i>
         </LogoutButton>
-        <UserIcon onClick={() => setActiveHeader('User')} />
+        <UserIcon src={userIcon} onClick={() => setActiveHeader('User')} />
       </UserActions>
     </Container>
   );

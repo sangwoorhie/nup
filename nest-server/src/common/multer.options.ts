@@ -22,23 +22,33 @@ export const multerOptions = {
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
+      cb(
+        null,
+        `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`,
+      );
     },
   }),
   fileFilter: (req, file, cb) => {
     if (file.fieldname === 'profile_image') {
       if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-        return cb(new Error('이미지 파일 (jpg, jpeg, png, gif)만 업로드 가능합니다.'), false);
+        return cb(
+          new Error('이미지 파일 (jpg, jpeg, png, gif)만 업로드 가능합니다.'),
+          false,
+        );
       }
     } else if (file.fieldname === 'business_license') {
       if (!file.originalname.match(/\.(pdf|doc|docx|ppt|pptx|xls|xlsx)$/)) {
-        return cb(new Error('허용된 파일 형식: pdf, doc, docx, ppt, pptx, xls, xlsx'), false);
+        return cb(
+          new Error('허용된 파일 형식: pdf, doc, docx, ppt, pptx, xls, xlsx'),
+          false,
+        );
       }
     }
     cb(null, true);
   },
 };
 
+// AWS Multer Bucket 사용시
 // import { S3Client } from '@aws-sdk/client-s3';
 // import * as multerS3 from 'multer-s3';
 // import { extname } from 'path';

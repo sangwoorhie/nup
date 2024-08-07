@@ -121,35 +121,28 @@ const CorporateSignup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (currentStep !== 3) {
-      handleNextClick();
-      return;
+    const fullAddress = `${address} ${detailedAddress}`;
+    const formData = new FormData();
+    formData.append('email', (email + emailProvider).toLowerCase());
+    formData.append('password', password);
+    formData.append('confirmPassword', confirmPassword);
+    formData.append('username', name);
+    formData.append('phone', phone);
+    formData.append('emergency_phone', emergencyPhone || '');
+    formData.append('corporate_name', corporateName);
+    formData.append('business_type', businessType);
+    formData.append('business_conditions', businessConditions);
+    formData.append('business_registration_number', businessRegistrationNumber);
+    formData.append('address', fullAddress);
+    if (profileImage) {
+      formData.append('profile_image', profileImage);
+    }
+    if (businessLicense) {
+      formData.append('business_license', businessLicense);
     }
 
-    const fullAddress = `${address} ${detailedAddress}`;
-
-    const payload = {
-      email: (email + emailProvider).toLowerCase(),
-      password,
-      confirmPassword,
-      username: name,
-      phone,
-      emergency_phone: emergencyPhone || null,
-      profile_image: profileImage ? URL.createObjectURL(profileImage) : '',
-      department: '',
-      position: '',
-      corporate_name: corporateName,
-      business_type: businessType,
-      business_conditions: businessConditions,
-      business_registration_number: Number(businessRegistrationNumber),
-      business_license: businessLicense
-        ? URL.createObjectURL(businessLicense)
-        : '',
-      address: fullAddress,
-    };
-
     try {
-      await signupCorporate(payload, setCurrentStep, navigate);
+      await signupCorporate(formData, setCurrentStep);
     } catch (error) {
       console.error('Error during corporate signup:', error);
       const message =
@@ -256,27 +249,19 @@ const CorporateSignup = () => {
       <Header>KO-MAPPER AI</Header>
       <Steps>
         <Step $active={currentStep === 1}>
-          <StepIcon $active={currentStep > 1 ? '✓' : '1'}>
-            {currentStep > 1 ? '✓' : '1'}
-          </StepIcon>
+          <StepIcon>{currentStep > 1 ? '✓' : '1'}</StepIcon>
           <StepLabel>약관동의</StepLabel>
         </Step>
         <Step $active={currentStep === 2}>
-          <StepIcon $active={currentStep > 2 ? '✓' : '2'}>
-            {currentStep > 2 ? '✓' : '2'}
-          </StepIcon>
+          <StepIcon>{currentStep > 2 ? '✓' : '2'}</StepIcon>
           <StepLabel>회원정보입력</StepLabel>
         </Step>
         <Step $active={currentStep === 3}>
-          <StepIcon $active={currentStep > 3 ? '✓' : '3'}>
-            {currentStep > 3 ? '✓' : '3'}
-          </StepIcon>
+          <StepIcon>{currentStep > 3 ? '✓' : '3'}</StepIcon>
           <StepLabel>사업자정보입력</StepLabel>
         </Step>
         <Step $active={currentStep === 4}>
-          <StepIcon $active={currentStep === 4 ? '✓' : '4'}>
-            {currentStep === 4 ? '✓' : '4'}
-          </StepIcon>
+          <StepIcon>{currentStep === 4 ? '✓' : '4'}</StepIcon>
           <StepLabel>가입완료</StepLabel>
         </Step>
       </Steps>

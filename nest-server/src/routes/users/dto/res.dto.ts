@@ -36,6 +36,10 @@ export class FindIndiUserResDto {
   @ApiProperty({ required: true })
   @IsDate()
   readonly created_at: Date;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  readonly profile_image?: string;
 }
 
 // 사업자회원 단일조회 응답 DTO
@@ -99,6 +103,10 @@ export class FindCorpUserResDto {
   @ApiProperty({ required: true })
   @IsDate()
   readonly created_at: Date;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  readonly profile_image?: string;
 }
 
 // 관리자회원 단일조회 응답 DTO

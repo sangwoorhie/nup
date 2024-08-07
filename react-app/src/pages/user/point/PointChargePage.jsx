@@ -252,7 +252,7 @@ const SmallComment = styled.p`
   font-size: 12px;
   color: #888;
   text-align: right;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 `;
 
 const ChargeButton = styled.button`

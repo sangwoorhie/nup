@@ -133,7 +133,7 @@ export class UpdateCorpUserReqDto {
   @ApiProperty({ required: false, description: '사업자 등록증 사본' })
   @IsString()
   @IsNotEmpty()
-  business_license: string;
+  business_license?: string;
 
   @ApiProperty({ required: false, description: '주소' })
   @IsString()

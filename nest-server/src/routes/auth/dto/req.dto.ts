@@ -171,7 +171,6 @@ export class CorpSignUpReqDto {
 
   @ApiProperty({
     type: 'string',
-    format: 'binary',
     required: true,
     description: '사업자 등록증 사본 (base64 encoded)',
   })

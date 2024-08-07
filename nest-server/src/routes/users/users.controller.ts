@@ -12,6 +12,7 @@ import {
   Header,
   UnauthorizedException,
   NotFoundException,
+  Res,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -55,6 +56,7 @@ import { sortAndDeduplicateDiagnostics } from 'typescript';
 import { createReadStream } from 'fs';
 import { join } from 'path';
 import { Public } from 'src/decorators/public.decorators';
+import { Response } from 'express';
 
 @ApiTags('User')
 @ApiExtraModels(
@@ -390,38 +392,37 @@ export class UsersController {
     return await this.usersService.doubleCheckPassword(user.id, password);
   }
 
-  // 19. 사업자등록증 다운로드 (사용자, 관리자)
-  // GET localhost:3000/users/download?userId=12345
-  @Get('download')
-  @Header('Content-Type', 'application/octet-stream')
-  @Header('Content-Disposition', 'attachment; filename="business_license"')
-  @ApiOperation({ summary: '사업자등록증 다운로드' })
-  @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
-  @ApiResponse({
-    status: 200,
-    description: '사업자등록증이 다운로드 되었습니다.',
-  })
+  // 19. 사업자등록증/기관등록증 다운로드 (사업자회원 본인)
+  // GET : localhost:3000/users/business-license
+  @Get('business-license')
+  @ApiOperation({ summary: '사업자 등록증 다운로드' })
+  @ApiResponse({ status: 200, description: '사업자 등록증 다운로드 성공' })
   async downloadBusinessLicense(
-    @Query('userId') userId: string,
+    @Res() res: Response,
     @User() user: UserAfterAuth,
-  ): Promise<StreamableFile> {
-    // Check if the requested user ID matches the authenticated user ID or if the user is an admin
-    if (
-      user.id !== userId &&
-      !(await this.usersService.checkUserIsAdmin(user.id))
-    ) {
-      throw new UnauthorizedException('권한이 없습니다.');
-    }
+  ): Promise<void> {
+    const { fileBuffer, fileName, mimeType } =
+      await this.usersService.getBusinessLicenseFile(user.id);
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    res.send(fileBuffer);
+  }
 
-    const businessLicensePath =
-      await this.usersService.getBusinessLicensePath(userId);
-    console.log('businessLicensePath', businessLicensePath);
-    if (!businessLicensePath) {
-      throw new NotFoundException('사업자등록증을 찾을 수 없습니다.');
-    }
-
-    const file = createReadStream(businessLicensePath);
-    return new StreamableFile(file);
+  // 20. 사업자등록증/기관등록증 다운로드 (관리자)
+  // GET : localhost:3000/users/business-license/:userId
+  @Get('admin/business-license/:userId')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '사업자 등록증 다운로드' })
+  @ApiResponse({ status: 200, description: '사업자 등록증 다운로드 성공' })
+  async downloadBusinessLicenseAdmin(
+    @Param('userId') userId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { fileBuffer, fileName, mimeType } =
+      await this.usersService.getBusinessLicenseFile(userId);
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    res.send(fileBuffer);
   }
 }
 

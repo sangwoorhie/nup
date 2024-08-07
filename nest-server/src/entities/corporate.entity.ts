@@ -10,6 +10,7 @@ import {
 import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean } from 'class-validator';
+import { join } from 'path';
 
 // 사업자 정보
 @Entity({ name: 'Corporates' })
@@ -70,4 +71,10 @@ export class Corporate {
   @OneToOne(() => User, (user) => user.corporate)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  // getBusinessLicensePath(): string {
+  //   // Extract the filename from the business_license string
+  //   const filename = this.business_license.split(',')[1]; // This assumes the filename is after the comma in the data URL
+  //   return join(process.cwd(), 'uploads', 'business_licenses', filename);
+  // }
 }

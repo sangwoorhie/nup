@@ -5,7 +5,7 @@ import {
   storeRefreshTokenToLocal,
 } from './tokenStorage';
 import {
-  UserRegisterPayloadType,
+  // UserRegisterPayloadType,
   UserLoginPayloadType,
   ApiKeyLoginPayloadType,
   ResetPasswordPayloadType,
@@ -13,11 +13,15 @@ import {
 
 // 개인 회원가입
 export const signupIndividual = async (
-  payload: UserRegisterPayloadType,
+  payload: FormData,
   setCurrentStep: (step: number) => void
 ) => {
   try {
-    const { data } = await httpClient.post('/auth/signup1', payload);
+    const { data } = await httpClient.post('/auth/signup1', payload, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     storeAccessTokenToLocal(data.accessToken);
     storeRefreshTokenToLocal(data.refreshToken);
     alert('개인 회원가입에 성공했습니다.');
@@ -30,13 +34,36 @@ export const signupIndividual = async (
   }
 };
 
+// 개인 회원가입
+// export const signupIndividual = async (
+//   payload: UserRegisterPayloadType,
+//   setCurrentStep: (step: number) => void
+// ) => {
+//   try {
+//     const { data } = await httpClient.post('/auth/signup1', payload);
+//     storeAccessTokenToLocal(data.accessToken);
+//     storeRefreshTokenToLocal(data.refreshToken);
+//     alert('개인 회원가입에 성공했습니다.');
+//     setCurrentStep(3); // Move to the next step after the alert
+//   } catch (error: any) {
+//     const message =
+//       error.response?.data?.message || error.message || 'Signup failed';
+//     alert(`Problem in Signup: ${message}`);
+//     console.error(error);
+//   }
+// };
+
 // 사업자 회원가입
 export const signupCorporate = async (
-  payload: UserRegisterPayloadType,
+  payload: FormData,
   setCurrentStep: (step: number) => void
 ) => {
   try {
-    const { data } = await httpClient.post('/auth/signup2', payload);
+    const { data } = await httpClient.post('/auth/signup2', payload, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     storeAccessTokenToLocal(data.accessToken);
     storeRefreshTokenToLocal(data.refreshToken);
     alert('사업자 회원가입에 성공했습니다.');
@@ -48,6 +75,25 @@ export const signupCorporate = async (
     console.error(error);
   }
 };
+
+// 사업자 회원가입
+// export const signupCorporate = async (
+//   payload: UserRegisterPayloadType,
+//   setCurrentStep: (step: number) => void
+// ) => {
+//   try {
+//     const { data } = await httpClient.post('/auth/signup2', payload);
+//     storeAccessTokenToLocal(data.accessToken);
+//     storeRefreshTokenToLocal(data.refreshToken);
+//     alert('사업자 회원가입에 성공했습니다.');
+//     setCurrentStep(4); // Move to the next step after the alert
+//   } catch (error: any) {
+//     const message =
+//       error.response?.data?.message || error.message || 'Signup failed';
+//     alert(`Problem in Signup: ${message}`);
+//     console.error(error);
+//   }
+// };
 
 // Email, Password 로그인
 export const login = async (

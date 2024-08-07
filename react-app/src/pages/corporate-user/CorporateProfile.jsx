@@ -26,13 +26,13 @@ const CorporateProfile = () => {
 
   const handleDownload = async () => {
     try {
-      const filename = CorporateProfile.business_license;
-      const response = await httpClient.get(
-        `/users/business_license/${filename}`,
-        {
-          responseType: 'blob',
-        }
-      );
+      const response = await httpClient.get(`/users/business-license`, {
+        responseType: 'blob',
+      });
+      const contentDisposition = response.headers['content-disposition'];
+      const filename = contentDisposition
+        ? contentDisposition.split('filename=')[1]
+        : 'business_license.pdf';
       const contentType = response.headers['content-type'];
       const blob = new Blob([response.data], { type: contentType });
       saveAs(blob, filename);

@@ -27,10 +27,17 @@ import {
   FindCorpUserResDto,
   FindIndiUserResDto,
 } from './dto/res.dto';
+import { join } from 'path';
+import { createReadStream, promises as fsPromises, readFileSync } from 'fs';
+import { ReadStream } from 'fs';
+import * as mime from 'mime-types';
 import { createTransporter } from 'src/config/mailer.config';
 import * as moment from 'moment';
 import * as path from 'path';
 import * as fs from 'fs';
+import { statSync } from 'fs';
+import { extname } from 'path';
+const { stat } = fsPromises;
 
 @Injectable()
 export class UsersService {
@@ -44,9 +51,10 @@ export class UsersService {
 
   // 1. 본인정보 조회 (개인회원)
   async findIndiUserInfo(userId: string) {
-    return await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: userId },
       select: [
+        'id',
         'email',
         'username',
         'phone',
@@ -54,25 +62,11 @@ export class UsersService {
         'profile_image',
       ],
     });
+    if (!user) {
+      throw new BadRequestException('해당 사용자 정보를 찾을 수 없습니다.');
+    }
+    return user;
   }
-
-  // 프로필이미지 조회 가능 코드
-  // async findIndiUserInfo(userId: string) {
-  //   const user = await this.userRepository.findOne({
-  //     where: { id: userId },
-  //     select: [
-  //       'email',
-  //       'username',
-  //       'phone',
-  //       'emergency_phone',
-  //       'profile_image',
-  //     ],
-  //   });
-  //   return {
-  //     ...user,
-  //     profile_image_url: user.profile_image,
-  //   };
-  // }
 
   // 2. 본인정보 조회 (사업자회원)
   async findCorpUserInfo(userId: string) {
@@ -698,31 +692,30 @@ export class UsersService {
     if (isMatch) return { message: '비밀번호가 확인되었습니다.' };
   }
 
-  // 19. 사업자등록증 다운로드 (사용자, 관리자)
-  async getBusinessLicensePath(userId: string): Promise<string | null> {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['corporate'],
+  // 19. 사업자등록증/기관등록증 다운로드 (사업자회원 본인 / 관리자)
+  async getBusinessLicenseFile(
+    userId: string,
+  ): Promise<{ fileBuffer: Buffer; fileName: string; mimeType: string }> {
+    const corporate = await this.corporateRepository.findOne({
+      where: { user: { id: userId } },
     });
-    if (!user || !user.corporate) {
-      throw new NotFoundException('해당 사용자 정보를 찾을 수 없습니다.');
+    if (!corporate) {
+      throw new NotFoundException('사업자 정보를 찾을 수 없습니다.');
     }
 
-    const businessLicenseFilename = user.corporate.business_license;
-    if (!businessLicenseFilename) {
-      return null;
-    }
+    const base64Data = corporate.business_license.split(',')[1]; // Extract base64 data
+    const fileBuffer = Buffer.from(base64Data, 'base64');
 
-    const businessLicensePath = path.join(
-      __dirname,
-      '../../uploads/business_licenses',
-      businessLicenseFilename,
-    );
-    if (!fs.existsSync(businessLicensePath)) {
-      return null;
-    }
+    // Extract mime type from the data URL
+    const mimeType = corporate.business_license
+      .split(',')[0]
+      .split(':')[1]
+      .split(';')[0];
 
-    return businessLicensePath;
+    // Generate a filename (you might want to store actual filenames in the future)
+    const fileName = `business_license_${userId}.${mimeType.split('/')[1]}`;
+
+    return { fileBuffer, fileName, mimeType };
   }
 
   // 이메일로 회원찾기

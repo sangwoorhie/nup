@@ -4,6 +4,7 @@ import MainHeader from '../../components/etc/ui/MainHeader';
 import SubHeaders from '../../components/etc/ui/SubHeaders';
 import httpClient from '../../services/httpClient';
 import Footer from '../../components/etc/ui/Footer';
+import userIcon from '../../assets/img/individual.png';
 
 const UserProfile = () => {
   const [activeHeader, setActiveHeader] = useState('User');
@@ -44,7 +45,10 @@ const UserProfile = () => {
       <SubHeaders activeHeader={activeHeader} userType={userType} />
       <Content>
         <Title>내 정보</Title>
-        <ProfileImage src={userData.profile_image} />
+        <ProfileImage
+          src={userData.profile_image || userIcon} // Provide a default image URL if profile_image is null
+          alt='Profile Image'
+        />
         <Form>
           <Label>이름</Label>
           <Input type='text' value={userData.username} readOnly />
@@ -86,12 +90,13 @@ const Title = styled.h2`
   margin-bottom: 20px;
 `;
 
-const ProfileImage = styled.div`
+const ProfileImage = styled.img`
   width: 100px;
   height: 100px;
   background-color: #ccc;
   border-radius: 50%;
   margin-bottom: 20px;
+  object-fit: cover;
 `;
 
 const Form = styled.div`

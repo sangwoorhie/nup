@@ -34,6 +34,22 @@ const CorporateUpdate = () => {
     });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setCorporateData({
+        ...corporateData,
+        business_license: reader.result,
+      });
+    };
+
+    if (file) {
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddressSelect = (data) => {
     setCorporateData({
       ...corporateData,
@@ -101,12 +117,7 @@ const CorporateUpdate = () => {
           <Input
             type='file'
             name='business_license'
-            onChange={(e) =>
-              setCorporateData({
-                ...corporateData,
-                business_license: e.target.files[0],
-              })
-            }
+            onChange={handleFileChange}
           />
           <Description>
             *사업자등록증 스캔본에 기재된 번호는 사업자 등록번호와 동일해야
@@ -198,17 +209,20 @@ const Input = styled.input`
 const InputWrapper = styled.div`
   display: flex;
   align-items: center;
+  margin-bottom: 10px;
   /* margin-bottom: 20px; Added margin-bottom for spacing */
 `;
 
 const CheckButton = styled.button`
   margin-left: 10px;
-  padding: 10px;
+  padding: 8px 12px; /* Adjusted padding to make the button smaller */
   background-color: #0056b3;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 14px; /* Adjusted font size */
+  white-space: nowrap; /* Prevents text from wrapping */
 `;
 
 const ButtonContainer = styled.div`

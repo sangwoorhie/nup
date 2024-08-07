@@ -78,6 +78,8 @@ export class AuthController {
   // POST : localhost:3000/auth/signup1
   @Post('signup1')
   @Public()
+  @UseInterceptors(FileInterceptor('profile_image', multerOptions))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '회원가입 (개인회원)' })
   @ApiBody({ type: IndiSignUpReqDto })
   @ApiResponse({
@@ -87,7 +89,10 @@ export class AuthController {
   })
   async IndisignUp(
     @Body() indiSignUpReqDto: IndiSignUpReqDto,
+    @UploadedFile() profileImage: Express.Multer.File,
   ): Promise<IndiSignUpResDto> {
+    const base64Image = readFileSync(profileImage.path).toString('base64');
+    indiSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
     const { id, accessToken, refreshToken } =
       await this.authService.IndisignUp(indiSignUpReqDto);
     return { id, accessToken, refreshToken };
@@ -97,6 +102,16 @@ export class AuthController {
   // POST : localhost:3000/auth/signup2
   @Post('signup2')
   @Public()
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'profile_image', maxCount: 1 },
+        { name: 'business_license', maxCount: 1 },
+      ],
+      multerOptions,
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '회원가입 (사업자회원)' })
   @ApiBody({ type: CorpSignUpReqDto })
   @ApiResponse({
@@ -106,62 +121,30 @@ export class AuthController {
   })
   async CorpsignUp(
     @Body() corpSignUpReqDto: CorpSignUpReqDto,
+    @UploadedFiles()
+    files: {
+      profile_image?: Express.Multer.File[];
+      business_license?: Express.Multer.File[];
+    },
   ): Promise<CorpSignUpResDto> {
+    const profileImage = files.profile_image?.[0];
+    const businessLicense = files.business_license?.[0];
+    if (profileImage) {
+      const base64Image = readFileSync(profileImage.path).toString('base64');
+      corpSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
+    }
+    if (businessLicense) {
+      const base64License = readFileSync(businessLicense.path).toString(
+        'base64',
+      );
+      corpSignUpReqDto.business_license = `data:${businessLicense.mimetype};base64,${base64License}`;
+    }
     const { id, accessToken, refreshToken } =
       await this.authService.CorpsignUp(corpSignUpReqDto);
     return { id, accessToken, refreshToken };
   }
 
-  // 3. 회원가입 시 이미지 업로드 (개인회원, 사업자회원)
-  // POST : localhost:3000/auth/image
-  @Post('image')
-  @Public()
-  @UseInterceptors(FileInterceptor('profile_image', multerOptions))
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: '회원가입 시 이미지업로드' })
-  @ApiBody({ type: ImageReqDto })
-  @ApiResponse({
-    status: 201,
-    description: '이미지 업로드 성공',
-  })
-  async ImageUpload(
-    @Body() imageReqDto: ImageReqDto,
-    @UploadedFile() profile_image: Express.Multer.File,
-  ) {
-    if (profile_image) {
-      const base64Image = readFileSync(profile_image.path).toString('base64');
-      imageReqDto.profile_image = `data:${profile_image.mimetype};base64,${base64Image}`;
-      const image = imageReqDto.profile_image;
-      return image;
-    }
-  }
-
-  // 4. 회원가입 시 사업자등록증 업로드 (사업자회원)
-  // POST : localhost:3000/auth/businesslicense
-  @Post('businesslicense')
-  @Public()
-  @UseInterceptors(FileInterceptor('business_license', multerOptions))
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: '회원가입 시 사업자등록증 업로드 (사업자회원)' })
-  @ApiBody({ type: BusinessLicenseReqDto })
-  @ApiResponse({
-    status: 201,
-    description: '사업자등록증 업로드 성공',
-  })
-  async BusinessLicenseUpload(
-    @Body() businessLicenseReqDto: BusinessLicenseReqDto,
-    @UploadedFile() business_license: Express.Multer.File,
-  ) {
-    if (business_license) {
-      const base64License = readFileSync(business_license.path).toString(
-        'base64',
-      );
-      businessLicenseReqDto.business_license = `data:${business_license.mimetype};base64,${base64License}`;
-    }
-    return business_license;
-  }
-
-  // 5. 로그인 (Email, Password)
+  // 3. 로그인 (Email, Password)
   // POST : localhost:3000/auth/signin
   @Post('signin')
   @Public()
@@ -172,7 +155,7 @@ export class AuthController {
     return await this.authService.signIn(signInReqDto, request);
   }
 
-  // 6. 로그인 (API-Key)
+  // 4. 로그인 (API-Key)
   // POST : localhost:3000/auth/signin/api-key
   @Post('signin/api-key')
   @Public()
@@ -186,7 +169,7 @@ export class AuthController {
     return await this.authService.signInByApiKey(apiKeySignInReqDto, request);
   }
 
-  // 7. 리프레시토큰 발급 (개인회원/사업자회원/관리자회원)
+  // 5. 리프레시토큰 발급 (개인회원/사업자회원/관리자회원)
   // POST : localhost:3000/auth/refresh
   @Post('refresh')
   @ApiOperation({ summary: '리프레시토큰 자동 발급' })
@@ -216,7 +199,7 @@ export class AuthController {
     return { accessToken, refreshToken, user };
   }
 
-  // 8. 로그아웃 (개인회원/사업자회원/관리자회원)
+  // 6. 로그아웃 (개인회원/사업자회원/관리자회원)
   // DELETE : localhost:3000/auth/signout
   @Delete('signout')
   @ApiOperation({ summary: '로그아웃' })
@@ -225,7 +208,7 @@ export class AuthController {
     return await this.authService.signOut(user.id);
   }
 
-  // 9. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
+  // 7. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
   // POST : localhost:3000/auth/reset-password
   @Post('reset-password')
   @Public()
@@ -243,7 +226,7 @@ export class AuthController {
     return await this.authService.resetPassword(email, username);
   }
 
-  // 10. E-mail 중복확인 (사용자)
+  // 8. E-mail 중복확인 (사용자)
   // GET : localhost:3000/auth/checkemail?email=powercom92@naver.com
   @Get('checkemail')
   @Public()
@@ -255,7 +238,7 @@ export class AuthController {
     return await this.usersService.emailCheck(email);
   }
 
-  // 11. 회원가입시 이메일로 인증번호 전송 (5분 시간제한)
+  // 9. 회원가입시 이메일로 인증번호 전송 (5분 시간제한)
   // POST : localhost:3000/auth/send-auth-number
   @Post('send-auth-number')
   @Public()
@@ -268,7 +251,7 @@ export class AuthController {
     );
   }
 
-  // 12. 회원가입시 이메일로 전송된 인증번호 확인 (5분 시간제한)
+  // 10. 회원가입시 이메일로 전송된 인증번호 확인 (5분 시간제한)
   // POST : localhost:3000/auth/verify-auth-number
   @Post('verify-auth-number')
   @Public()
@@ -281,6 +264,15 @@ export class AuthController {
     );
   }
 }
+
+// 이미지 업로드
+// POST : localhost:3000/auth/upload-single
+// @Post('upload-single')
+// @Public()
+// @UseInterceptors(FileInterceptor('profile_image'))
+// uploadFile(@UploadedFile() profile_image: Express.Multer.File) {
+//   console.log(profile_image);
+// }
 
 // 스웨거 상 인증을 거쳐야 함
 // @ApiBearerAuth()

@@ -221,11 +221,7 @@ export class AuthService {
     }
   }
 
-  // 3. 회원가입 시 이미지 업로드 (개인회원, 사업자회원)
-
-  // 4. 회원가입 시 사업자등록증 업로드 (사업자회원)
-
-  // 5. 로그인 (Email, Password)
+  // 3. 로그인 (Email, Password)
   async signIn(signInReqDto: SignInReqDto, request: Request) {
     const { email, password } = signInReqDto;
     const user = await this.validateUser(email, password);
@@ -244,7 +240,7 @@ export class AuthService {
     };
   }
 
-  // 6. 로그인 (API Key)
+  // 4. 로그인 (API Key)
   async signInByApiKey(
     apiKeySignInReqDto: ApiKeySignInReqDto,
     request: Request,
@@ -333,7 +329,7 @@ export class AuthService {
     await this.tokenUsageRepository.save(tokenUsage);
   }
 
-  // 7. 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
+  // 5. 리프레시 토큰 발급 (리프레시토큰이 만료됬을 때 자동으로 호출함)
   async refresh(token: string, userId: string) {
     const refreshTokenEntity = await this.refreshTokenRepository.findOne({
       where: { token, user: { id: userId } },
@@ -358,13 +354,13 @@ export class AuthService {
     return { accessToken, refreshToken, user };
   }
 
-  // 8. 로그아웃
+  // 6. 로그아웃
   async signOut(userId: string) {
     await this.refreshTokenRepository.delete({ user: { id: userId } });
     return { message: '로그아웃 되었습니다.' };
   }
 
-  // 9. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
+  // 7. 임시 비밀번호 발급 (개인회원/사업자회원/관리자회원)
   async resetPassword(
     email: string,
     username: string,
@@ -415,7 +411,7 @@ export class AuthService {
     }
   }
 
-  // 11. 회원가입시 이메일로 인증번호 전송 (5분 시간제한)
+  // 8. 회원가입시 이메일로 인증번호 전송 (5분 시간제한)
   async sendAuthenticationNumber(email: string): Promise<{ message: string }> {
     const user = await this.usersService.findOneByEmail(email);
     if (user) throw new BadRequestException('동일한 이메일이 이미 존재합니다');
@@ -438,7 +434,7 @@ export class AuthService {
     return { message: '인증번호가 이메일로 전송되었습니다.' };
   }
 
-  // 12. 회원가입시 이메일로 전송된 인증번호 확인 (5분 시간제한)
+  // 9. 회원가입시 이메일로 전송된 인증번호 확인 (5분 시간제한)
   async verifyAuthenticationNumber({
     email,
     authNumber,

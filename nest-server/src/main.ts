@@ -16,6 +16,7 @@ import * as winston from 'winston';
 import * as basicAuth from 'express-basic-auth';
 import * as serveStatic from 'serve-static';
 import { join } from 'path';
+import * as bodyParser from 'body-parser';
 
 dotenv.config();
 config();
@@ -23,6 +24,10 @@ config();
 async function bootstrap() {
   const PORT = process.env.PORT || 3000;
   const app = await NestFactory.create(AppModule);
+
+  // Set the file upload limit
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
   // CORS 설정 추가
   app.enableCors({
