@@ -14,6 +14,7 @@ import {
   Length,
 } from 'class-validator';
 import { IsStrongPassword } from 'src/decorators/strong-password.decorator';
+import { CorporateType } from 'src/enums/enums';
 
 // 개인 회원가입 요청 DTO
 export class IndiSignUpReqDto {
@@ -88,6 +89,12 @@ export class BusinessLicenseReqDto {
 
 // 사업자 회원가입 요청 DTO
 export class CorpSignUpReqDto {
+  @ApiProperty({ required: true, description: '사업자 유형' })
+  @IsEnum(CorporateType, {
+    message: '사업자 유형은 "business" 또는 "organization" 이어야 합니다.',
+  })
+  readonly corporate_type: CorporateType;
+
   @ApiProperty({ required: true, description: '이메일' })
   @IsEmail()
   @MaxLength(30)

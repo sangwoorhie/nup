@@ -235,3 +235,22 @@ export const deleteRefundRequestAdmin = async (ids: string[]) => {
     data: { ids },
   });
 };
+
+// 통장사본 다운로드
+export const downloadImageAdmin = async (refundRequestId: string) => {
+  const response = await httpClient.get(
+    `/refund-request/admin/download/${refundRequestId}`,
+    {
+      responseType: 'arraybuffer',
+    }
+  );
+  const fileBuffer = response.data;
+  const contentDisposition = response.headers['content-disposition'];
+  const fileName = contentDisposition
+    ? contentDisposition.split('filename=')[1]
+    : `bank_account_copy_${refundRequestId}.jpg`;
+  const mimeType = response.headers['content-type'];
+  return { fileBuffer, fileName, mimeType };
+};
+
+////////////////////////////////////////////////////////

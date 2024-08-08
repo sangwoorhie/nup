@@ -83,6 +83,7 @@ export class UsersService {
 
     return {
       id: user.id,
+      corporate_type: corporate.corporate_type,
       corporate_name: corporate.corporate_name,
       business_type: corporate.business_type,
       business_conditions: corporate.business_conditions,
@@ -226,12 +227,6 @@ export class UsersService {
     if (!user) {
       throw new BadRequestException('해당 회원이 존재하지 않습니다.');
     }
-    // const isMatch = await bcrypt.compare(currentPassword, user.password);
-
-    // if (!isMatch) {
-    //   throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다.');
-    // }
-
     const saltRounds = 10;
     const hash = await bcrypt.hash(newPassword, saltRounds);
 
@@ -253,13 +248,6 @@ export class UsersService {
     if (!user) {
       throw new BadRequestException('해당 회원이 존재하지 않습니다.');
     }
-    // const isMatch = await bcrypt.compare(
-    //   deleteUserReqDto.password,
-    //   user.password,
-    // );
-    // if (!isMatch)
-    //   throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
-
     await this.userRepository.softDelete(userId);
     return { message: '회원 탈퇴되었습니다.' };
   }
@@ -376,6 +364,7 @@ export class UsersService {
 
     const items = corporates.map((corporate) => ({
       id: corporate.id,
+      corporate_type: corporate.corporate_type,
       corporate_name: corporate.corporate_name,
       business_type: corporate.business_type,
       business_conditions: corporate.business_conditions,
@@ -388,6 +377,7 @@ export class UsersService {
       position: corporate.user.position,
       email: corporate.user.email,
       phone: corporate.user.phone,
+      point: corporate.user.point,
       emergency_phone: corporate.user.emergency_phone,
       banned: corporate.user.banned,
       created_at: corporate.user.created_at,
@@ -397,7 +387,7 @@ export class UsersService {
       page,
       size,
       total,
-      items,
+      items: items,
     };
   }
 
@@ -449,28 +439,32 @@ export class UsersService {
       throw new NotFoundException('해당 조건에 맞는 기업을 찾을 수 없습니다.');
     }
 
+    const items = corporates.map((corporate) => ({
+      id: corporate.id,
+      corporate_type: corporate.corporate_type,
+      corporate_name: corporate.corporate_name,
+      business_type: corporate.business_type,
+      business_conditions: corporate.business_conditions,
+      business_registration_number: corporate.business_registration_number,
+      business_license: corporate.business_license,
+      address: corporate.address,
+      business_license_verified: corporate.business_license_verified,
+      username: corporate.user.username,
+      department: corporate.user.department,
+      position: corporate.user.position,
+      email: corporate.user.email,
+      phone: corporate.user.phone,
+      point: corporate.user.point,
+      emergency_phone: corporate.user.emergency_phone,
+      banned: corporate.user.banned,
+      created_at: corporate.user.created_at,
+    }));
+
     return {
       page,
       size,
       total,
-      items: corporates.map((corporate) => ({
-        id: corporate.id,
-        corporate_name: corporate.corporate_name,
-        business_type: corporate.business_type,
-        business_conditions: corporate.business_conditions,
-        business_registration_number: corporate.business_registration_number,
-        business_license: corporate.business_license,
-        address: corporate.address,
-        business_license_verified: corporate.business_license_verified,
-        username: corporate.user.username,
-        department: corporate.user.department,
-        position: corporate.user.position,
-        email: corporate.user.email,
-        phone: corporate.user.phone,
-        emergency_phone: corporate.user.emergency_phone,
-        banned: corporate.user.banned,
-        created_at: corporate.user.created_at,
-      })),
+      items: items,
     };
   }
 
@@ -694,10 +688,10 @@ export class UsersService {
 
   // 19. 사업자등록증/기관등록증 다운로드 (사업자회원 본인 / 관리자)
   async getBusinessLicenseFile(
-    userId: string,
+    corporateId: string,
   ): Promise<{ fileBuffer: Buffer; fileName: string; mimeType: string }> {
     const corporate = await this.corporateRepository.findOne({
-      where: { user: { id: userId } },
+      where: { id: corporateId },
     });
     if (!corporate) {
       throw new NotFoundException('사업자 정보를 찾을 수 없습니다.');
@@ -713,7 +707,7 @@ export class UsersService {
       .split(';')[0];
 
     // Generate a filename (you might want to store actual filenames in the future)
-    const fileName = `business_license_${userId}.${mimeType.split('/')[1]}`;
+    const fileName = `business_license_${corporateId}.${mimeType.split('/')[1]}`;
 
     return { fileBuffer, fileName, mimeType };
   }

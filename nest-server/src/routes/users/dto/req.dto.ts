@@ -130,10 +130,14 @@ export class UpdateCorpUserReqDto {
   @IsNotEmpty()
   business_registration_number: number;
 
-  @ApiProperty({ required: false, description: '사업자 등록증 사본' })
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: '사업자 등록증 사본 (base64 encoded)',
+  })
   @IsString()
   @IsNotEmpty()
-  business_license?: string;
+  business_license: string;
 
   @ApiProperty({ required: false, description: '주소' })
   @IsString()

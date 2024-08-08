@@ -112,7 +112,7 @@ export class RefundRequestService {
       requested_point: refundRequest.requested_point,
       rest_point: refundRequest.rest_point,
       refund_request_reason: refundRequest.refund_request_reason,
-      cancelled_at: refundRequest.cancelled_at
+      cancelled_at: refundRequest.cancelled_at,
     };
   }
 
@@ -129,9 +129,9 @@ export class RefundRequestService {
       .orderBy('refundRequest.requested_at', 'DESC')
       .skip((page - 1) * size)
       .take(size);
-  
+
     const [refundRequests, total] = await queryBuilder.getManyAndCount();
-  
+
     const items = refundRequests.map((refundRequest) => ({
       id: refundRequest.id,
       requested_at: refundRequest.requested_at,
@@ -142,7 +142,7 @@ export class RefundRequestService {
       refund_request_reason: refundRequest.refund_request_reason,
       cancelled_at: refundRequest.cancelled_at,
     }));
-  
+
     return {
       page,
       size,
@@ -165,7 +165,7 @@ export class RefundRequestService {
 
     const [refundRequests, total] =
       await this.refundRequestRepository.findAndCount({
-        // withDeleted: true, 
+        // withDeleted: true,
         where: {
           user: { id: userId },
           requested_at: Between(startDate, endDate),
@@ -184,7 +184,7 @@ export class RefundRequestService {
       requested_point: refundRequest.requested_point,
       rest_point: refundRequest.rest_point,
       refund_request_reason: refundRequest.refund_request_reason,
-      cancelled_at: refundRequest.cancelled_at
+      cancelled_at: refundRequest.cancelled_at,
     }));
 
     return {
@@ -225,10 +225,8 @@ export class RefundRequestService {
         );
       }
 
-      if(refundRequest.is_cancelled) {
-        throw new BadRequestException(
-          '이미 취소된 환불 요청건입니다.',
-        );
+      if (refundRequest.is_cancelled) {
+        throw new BadRequestException('이미 취소된 환불 요청건입니다.');
       }
 
       refundRequest.is_cancelled = true;
@@ -269,9 +267,11 @@ export class RefundRequestService {
         throw new BadRequestException('본인의 환불 요청만 삭제할 수 있습니다.');
       }
 
-    if(refundRequest.is_cancelled === false) {
-      throw new BadRequestException('환불요청을 먼저 취소한 후 삭제해 주시기 바랍니다.');
-    }
+      if (refundRequest.is_cancelled === false) {
+        throw new BadRequestException(
+          '환불요청을 먼저 취소한 후 삭제해 주시기 바랍니다.',
+        );
+      }
 
       refundRequest.deleted_at = new Date();
     });
@@ -288,12 +288,12 @@ export class RefundRequestService {
     size: number,
   ): Promise<PageResDto<RefundResAdminDto>> {
     const queryBuilder = this.refundRequestRepository
-    .createQueryBuilder('refundRequest')
-    // .withDeleted()
-    .leftJoinAndSelect('refundRequest.user', 'user')
-    .orderBy('refundRequest.requested_at', 'DESC')
-    .skip((page - 1) * size)
-    .take(size);
+      .createQueryBuilder('refundRequest')
+      // .withDeleted()
+      .leftJoinAndSelect('refundRequest.user', 'user')
+      .orderBy('refundRequest.requested_at', 'DESC')
+      .skip((page - 1) * size)
+      .take(size);
 
     const [refundRequests, total] = await queryBuilder.getManyAndCount();
 
@@ -305,7 +305,7 @@ export class RefundRequestService {
       bank_account_copy: refundRequest.bank_account_copy,
       requested_point: refundRequest.requested_point,
       rest_point: refundRequest.rest_point,
-      cancelled_at : refundRequest.cancelled_at,
+      cancelled_at: refundRequest.cancelled_at,
       refund_request_reason: refundRequest.refund_request_reason,
       username: refundRequest.user.username,
       phone: refundRequest.user.phone,
@@ -380,26 +380,26 @@ export class RefundRequestService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-  
+
     try {
       if (!ids || ids.length === 0) {
         return { message: '환불 요청을 찾을 수 없습니다.' };
       }
-  
+
       for (const refundRequestId of ids) {
         const refundRequest = await this.refundRequestRepository.findOne({
           where: { id: refundRequestId },
         });
-  
+
         if (!refundRequest) {
           throw new NotFoundException(
             `환불 요청을 찾을 수 없습니다. ID: ${refundRequestId}`,
           );
         }
-  
+
         await this.refundRequestRepository.remove(refundRequest);
       }
-  
+
       await queryRunner.commitTransaction();
       return { message: '환불요청이 성공적으로 삭제되었습니다.' };
     } catch (error) {
@@ -408,5 +408,28 @@ export class RefundRequestService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // 10. 환불 통장사본 이미지 다운로드
+  async downloadImageAdmin(
+    refundRequestId: string,
+  ): Promise<{ fileBuffer: Buffer; fileName: string; mimeType: string }> {
+    const refundRequest = await this.refundRequestRepository.findOne({
+      where: { id: refundRequestId },
+    });
+    if (!refundRequest) {
+      throw new NotFoundException('환불요청 정보를 찾을 수 없습니다.');
+    }
+
+    const base64Data = refundRequest.bank_account_copy.split(',')[1];
+    const fileBuffer = Buffer.from(base64Data, 'base64');
+
+    const mimeType = refundRequest.bank_account_copy
+      .split(',')[0]
+      .split(':')[1]
+      .split(';')[0];
+    const fileName = `bank_account_copy_${refundRequestId}.${mimeType.split('/')[1]}`;
+
+    return { fileBuffer, fileName, mimeType };
   }
 }

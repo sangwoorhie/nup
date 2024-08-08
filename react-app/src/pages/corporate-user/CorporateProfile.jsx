@@ -5,6 +5,7 @@ import MainHeader from '../../components/etc/ui/MainHeader';
 import SubHeaders from '../../components/etc/ui/SubHeaders';
 import Footer from '../../components/etc/ui/Footer';
 import { saveAs } from 'file-saver';
+import 'primeicons/primeicons.css';
 
 const CorporateProfile = () => {
   const [CorporateProfile, setCorporateProfile] = useState(null);
@@ -41,6 +42,20 @@ const CorporateProfile = () => {
     }
   };
 
+  const renderLabel = (label) => {
+    const mapping = {
+      기업명: '기관명',
+      '업종 명': '기관 유형',
+      '업태 명': '기관 세부유형',
+      '사업자 등록번호': '기관 고유번호',
+      '사업자 등록증': '기관 등록증',
+    };
+
+    return CorporateProfile.corporate_type === 'organization'
+      ? mapping[label]
+      : label;
+  };
+
   if (!CorporateProfile) {
     return <div>Loading...</div>;
   }
@@ -53,31 +68,34 @@ const CorporateProfile = () => {
         <Title>사업자 정보</Title>
         <Form>
           <FormItem>
-            <Label>기업 명</Label>
+            <Label>{renderLabel('기업명')}</Label>
             <Input
               type='text'
+              name='corporate_name'
               value={CorporateProfile.corporate_name}
               readOnly
             />
           </FormItem>
           <FormItem>
-            <Label>업종 명</Label>
+            <Label>{renderLabel('업종 명')}</Label>
             <Input
               type='text'
+              name='business_type'
               value={CorporateProfile.business_type}
               readOnly
             />
           </FormItem>
           <FormItem>
-            <Label>업태 명</Label>
+            <Label>{renderLabel('업태 명')}</Label>
             <Input
               type='text'
+              name='business_conditions'
               value={CorporateProfile.business_conditions}
               readOnly
             />
           </FormItem>
           <FormItem>
-            <Label>사업자 등록번호</Label>
+            <Label>{renderLabel('사업자 등록번호')}</Label>
             <Input
               type='text'
               value={CorporateProfile.business_registration_number}
@@ -85,9 +103,10 @@ const CorporateProfile = () => {
             />
           </FormItem>
           <FormItem>
-            <Label>사업자등록증 스캔본</Label>
+            <Label>{renderLabel('사업자 등록증')}</Label>
             <ButtonLink onClick={handleDownload}>
-              Download Business License
+              Download {renderLabel('사업자 등록증')}
+              <i className='pi pi-download' style={{ marginLeft: '3px' }}></i>
             </ButtonLink>
           </FormItem>
           <FormItem>

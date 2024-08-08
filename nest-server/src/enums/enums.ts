@@ -7,6 +7,12 @@ export enum UserType {
   ADMIN = 'admin', // 관리자 회원
 }
 
+// 사업자 유형
+export enum CorporateType {
+  BUSINESS = 'business', // 기업 회원
+  ORGANIZATION = 'organization', // 기관 회원
+}
+
 // 거래유형
 export enum PaymentType {
   CHARGE = 'charge', // 포인트 충전

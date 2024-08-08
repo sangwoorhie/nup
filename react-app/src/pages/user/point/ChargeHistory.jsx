@@ -97,9 +97,9 @@ const ChargeHistory = () => {
 
   const chargeStatusTemplate = (rowData) => {
     const statusMap = {
-      confirmed: '성공',
-      pending: '진행중',
-      rejected: '실패',
+      confirmed: '충전 완료',
+      pending: '대기중',
+      rejected: '충전 실패',
     };
     return statusMap[rowData.charge_status] || rowData.charge_status;
   };
@@ -160,11 +160,14 @@ const ChargeHistory = () => {
   const handleRefund = async (formData) => {
     try {
       await requestRefund(formData);
-      alert('환불 신청이 성공적으로 접수되었습니다. 환불 내역에서 확인 가능합니다.');
+      alert(
+        '환불 신청이 성공적으로 접수되었습니다. 환불 내역에서 확인 가능합니다.'
+      );
       setShowModal(false);
     } catch (error) {
-      console.error('Failed to request refund:', error);
-      alert('환불 신청에 실패했습니다.');
+      const errorMessage = error.response?.data?.message || error.message;
+      alert(errorMessage);
+      console.error('Failed to reject charges:', error, errorMessage);
     }
   };
 

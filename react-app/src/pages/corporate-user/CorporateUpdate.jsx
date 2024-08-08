@@ -65,6 +65,7 @@ const CorporateUpdate = () => {
         address: `${corporateData.address} ${detailedAddress}`,
       };
       delete updateData.business_license_verified; // Remove unwanted fields
+      delete updateData.corporate_type;
       await httpClient.patch('/users/me/corp', updateData);
       alert('사업자 정보가 변경되었습니다');
       navigate('/user-profile');
@@ -78,6 +79,20 @@ const CorporateUpdate = () => {
     navigate('/user-profile');
   };
 
+  const renderLabel = (label) => {
+    const mapping = {
+      기업명: '기관명',
+      '업종 명': '기관 유형',
+      '업태 명': '기관 세부유형',
+      '사업자 등록번호': '기관 고유번호',
+      '사업자 등록증': '기관 등록증',
+    };
+
+    return corporateData.corporate_type === 'organization'
+      ? mapping[label]
+      : label;
+  };
+
   return (
     <Container>
       <MainHeader setActiveHeader={() => {}} userType='corporate' />
@@ -85,45 +100,45 @@ const CorporateUpdate = () => {
       <Content>
         <Title>사업자 정보 수정</Title>
         <Form>
-          <Label>기업명</Label>
+          <Label>{renderLabel('기업명')}</Label>
           <Input
             type='text'
             name='corporate_name'
             value={corporateData.corporate_name || ''}
             onChange={handleInputChange}
           />
-          <Label>업종 명</Label>
+          <Label>{renderLabel('업종 명')}</Label>
           <Input
             type='text'
             name='business_type'
             value={corporateData.business_type || ''}
             onChange={handleInputChange}
           />
-          <Label>업태 명</Label>
+          <Label>{renderLabel('업태 명')}</Label>
           <Input
             type='text'
             name='business_conditions'
             value={corporateData.business_conditions || ''}
             onChange={handleInputChange}
           />
-          <Label>사업자 등록번호</Label>
+          <Label>{renderLabel('사업자 등록번호')}</Label>
           <Input
             type='text'
             name='business_registration_number'
             value={corporateData.business_registration_number || ''}
             onChange={handleInputChange}
           />
-          <Label>사업자등록증</Label>
+          <Label>{renderLabel('사업자 등록증')}</Label>
           <Input
             type='file'
             name='business_license'
             onChange={handleFileChange}
           />
           <Description>
-            *사업자등록증 스캔본에 기재된 번호는 사업자 등록번호와 동일해야
-            하며, 지원되는 파일 유형은 PDF, JPG, PNG입니다. 파일 크기는 최대
-            10MB까지 가능합니다. 모든 글자가 또렷이 보이도록 선명한 스캔본을
-            업로드해주세요.
+            *{renderLabel('사업자 등록증')} 스캔본에 기재된 번호는 사업자
+            등록번호와 동일해야 하며, 지원되는 파일 유형은 PDF, JPG, PNG입니다.
+            파일 크기는 최대 10MB까지 가능합니다. 모든 글자가 또렷이 보이도록
+            선명한 스캔본을 업로드해주세요.
           </Description>
           <Label>주소</Label>
           <InputWrapper>

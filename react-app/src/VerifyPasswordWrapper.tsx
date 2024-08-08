@@ -7,9 +7,10 @@ const VerifyPasswordWrapper = () => {
   const location = useLocation();
   const nextPath = location.state?.next || '/user-profile';
   const userType = location.state?.userType || 'individual'; // default to individual if not provided
+  const initialActiveSubOption = location.state?.initialActiveSubOption || '';
 
   const handleSuccess = () => {
-    navigate(nextPath, { state: { userType } }); // Pass userType on navigation
+    navigate(nextPath, { state: { userType, initialActiveSubOption } }); // Pass userType on navigation
   };
 
   return <VerifyPassword onSuccess={handleSuccess} userType={userType} />;

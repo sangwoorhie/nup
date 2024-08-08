@@ -13,6 +13,8 @@ import {
   UnauthorizedException,
   NotFoundException,
   Res,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
@@ -23,6 +25,7 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import {
   BanUserReqDto,
@@ -57,6 +60,9 @@ import { createReadStream } from 'fs';
 import { join } from 'path';
 import { Public } from 'src/decorators/public.decorators';
 import { Response } from 'express';
+import { multerOptions } from 'src/common/multer.options';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { readFileSync } from 'fs';
 
 @ApiTags('User')
 @ApiExtraModels(
@@ -98,7 +104,11 @@ export class UsersController {
   @Patch('me/indi')
   @ApiOperation({ summary: '본인 정보 수정 (개인회원)' })
   @ApiBody({ type: UpdateIndiUserReqDto })
-  @ApiResponse({ status: 200, description: '성공', type: FindIndiUserResDto })
+  @ApiResponse({
+    status: 200,
+    description: '정보수정 성공',
+    type: FindIndiUserResDto,
+  })
   async updateMyIndiInfo(
     @User() user: UserAfterAuth,
     @Body() updateIndiUserReqDto: UpdateIndiUserReqDto,
@@ -112,13 +122,26 @@ export class UsersController {
   // 4. 본인정보 수정 (사업자회원)
   // PATCH : localhost:3000/users/me/corp
   @Patch('me/corp')
+  @UseInterceptors(FileInterceptor('business_license', multerOptions))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '본인 정보 수정 (사업자회원)' })
   @ApiBody({ type: UpdateCorpUserReqDto })
-  @ApiResponse({ status: 200, description: '성공', type: FindCorpUserResDto })
+  @ApiResponse({
+    status: 200,
+    description: '정보수정 성공',
+    type: FindCorpUserResDto,
+  })
   async updateMyCorpInfo(
     @User() user: UserAfterAuth,
     @Body() updateCorpUserReqDto: UpdateCorpUserReqDto,
+    @UploadedFile() businessLicense: Express.Multer.File,
   ) {
+    if (businessLicense) {
+      const base64businessLicense = readFileSync(businessLicense.path).toString(
+        'base64',
+      );
+      updateCorpUserReqDto.business_license = `data:${businessLicense.mimetype};base64,${base64businessLicense}`;
+    }
     return await this.usersService.updateCorpUserInfo(
       user.id,
       updateCorpUserReqDto,
@@ -409,17 +432,17 @@ export class UsersController {
   }
 
   // 20. 사업자등록증/기관등록증 다운로드 (관리자)
-  // GET : localhost:3000/users/business-license/:userId
-  @Get('admin/business-license/:userId')
+  // GET : localhost:3000/users/admin/business-license/:corporateId
+  @Get('admin/business-license/:corporateId')
   @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '사업자 등록증 다운로드' })
   @ApiResponse({ status: 200, description: '사업자 등록증 다운로드 성공' })
   async downloadBusinessLicenseAdmin(
-    @Param('userId') userId: string,
+    @Param('corporateId') corporateId: string,
     @Res() res: Response,
   ): Promise<void> {
     const { fileBuffer, fileName, mimeType } =
-      await this.usersService.getBusinessLicenseFile(userId);
+      await this.usersService.getBusinessLicenseFile(corporateId);
     res.setHeader('Content-Type', mimeType);
     res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
     res.send(fileBuffer);

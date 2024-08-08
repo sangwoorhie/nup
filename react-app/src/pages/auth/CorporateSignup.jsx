@@ -38,7 +38,7 @@ const CorporateSignup = () => {
   const [detailedAddress, setDetailedAddress] = useState('');
   const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
   const [inputAuthNumber, setInputAuthNumber] = useState('');
-  const [memberType, setMemberType] = useState('기업회원'); // Default to 기업회원
+  const [memberType, setMemberType] = useState('기업회원');
   const [timeLeft, setTimeLeft] = useState(0);
   const [authSent, setAuthSent] = useState(false);
   const [authVerified, setAuthVerified] = useState(false);
@@ -134,6 +134,10 @@ const CorporateSignup = () => {
     formData.append('business_conditions', businessConditions);
     formData.append('business_registration_number', businessRegistrationNumber);
     formData.append('address', fullAddress);
+    formData.append(
+      'corporate_type',
+      memberType === '기업회원' ? 'business' : 'organization'
+    );
     if (profileImage) {
       formData.append('profile_image', profileImage);
     }

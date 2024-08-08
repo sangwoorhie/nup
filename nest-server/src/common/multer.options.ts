@@ -11,6 +11,8 @@ export const multerOptions = {
         uploadPath = join(__dirname, '../../uploads/profile_images');
       } else if (file.fieldname === 'business_license') {
         uploadPath = join(__dirname, '../../uploads/business_licenses');
+      } else if (file.fieldname === 'bank_account_copy') {
+        uploadPath = join(__dirname, '../../uploads/bank_account_copies');
       }
 
       // Ensure the upload directory exists
@@ -29,7 +31,10 @@ export const multerOptions = {
     },
   }),
   fileFilter: (req, file, cb) => {
-    if (file.fieldname === 'profile_image') {
+    if (
+      file.fieldname === 'profile_image' ||
+      file.fieldname === 'bank_account_copy'
+    ) {
       if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
         return cb(
           new Error('이미지 파일 (jpg, jpeg, png, gif)만 업로드 가능합니다.'),

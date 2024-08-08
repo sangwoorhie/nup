@@ -9,8 +9,12 @@ export class RefundReqDto {
   @IsNumberString()
   requested_point: number;
 
-  @ApiProperty({ description: '통장 사본' })
-  @IsString()
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: '통장 사본 이미지 (base64 encoded)',
+  })
+  // @IsString()
   bank_account_copy: string;
 
   @ApiProperty({ description: '환불요청 사유' })

@@ -9,9 +9,17 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { RefundRequestService } from './refund_request.service';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AmountResDto, RefundResAdminDto, RefundResDto } from './dto/res.dto';
 import { DateReqDto, RefundReqDto } from './dto/req.dto';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
@@ -19,6 +27,9 @@ import { Usertype } from 'src/decorators/usertype.decorators';
 import { UserType } from 'src/enums/enums';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from 'src/common/multer.options';
+import { readFileSync } from 'fs';
+import { Response } from 'express';
 
 @ApiTags('Refund-Request')
 @Controller('refund-request')
@@ -43,17 +54,22 @@ export class RefundRequestController {
   // 2. 환불요청 (사용자)
   // POST : localhost:3000/refund-request
   @Post()
+  @UseInterceptors(FileInterceptor('bank_account_copy', multerOptions))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '환불 요청 (사용자)' })
+  @ApiBody({ type: RefundResDto })
   @ApiResponse({
     status: 201,
     description: '환불 요청 성공',
     type: RefundResDto,
   })
-  @UseInterceptors(FileInterceptor('bank_account_copy'))
   async requestRefund(
     @User() user: UserAfterAuth,
     @Body() refundReqDto: RefundReqDto,
+    @UploadedFile() bankAccountCopy: Express.Multer.File,
   ) {
+    const base64Image = readFileSync(bankAccountCopy.path).toString('base64');
+    refundReqDto.bank_account_copy = `data:${bankAccountCopy.mimetype};base64,${base64Image}`;
     const userCurrentPoint = await this.refundRequestService.userCurrentPoint(
       user.id,
     );
@@ -186,5 +202,22 @@ export class RefundRequestController {
   @Usertype(UserType.ADMIN)
   async deleteRefundRequestAdmin(@Body('ids') ids: string[]) {
     return await this.refundRequestService.deleteRefundRequestAdmin(ids);
+  }
+
+  // 10. 환불 통장사본 이미지 다운로드 (관리자)
+  // GET : localhost:3000/refund-request/admin/download/:refundRequest_Id
+  @Get('admin/download/:refundRequestId')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '통장사본 이미지 다운로드' })
+  @ApiResponse({ status: 200, description: '통장사본 이미지 다운로드 성공' })
+  async downloadImageAdmin(
+    @Param('refundRequestId') refundRequestId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const { fileBuffer, fileName, mimeType } =
+      await this.refundRequestService.downloadImageAdmin(refundRequestId);
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    res.send(fileBuffer);
   }
 }

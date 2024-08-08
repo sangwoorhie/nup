@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { CorporateType } from 'src/enums/enums';
 import { IsBoolean } from 'class-validator';
 import { join } from 'path';
 
@@ -18,6 +19,15 @@ export class Corporate {
   // 기본 ID
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  // 사업자 유형
+  @ApiProperty({ description: '사업자 유형' })
+  @Column({
+    type: 'enum',
+    enum: CorporateType,
+    default: CorporateType.BUSINESS,
+  })
+  corporate_type: CorporateType;
 
   // 기업명
   @ApiProperty({ description: '기업 명 / 기관명' })
@@ -71,10 +81,4 @@ export class Corporate {
   @OneToOne(() => User, (user) => user.corporate)
   @JoinColumn({ name: 'user_id' })
   user: User;
-
-  // getBusinessLicensePath(): string {
-  //   // Extract the filename from the business_license string
-  //   const filename = this.business_license.split(',')[1]; // This assumes the filename is after the comma in the data URL
-  //   return join(process.cwd(), 'uploads', 'business_licenses', filename);
-  // }
 }

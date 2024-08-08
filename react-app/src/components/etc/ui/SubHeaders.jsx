@@ -2,15 +2,20 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const SubHeaders = ({ activeHeader, userType }) => {
+const SubHeaders = ({ activeHeader, userType, initialActiveSubOption }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [activeSubOption, setActiveSubOption] = React.useState(
+    initialActiveSubOption
+  );
 
   const handleNavigation = (destination) => {
     if (destination === '/stable-models' || destination === '/nightly-models') {
       alert('서비스 준비중입니다.');
       return;
     }
+
+    setActiveSubOption(destination);
 
     if (
       destination === '/user-update' ||
@@ -19,7 +24,11 @@ const SubHeaders = ({ activeHeader, userType }) => {
       destination === '/corporate-update'
     ) {
       navigate('/verify-password', {
-        state: { next: destination, userType },
+        state: {
+          next: destination,
+          userType,
+          initialActiveSubOption: destination,
+        },
       });
     } else {
       navigate(destination, { state: { userType } });
@@ -101,7 +110,9 @@ const SubHeaders = ({ activeHeader, userType }) => {
         <SubOption
           key={option.label}
           onClick={() => handleNavigation(option.path)}
-          active={currentPath === option.path}
+          active={
+            currentPath === option.path || activeSubOption === option.path
+          }
         >
           {option.label}
         </SubOption>

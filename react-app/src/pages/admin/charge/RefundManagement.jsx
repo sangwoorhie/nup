@@ -10,8 +10,10 @@ import {
   getRefundRequests,
   completeRefundRequest,
   deleteRefundRequestAdmin,
+  downloadImageAdmin,
 } from '../../../services/adminService';
 import { Button } from 'primereact/button';
+import { saveAs } from 'file-saver';
 import 'primeicons/primeicons.css';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 import RefundRequestModal from '../../../components/etc/modals/RefundRequestModal';
@@ -120,6 +122,19 @@ const RefundManagement = () => {
     return rowData.is_refunded ? '환불 완료' : '환불 대기';
   };
 
+  const handleDownload = async (refundRequestId) => {
+    try {
+      const { fileBuffer, fileName, mimeType } =
+        await downloadImageAdmin(refundRequestId);
+      const blob = new Blob([fileBuffer], { type: mimeType });
+      saveAs(blob, fileName);
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      alert(errorMessage);
+      console.error('Failed to reject charges:', error, errorMessage);
+    }
+  };
+
   return (
     <Container>
       <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
@@ -157,9 +172,18 @@ const RefundManagement = () => {
               header='환불 상태'
               body={formatRefundStatus}
             />
-            <Column field='username' header='이름' />
-            <Column field='phone' header='연락처' />
-            <Column field='bank_account_copy' header='통장사본' />
+            <Column field='username' header='회원 이름' />
+            <Column field='phone' header='회원 연락처' />
+            <Column
+              field='bank_account_copy'
+              header='통장사본'
+              body={(rowData) => (
+                <SmallButton
+                  label='다운로드'
+                  onClick={() => handleDownload(rowData.id)}
+                />
+              )}
+            />
             <Column
               field='requested_point'
               header='환불요청 포인트'

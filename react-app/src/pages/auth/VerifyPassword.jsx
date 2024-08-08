@@ -14,6 +14,7 @@ const VerifyPassword = ({ onSuccess, userType }) => {
   const location = useLocation();
   const email = localStorage.getItem('userEmail') || '';
   const nextPath = location.state?.next || '/user-profile';
+  const initialActiveSubOption = location.state?.initialActiveSubOption || '';
 
   const handlePasswordCheck = async () => {
     try {
@@ -39,7 +40,11 @@ const VerifyPassword = ({ onSuccess, userType }) => {
   return (
     <Container>
       <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
-      <SubHeaders activeHeader={activeHeader} userType={userType} />
+      <SubHeaders
+        activeHeader={activeHeader}
+        userType={userType}
+        initialActiveSubOption={initialActiveSubOption}
+      />
       <Content>
         <Title>회원정보 확인</Title>
         <div>본인 인증이 필요한 기능입니다.</div>

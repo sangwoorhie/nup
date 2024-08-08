@@ -5,7 +5,9 @@ import {
   IsString,
   IsNumber,
   IsBoolean,
+  IsEnum,
 } from 'class-validator';
+import { CorporateType } from 'src/enums/enums';
 
 // 개인유저 단일조회 응답 DTO
 export class FindIndiUserResDto {
@@ -47,6 +49,10 @@ export class FindCorpUserResDto {
   @ApiProperty({ required: true })
   @IsString()
   readonly id: string;
+
+  @ApiProperty({ required: true })
+  @IsEnum(CorporateType)
+  readonly corporate_type: CorporateType;
 
   @ApiProperty({ required: true })
   @IsString()
@@ -95,6 +101,10 @@ export class FindCorpUserResDto {
   @ApiProperty({ required: true })
   @IsString()
   readonly phone: string;
+
+  @ApiProperty({ required: true })
+  @IsNumber()
+  readonly point: number;
 
   @ApiProperty({ required: true })
   @IsString()

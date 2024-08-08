@@ -120,6 +120,7 @@ export class AuthService {
     await queryRunner.startTransaction();
 
     const {
+      corporate_type,
       email,
       password,
       confirmPassword,
@@ -172,6 +173,7 @@ export class AuthService {
 
       // Corporate 엔티티 생성
       const corporateEntity = new Corporate();
+      corporateEntity.corporate_type = corporate_type;
       corporateEntity.corporate_name = corporate_name;
       corporateEntity.business_type = business_type;
       corporateEntity.business_conditions = business_conditions;

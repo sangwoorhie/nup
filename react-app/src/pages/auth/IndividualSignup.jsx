@@ -191,8 +191,8 @@ const IndividualSignup = () => {
           <div>
             <Title>약관 동의</Title>
             <div>
-              KO-MAPPER AI 회원가입을 위해 아래 이용약관 및 개인정보 수집 이용
-              등의 동의 확인 동의하여 주시기 바랍니다.
+              KO-MAPPER AI 회원가입을 위해 아래 이용약관 및 개인정보 수집 이용에
+              동의하여 주시기 바랍니다.
             </div>
             <TermsContainer>
               <Section>
@@ -203,7 +203,7 @@ const IndividualSignup = () => {
                   checked={termsAccepted}
                   onChange={(e) => handleCheckboxChange(e, setTermsAccepted)}
                 />
-                <Label>이용 약관을 확인하였으며, 이에 동이합니다. (필수)</Label>
+                <Label>이용 약관을 확인하였으며, 이에 동의합니다. (필수)</Label>
               </Section>
               <Section>
                 <h3>II. 개인정보 수집 및 이용</h3>
