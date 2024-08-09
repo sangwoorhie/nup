@@ -225,7 +225,7 @@ export class UsersService {
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new BadRequestException('해당 회원이 존재하지 않습니다.');
+      throw new BadRequestException('회원 정보를 찾을 수 없습니다.');
     }
     const saltRounds = 10;
     const hash = await bcrypt.hash(newPassword, saltRounds);
@@ -246,7 +246,7 @@ export class UsersService {
   async deleteUser(userId: string) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new BadRequestException('해당 회원이 존재하지 않습니다.');
+      throw new BadRequestException('회원 정보를 찾을 수 없습니다.');
     }
     await this.userRepository.softDelete(userId);
     return { message: '회원 탈퇴되었습니다.' };
@@ -380,7 +380,7 @@ export class UsersService {
       point: corporate.user.point,
       emergency_phone: corporate.user.emergency_phone,
       banned: corporate.user.banned,
-      created_at: corporate.user.created_at,
+      created_at: corporate.created_at,
     }));
 
     return {
@@ -415,22 +415,9 @@ export class UsersService {
     }
 
     const [corporates, total] = await this.corporateRepository.findAndCount({
-      where: {
-        ...whereCondition,
-        // user_type: UserType.CORPORATE,
-      },
+      where: whereCondition,
       skip: (page - 1) * size,
       take: size,
-      select: [
-        'id',
-        'corporate_name',
-        'business_type',
-        'business_conditions',
-        'business_registration_number',
-        'business_license',
-        'address',
-        'business_license_verified',
-      ],
       relations: ['user'],
       order: { created_at: 'DESC' },
     });
@@ -457,7 +444,7 @@ export class UsersService {
       point: corporate.user.point,
       emergency_phone: corporate.user.emergency_phone,
       banned: corporate.user.banned,
-      created_at: corporate.user.created_at,
+      created_at: corporate.created_at,
     }));
 
     return {
@@ -561,7 +548,7 @@ export class UsersService {
     };
   }
 
-  // 13. 회원 계정정지 (관리자)
+  // 13. 개인회원 계정정지 (관리자)
   async banUser(
     userId: string,
     banUserReqDto: BanUserReqDto,
@@ -569,7 +556,7 @@ export class UsersService {
     const { reason } = banUserReqDto;
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
+    if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
     user.banned = !user.banned;
     user.banned_reason = user.banned ? reason : null; // 계정정지 사유 저장 또는 제거
@@ -581,10 +568,10 @@ export class UsersService {
     };
   }
 
-  // 14. 회원 계정정지 취소 (관리자)
+  // 14. 개인회원 계정정지 해제 (관리자)
   async unbanUser(userId: string): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
+    if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
     if (!user.banned) {
       throw new BadRequestException('계정이 정지되지 않은 회원입니다.');
@@ -598,10 +585,62 @@ export class UsersService {
     return { message: `username: ${username} 계정 정지가 해제되었습니다.` };
   }
 
-  // 15. 관리자회원으로 변경 (관리자)
+  // 15. 사업자회원 계정정지 (관리자)
+  async banCorporateUser(
+    corporateId: string,
+    banUserReqDto: BanUserReqDto,
+  ): Promise<{ message: string }> {
+    const { reason } = banUserReqDto;
+
+    const corporate = await this.corporateRepository.findOne({
+      where: { id: corporateId },
+      relations: ['user'],
+    });
+    if (!corporate) {
+      throw new NotFoundException('사업자 정보를 찾을 수 없습니다.');
+    }
+    const userId = corporate.user.id;
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('회원 정보를 찾을 수 없습니다.');
+    }
+
+    user.banned = !user.banned;
+    user.banned_reason = user.banned ? reason : null; // 계정정지 사유 저장 또는 제거
+    const username = user.username;
+    await this.userRepository.save(user);
+
+    return {
+      message: `username: ${username} 계정이 ${user.banned ? '정지' : '정지 해제'}되었습니다.`,
+    };
+  }
+
+  // 16. 사업자회원 계정정지 해제 (관리자)
+  async unbanCorporateUser(corporateId: string): Promise<{ message: string }> {
+    const corporate = await this.corporateRepository.findOne({
+      where: { id: corporateId },
+      relations: ['user'],
+    });
+    if (!corporate) {
+      throw new NotFoundException('사업자 정보를 찾을 수 없습니다.');
+    }
+    const userId = corporate.user.id;
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('회원 정보를 찾을 수 없습니다.');
+    }
+    user.banned = false;
+    user.banned_reason = null; // 계정정지 사유 제거
+    const username = user.username;
+    await this.userRepository.save(user);
+
+    return { message: `username: ${username} 계정 정지가 해제되었습니다.` };
+  }
+
+  // 17. 관리자회원으로 변경 (관리자)
   async promoteUser(userId: string): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
+    if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
     if (user.user_type === UserType.ADMIN) {
       throw new BadRequestException('이미 관리자 회원입니다.');
@@ -616,7 +655,7 @@ export class UsersService {
     };
   }
 
-  // 16. 미확인 사업자등록증 확인처리 (관리자)
+  // 18. 미확인 사업자등록증 확인처리 (관리자)
   async verifyBusinessLicense(
     corporateId: string,
   ): Promise<{ message: string }> {
@@ -624,7 +663,7 @@ export class UsersService {
       where: { id: corporateId },
     });
     if (!corporate)
-      throw new UnauthorizedException('존재하지 않는 사업자회원입니다.');
+      throw new UnauthorizedException('사업자 회원 정보를 찾을 수 없습니다.');
 
     if (corporate.business_license_verified)
       throw new BadRequestException('이미 확인처리 된 사업자등록증입니다.');
@@ -638,7 +677,7 @@ export class UsersService {
     };
   }
 
-  // 17. 포인트 충전/차감 (관리자)
+  // 19. 포인트 충전/차감 (관리자)
   async updatePoints(
     userId: string,
     updatePointsReqDto: UpdatePointsReqDto,
@@ -646,7 +685,7 @@ export class UsersService {
     const { points } = updatePointsReqDto;
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new UnauthorizedException('존재하지 않는 회원입니다.');
+    if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
     // 포인트 차감 조건 확인
     if (points < 0) {
@@ -672,7 +711,7 @@ export class UsersService {
     return { message };
   }
 
-  // 18. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
+  // 20. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
   async doubleCheckPassword(
     userId: string,
     password: string,
@@ -686,12 +725,12 @@ export class UsersService {
     if (isMatch) return { message: '비밀번호가 확인되었습니다.' };
   }
 
-  // 19. 사업자등록증/기관등록증 다운로드 (사업자회원 본인 / 관리자)
+  // 21. 사업자등록증/기관등록증 다운로드 (사업자회원 본인)
   async getBusinessLicenseFile(
-    corporateId: string,
+    userId: string,
   ): Promise<{ fileBuffer: Buffer; fileName: string; mimeType: string }> {
     const corporate = await this.corporateRepository.findOne({
-      where: { id: corporateId },
+      where: { user: { id: userId } },
     });
     if (!corporate) {
       throw new NotFoundException('사업자 정보를 찾을 수 없습니다.');
@@ -707,17 +746,48 @@ export class UsersService {
       .split(';')[0];
 
     // Generate a filename (you might want to store actual filenames in the future)
-    const fileName = `business_license_${corporateId}.${mimeType.split('/')[1]}`;
+    const fileName = `business_license_${userId}.${mimeType.split('/')[1]}`;
 
     return { fileBuffer, fileName, mimeType };
   }
 
-  // 이메일로 회원찾기
+  // 22. 사업자등록증/기관등록증 다운로드 (관리자)
+  async getBusinessLicenseFileAdmin(
+    corporateId: string,
+  ): Promise<{ fileBuffer: Buffer; fileName: string; mimeType: string }> {
+    const corporate = await this.corporateRepository.findOne({
+      where: { id: corporateId },
+      relations: ['user'],
+    });
+    if (!corporate) {
+      throw new NotFoundException('사업자 정보를 찾을 수 없습니다.');
+    }
+    const userId = corporate.user.id;
+    if (!userId) {
+      throw new NotFoundException('회원 정보를 찾을 수 없습니다.');
+    }
+
+    const base64Data = corporate.business_license.split(',')[1]; // Extract base64 data
+    const fileBuffer = Buffer.from(base64Data, 'base64');
+
+    // Extract mime type from the data URL
+    const mimeType = corporate.business_license
+      .split(',')[0]
+      .split(':')[1]
+      .split(';')[0];
+
+    // Generate a filename (you might want to store actual filenames in the future)
+    const fileName = `business_license_${userId}.${mimeType.split('/')[1]}`;
+
+    return { fileBuffer, fileName, mimeType };
+  }
+
+  // * 이메일로 회원찾기
   async findOneByEmail(email: string) {
     return await this.userRepository.findOneBy({ email });
   }
 
-  // 이메일과 이름으로 회원찾기
+  // * 이메일과 이름으로 회원찾기 (임시비밀번호 발급용)
   async findOneByEmailandName(
     email: string,
     username: string,
@@ -725,12 +795,12 @@ export class UsersService {
     return await this.userRepository.findOne({ where: { email, username } });
   }
 
-  // 아이디로 회원찾기
+  // * 아이디로 회원찾기
   async findOneById(id: string) {
     return await this.userRepository.findOneBy({ id });
   }
 
-  // E-mail 중복검사
+  // * E-mail 중복검사
   async emailCheck(email: string) {
     const user = await this.findOneByEmail(email);
     if (!user) {
@@ -739,13 +809,13 @@ export class UsersService {
     throw new BadRequestException(`Email : ${email}은 이미 사용 중입니다.`);
   }
 
-  // 관리자 회원 검증
+  // * 관리자 회원 검증
   async checkUserIsAdmin(id: string) {
     const user = await this.userRepository.findOneBy({ id });
     return user.user_type === UserType.ADMIN;
   }
 
-  // 비밀번호 재설정
+  // * 비밀번호 재설정 (임시비밀번호 발급용)
   async updateUser(user: User): Promise<User> {
     return this.userRepository.save(user);
   }

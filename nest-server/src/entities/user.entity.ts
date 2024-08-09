@@ -94,17 +94,17 @@ export class User {
 
   // 유저 생성 시각
   @ApiProperty({ description: '유저 생성시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 유저 정보수정 시각
   @ApiProperty({ description: '유저 정보수정 시각' })
-  @UpdateDateColumn({ type: 'date' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
   // 유저 삭제 시각
   @ApiProperty({ description: '유저 삭제시각' })
-  @DeleteDateColumn({ type: 'date', nullable: true })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
   deleted_at: Date;
 
   // User : Corporate = 1 : 1 관계

@@ -64,7 +64,9 @@ export class CouponsService {
       });
 
       if (!coupon) {
-        throw new NotFoundException(`쿠폰 코드: ${code} 가 존재하지 않습니다.`);
+        throw new NotFoundException(
+          `쿠폰 코드: ${code} 정보를 찾을 수 없습니다.`,
+        );
       }
 
       if (coupon.is_used) {

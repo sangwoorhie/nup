@@ -21,3 +21,15 @@ https://business.juso.go.kr/addrlink/openApi/searchApi.do
 
 주소 Open API
 https://blog.naver.com/gi_balja/223092973271
+
+AWS Bucket 관련
+https://soraji.github.io/back/2023/02/14/awsS3/
+
+
+포트원 (아임포트) 연동
+
+https://faq.portone.io/42030fae-7769-48fc-bbd8-b9d061c5d4cd
+https://developers.portone.io/docs/ko/pg/payment-gateway/readme?v=v2
+
+Docker
+https://www.youtube.com/watch?v=M25Pl0tX8yw&list=PLlTylS8uB2fDLJRJCXqUowsOViG-ZKnWy&index=1

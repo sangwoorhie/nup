@@ -35,17 +35,17 @@ export class CouponTemplate {
 
   // 쿠폰 만료 시각
   @ApiProperty({ description: '쿠폰 만료시각' })
-  @Column({ type: 'date' })
+  @Column({ type: 'timestamp' })
   expiration_date: Date;
 
   // 쿠폰 생성 시각
   @ApiProperty({ description: '쿠폰 생성시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 쿠폰 수정 시각
   @ApiProperty({ description: '쿠폰 수정시각' })
-  @UpdateDateColumn({ type: 'date' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
   // CouponTemplate : User = N : 1 관계

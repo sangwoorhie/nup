@@ -379,7 +379,7 @@ export class AuthService {
       );
 
       if (!user) {
-        throw new NotFoundException('존재하지 않는 회원입니다.');
+        throw new NotFoundException('회원 정보를 찾을 수 없습니다.');
       }
 
       const newPassword = crypto.randomBytes(6).toString('base64');

@@ -288,10 +288,11 @@ const IndividualSignup = () => {
                             <option value='@daum.net'>@daum.net</option>
                             <option value='@hanmail.net'>@hanmail.net</option>
                             <option value='@kakao.com'>@kakao.com</option>
-                            <option value='@hotmail.com'>@hotmail.com</option>
-                            <option value='@icloud.com'>@icloud.com</option>
                             <option value='@nate.com'>@nate.com</option>
                             <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
+                            <option value='@hotmail.com'>@hotmail.com</option>
+                            <option value='@icloud.com'>@icloud.com</option>
+                            <option value='@outlook.com'>@outlook.com</option>
                             <option value='@komapper.ai'>@komapper.ai</option>
                             <option value='직접입력'>직접입력</option>
                           </Select>

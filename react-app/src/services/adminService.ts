@@ -34,7 +34,7 @@ export const promoteUser = async (userId: string) => {
   return await httpClient.patch(`/users/admin/promote?userId=${userId}`);
 };
 
-// 회원 계정 정지
+// 개인회원 계정 정지
 export const banUser = async (
   userId: string,
   banUserReqDto: { reason: string }
@@ -45,9 +45,27 @@ export const banUser = async (
   );
 };
 
-// 회원 계정 정지해제
+// 개인회원 계정 정지해제
 export const unbanUser = async (userId: string) => {
   return await httpClient.patch(`/users/admin/unban?userId=${userId}`);
+};
+
+// 사업자회원 계정 정지
+export const banCorporateUser = async (
+  corporateId: string,
+  banUserReqDto: { reason: string }
+) => {
+  return await httpClient.patch(
+    `/users/admin/corporate/ban?corporateId=${corporateId}`,
+    banUserReqDto
+  );
+};
+
+// 사업자회원 계정 정지해제
+export const unbanCorporateUser = async (corporateId: string) => {
+  return await httpClient.patch(
+    `/users/admin/corporate/unban?corporateId=${corporateId}`
+  );
 };
 
 // 사업자회원 조회
@@ -253,4 +271,19 @@ export const downloadImageAdmin = async (refundRequestId: string) => {
   return { fileBuffer, fileName, mimeType };
 };
 
-////////////////////////////////////////////////////////
+// 사업자등록증 다운로드 (관리자)
+export const downloadBusinessLicenseAdmin = async (corporateId: string) => {
+  const response = await httpClient.get(
+    `/users/admin/business-license/${corporateId}`,
+    {
+      responseType: 'arraybuffer', // This ensures the response is treated as a binary file
+    }
+  );
+
+  const contentDisposition = response.headers['content-disposition'];
+  const fileName = contentDisposition
+    ? contentDisposition.split('filename=')[1]
+    : `business_license_${corporateId}.pdf`; // Default file name if not provided
+
+  return { fileBuffer: response.data, fileName };
+};

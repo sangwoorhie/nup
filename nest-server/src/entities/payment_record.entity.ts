@@ -63,12 +63,12 @@ export class PaymentRecord {
 
   // 거래 발생시각
   @ApiProperty({ description: '거래 발생시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 거래 삭제시각
   @ApiProperty({ description: '거래 삭제시각' })
-  @DeleteDateColumn({ type: 'date', nullable: true })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
   deleted_at: Date;
 
   // PaymentRecord : User = N : 1 관계

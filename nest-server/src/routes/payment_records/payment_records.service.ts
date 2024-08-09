@@ -44,7 +44,7 @@ export class PaymentRecordsService {
     // Change the return type to void
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new BadRequestException('해당 회원이 존재하지 않습니다.');
+      throw new BadRequestException('회원 정보를 찾을 수 없습니다.');
     }
 
     const { amount, account_holder_name } = createChargeReqDto;

@@ -5,10 +5,10 @@ import SubHeaders from '../../../components/etc/ui/SubHeaders';
 import Footer from '../../../components/etc/ui/Footer';
 import {
   getCorporateUsers,
-  promoteUser,
-  banUser,
-  unbanUser,
+  banCorporateUser,
+  unbanCorporateUser,
   verifyBusinessLicense,
+  downloadBusinessLicenseAdmin,
 } from '../../../services/adminService';
 import { Paginator } from 'primereact/paginator';
 import refreshImage from '../../../assets/img/refresh_icon.png';
@@ -19,63 +19,79 @@ const CorporateUserManagement = () => {
   const [users, setUsers] = useState([]);
   const [searchCriteria, setSearchCriteria] = useState('corporate_name');
   const [searchValue, setSearchValue] = useState('');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0); // Changed to 0-based index
   const [pageSize, setPageSize] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
   const [selectedUser, setSelectedUser] = useState(null); // State to manage selected user
 
+  // Fetch functions
   const fetchUsers = useCallback(
-    async (criteria = searchCriteria, value = searchValue) => {
+    async (criteria = '', value = '') => {
       try {
         const { data } = await getCorporateUsers(
-          page,
+          page + 1,
           pageSize,
           criteria,
           value
-        );
+        ); // Page is 1-based index
         setUsers(data.items);
         setTotalRecords(data.total);
       } catch (error) {
-        console.error('Error fetching corporate users:', error);
-        if (error.response && error.response.status === 401) {
-          // Handle token refresh or user logout here if necessary
+        if (error.response?.status === 404) {
+          // setUsers([]);
+          // setTotalRecords(0);
+          alert('해당 조건에 맞는 기업을 찾을 수 없습니다.');
+        } else {
+          console.error('Error fetching corporate users:', error);
+          const errorMessage = error.response?.data?.message || error.message;
+          alert(errorMessage);
         }
       }
     },
-    [page, pageSize, searchCriteria, searchValue]
+    [page, pageSize]
   );
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleSearch = async () => {
+  const handleDownload = async (corporateId) => {
     try {
-      await fetchUsers();
+      const { fileBuffer, fileName } =
+        await downloadBusinessLicenseAdmin(corporateId);
+      const blob = new Blob([fileBuffer], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      window.URL.revokeObjectURL(link.href); // Cleanup
     } catch (error) {
-      alert('검색어와 일치하는 회원이 존재하지 않습니다.');
+      const errorMessage = error.response?.data?.message || error.message;
+      alert('파일을 다운로드할 수 없습니다. ' + errorMessage);
     }
   };
 
-  const handlePromote = async () => {
-    if (selectedUserIds.length === 0) {
-      alert('선택된 회원이 없습니다.');
+  const handleSearch = async () => {
+    if (!searchValue.trim()) {
+      alert('검색어를 입력해 주세요.');
       return;
     }
-
-    if (window.confirm('관리자 회원으로 변경하시겠습니까?')) {
-      for (const userId of selectedUserIds) {
-        try {
-          await promoteUser(userId);
-        } catch (error) {
-          console.error('Error promoting user:', error);
-        }
+    try {
+      await fetchUsers(searchCriteria, searchValue);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        alert('해당 조건에 맞는 기업을 찾을 수 없습니다.');
+      } else {
+        const errorMessage = error.response?.data?.message || error.message;
+        alert('에러가 발생했습니다: ' + errorMessage);
       }
-      fetchUsers();
-      alert('선택한 회원이 관리자 회원으로 변경되었습니다.');
     }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') handleSearch();
   };
 
   const handleBan = async () => {
@@ -92,9 +108,9 @@ const CorporateUserManagement = () => {
       for (const user of selectedUsers) {
         try {
           if (user.banned) {
-            await unbanUser(user.id);
+            await unbanCorporateUser(user.id);
           } else {
-            await banUser(user.id, { reason: '관리자에 의해 정지됨' });
+            await banCorporateUser(user.id, { reason: '관리자에 의해 정지됨' });
           }
         } catch (error) {
           alert(
@@ -102,7 +118,7 @@ const CorporateUserManagement = () => {
           );
         }
       }
-      fetchUsers();
+      fetchUsers(searchCriteria, searchValue);
       alert('선택한 회원의 계정 상태가 변경되었습니다.');
     }
   };
@@ -118,10 +134,11 @@ const CorporateUserManagement = () => {
         try {
           await verifyBusinessLicense(corporateId);
         } catch (error) {
-          console.error('Error verifying business license:', error);
+          const errorMessage = error.response?.data?.message || error.message;
+          alert(errorMessage);
         }
       }
-      fetchUsers();
+      fetchUsers(searchCriteria, searchValue);
       alert('선택한 회원의 사업자 등록증이 확인되었습니다.');
     }
   };
@@ -132,6 +149,11 @@ const CorporateUserManagement = () => {
         ? prevSelected.filter((id) => id !== userId)
         : [...prevSelected, userId]
     );
+  };
+
+  const handleRefresh = () => {
+    fetchUsers();
+    window.location.reload(); // Reload the page
   };
 
   return (
@@ -145,24 +167,24 @@ const CorporateUserManagement = () => {
               value={searchCriteria}
               onChange={(e) => setSearchCriteria(e.target.value)}
             >
-              <option value='corporate_name'>기업명</option>
+              <option value='corporate_name'>기업(기관)명</option>
               <option value='business_registration_number'>
-                사업자 등록번호
+                사업자(기관) 등록번호
               </option>
             </select>
             <input
               type='text'
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder='검색어를 입력해 주세요'
             />
             <button onClick={handleSearch}>검색</button>
           </SearchSection>
           <ButtonContainer>
-            <button onClick={handlePromote}>관리자 회원으로 변경</button>
             <button onClick={handleBan}>계정 정지/해제</button>
             <button onClick={handleVerify}>사업자 등록증 확인</button>
-            <RefreshButton onClick={() => fetchUsers()}>
+            <RefreshButton onClick={handleRefresh}>
               <img src={refreshImage} alt='새로고침' />
             </RefreshButton>
           </ButtonContainer>
@@ -171,11 +193,11 @@ const CorporateUserManagement = () => {
           <thead>
             <tr>
               <th></th>
-              <th>기업명</th>
-              <th>업종명</th>
-              <th>업태명</th>
-              <th>사업자 등록번호</th>
-              <th>사업자 등록증</th>
+              <th>기업(기관)명</th>
+              <th>업종명(기관 유형)</th>
+              <th>업태명(기관 세부유형)</th>
+              <th>사업자 등록번호(기관 고유번호)</th>
+              <th>사업자(기관) 등록증</th>
               <th>사업자 등록증 확인여부</th>
               <th>주소</th>
               <th>회원 정보</th>
@@ -194,18 +216,16 @@ const CorporateUserManagement = () => {
                     onChange={() => handleCheckboxChange(user.id)}
                   />
                 </td>
-                <td>{user.corporate_name}</td>
+                <TdCorporateName banned={user.banned ? 'true' : undefined}>
+                  {user.corporate_name}
+                </TdCorporateName>
                 <td>{user.business_type}</td>
                 <td>{user.business_conditions}</td>
                 <td>{user.business_registration_number}</td>
                 <td>
-                  <a
-                    href={user.business_license}
-                    target='_blank'
-                    rel='noreferrer'
-                  >
-                    PDF
-                  </a>
+                  <button onClick={() => handleDownload(user.id)}>
+                    다운로드
+                  </button>
                 </td>
                 <td>{user.business_license_verified ? '확인' : '미확인'}</td>
                 <td>{user.address}</td>
@@ -228,14 +248,14 @@ const CorporateUserManagement = () => {
 
         <Pagination>
           <Paginator
-            first={(page - 1) * pageSize}
+            first={page * pageSize}
             rows={pageSize}
             totalRecords={totalRecords}
             rowsPerPageOptions={[10, 20, 30]}
             onPageChange={(e) => {
-              setPage(e.first / e.rows + 1);
+              setPage(e.page);
               setPageSize(e.rows);
-              fetchUsers();
+              fetchUsers(searchCriteria, searchValue);
             }}
           />
         </Pagination>
@@ -354,4 +374,8 @@ const Pagination = styled.div`
   justify-content: center;
   width: 80%; /* Adjusted width */
   margin: 0 auto;
+`;
+
+const TdCorporateName = styled.td`
+  color: ${({ banned }) => (banned === 'true' ? 'red' : 'black')};
 `;

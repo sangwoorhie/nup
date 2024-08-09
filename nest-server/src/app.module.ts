@@ -8,7 +8,7 @@ import { CouponsModule } from './routes/coupons/coupons.module';
 import { CouponTemplatesModule } from './routes/coupon_templates/coupon_templates.module';
 import { AiModelsModule } from './routes/ai_models/ai_models.module';
 import { ApiKeysModule } from './routes/api_keys/api_keys.module';
-// import { ImagesModule } from './routes/images/images.module';
+import { ImagesModule } from './routes/images/images.module';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -64,7 +64,7 @@ config();
     CouponTemplatesModule,
     AiModelsModule,
     ApiKeysModule,
-    // ImagesModule,
+    ImagesModule,
     AuthModule,
     HealthModule,
     LogModule,

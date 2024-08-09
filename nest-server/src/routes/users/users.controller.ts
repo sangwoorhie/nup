@@ -332,11 +332,11 @@ export class UsersController {
     );
   }
 
-  // 13. 회원 계정정지 (관리자)
+  // 13. 개인회원 계정정지 (관리자)
   // PATCH localhost:3000/users/admin/ban?userId=12345
   @Patch('admin/ban')
   @Usertype(UserType.ADMIN)
-  @ApiOperation({ summary: '회원 계정정지 (관리자)' })
+  @ApiOperation({ summary: '개인회원 계정정지 (관리자)' })
   @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiBody({ type: BanUserReqDto })
   @ApiResponse({ status: 200, description: '계정이 정지되었습니다.' })
@@ -347,18 +347,44 @@ export class UsersController {
     return await this.usersService.banUser(userId, banUserReqDto);
   }
 
-  // 14. 회원 계정정치 취소 (관리자)
+  // 14. 개인회원 계정정지 해제 (관리자)
   // PATCH localhost:3000/users/admin/unban?userId=12345
   @Patch('admin/unban')
   @Usertype(UserType.ADMIN)
-  @ApiOperation({ summary: '회원 계정정지 취소 (관리자)' })
+  @ApiOperation({ summary: '개인회원 계정정지 취소 (관리자)' })
   @ApiQuery({ name: 'userId', required: true, description: '유저 ID' })
   @ApiResponse({ status: 200, description: '계정 정지가 해제되었습니다.' })
   async unbanUser(@Query('userId') userId: string) {
     return await this.usersService.unbanUser(userId);
   }
 
-  // 15. 관리자회원으로 변경 (관리자)
+  // 15. 사업자회원 계정정지 (관리자)
+  // PATCH localhost:3000/users/admin/corporate/ban?corporateId=12345
+  @Patch('admin/corporate/ban')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '사업자 계정정지 (관리자)' })
+  @ApiQuery({ name: 'corporateId', required: true, description: '사업자 ID' })
+  @ApiBody({ type: BanUserReqDto })
+  @ApiResponse({ status: 200, description: '계정이 정지되었습니다.' })
+  async banCorporateUser(
+    @Query('corporateId') corporateId: string,
+    @Body() banUserReqDto: BanUserReqDto,
+  ) {
+    return await this.usersService.banCorporateUser(corporateId, banUserReqDto);
+  }
+
+  // 16. 사업자회원 계정정지 해제 (관리자)
+  // PATCH localhost:3000/users/admin/corporate/unban?corporateId=12345
+  @Patch('admin/corporate/unban')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '사업자 계정정지 취소 (관리자)' })
+  @ApiQuery({ name: 'corporateId', required: true, description: '사업자 ID' })
+  @ApiResponse({ status: 200, description: '계정 정지가 해제되었습니다.' })
+  async unbanCorporateUser(@Query('corporateId') corporateId: string) {
+    return await this.usersService.unbanCorporateUser(corporateId);
+  }
+
+  // 17. 관리자회원으로 변경 (관리자)
   // PATCH : localhost:3000/users/admin/promote?userId=12345
   @Patch('admin/promote')
   @Usertype(UserType.ADMIN)
@@ -372,7 +398,7 @@ export class UsersController {
     return await this.usersService.promoteUser(userId);
   }
 
-  // 16. 미확인 사업자등록증 확인처리 (관리자)
+  // 18. 미확인 사업자등록증 확인처리 (관리자)
   // PATCH : localhost:3000/users/admin/corp/verify?corporateId=12345
   @Patch('admin/corp/verify')
   @Usertype(UserType.ADMIN)
@@ -386,7 +412,7 @@ export class UsersController {
     return await this.usersService.verifyBusinessLicense(corporateId);
   }
 
-  // 17. 포인트 충전/차감 (관리자)
+  // 19. 포인트 충전/차감 (관리자)
   // PATCH : localhost:3000/users/admin/points?userId=12345
   @Patch('admin/points')
   @Usertype(UserType.ADMIN)
@@ -401,7 +427,7 @@ export class UsersController {
     return await this.usersService.updatePoints(userId, updatePointsReqDto);
   }
 
-  // 18. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
+  // 20. 정보 수정, 삭제 시 비밀번호로 본인 일치 조회 (사용자, 관리자)
   // POST : localhost:3000/users/me/doublecheckpassword
   @Post('me/doublecheckpassword')
   @ApiOperation({ summary: '정보 수정, 삭제 시 비밀번호로 본인 일치 조회' })
@@ -415,10 +441,10 @@ export class UsersController {
     return await this.usersService.doubleCheckPassword(user.id, password);
   }
 
-  // 19. 사업자등록증/기관등록증 다운로드 (사업자회원 본인)
+  // 21. 사업자등록증/기관등록증 다운로드 (사업자회원 본인)
   // GET : localhost:3000/users/business-license
   @Get('business-license')
-  @ApiOperation({ summary: '사업자 등록증 다운로드' })
+  @ApiOperation({ summary: '사업자 등록증 다운로드 (사업자회원 본인)' })
   @ApiResponse({ status: 200, description: '사업자 등록증 다운로드 성공' })
   async downloadBusinessLicense(
     @Res() res: Response,
@@ -431,18 +457,18 @@ export class UsersController {
     res.send(fileBuffer);
   }
 
-  // 20. 사업자등록증/기관등록증 다운로드 (관리자)
+  // 22. 사업자등록증/기관등록증 다운로드 (관리자)
   // GET : localhost:3000/users/admin/business-license/:corporateId
   @Get('admin/business-license/:corporateId')
   @Usertype(UserType.ADMIN)
-  @ApiOperation({ summary: '사업자 등록증 다운로드' })
+  @ApiOperation({ summary: '사업자 등록증 다운로드 (관리자)' })
   @ApiResponse({ status: 200, description: '사업자 등록증 다운로드 성공' })
   async downloadBusinessLicenseAdmin(
     @Param('corporateId') corporateId: string,
     @Res() res: Response,
   ): Promise<void> {
     const { fileBuffer, fileName, mimeType } =
-      await this.usersService.getBusinessLicenseFile(corporateId);
+      await this.usersService.getBusinessLicenseFileAdmin(corporateId);
     res.setHeader('Content-Type', mimeType);
     res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
     res.send(fileBuffer);

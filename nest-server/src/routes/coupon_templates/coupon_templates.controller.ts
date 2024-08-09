@@ -281,7 +281,7 @@ export class CouponTemplatesController {
   ): Promise<FindCouponResDto> {
     const coupon = await this.couponService.findCoupon(templateId, couponId);
     if (!coupon) {
-      throw new NotFoundException('해당 쿠폰이 존재하지 않습니다.');
+      throw new NotFoundException('쿠폰 정보를 찾을 수 없습니다.');
     }
     return coupon;
   }

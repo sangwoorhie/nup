@@ -37,17 +37,17 @@ export class Coupon {
 
   // 쿠폰 생성 시각
   @ApiProperty({ description: '쿠폰 생성 시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 쿠폰 수정 시각
   @ApiProperty({ description: '쿠폰 수정 시각' })
-  @UpdateDateColumn({ type: 'date' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
   // 쿠폰 삭제시각
   @ApiProperty({ description: '쿠폰 삭제시각' })
-  @DeleteDateColumn({ type: 'date', nullable: true })
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
   deleted_at: Date;
 
   // Coupon : CouponTemplate = N : 1 관계

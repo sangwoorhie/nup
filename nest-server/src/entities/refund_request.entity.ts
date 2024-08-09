@@ -54,7 +54,7 @@ export class RefundRequest {
 
   // 환불 신청 시각
   @ApiProperty({ description: '환불 신청 시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   requested_at: Date;
 
   // 환불신청 취소 시각

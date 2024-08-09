@@ -68,12 +68,12 @@ export class Corporate {
 
   // 사업자 생성 시각
   @ApiProperty({ description: '사업자 생성시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 사업자 정보수정 시각
   @ApiProperty({ description: '사업자 정보수정 시각' })
-  @UpdateDateColumn({ type: 'date' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
   // Corporate : User = 1 : 1 관계

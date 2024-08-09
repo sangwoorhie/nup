@@ -4,6 +4,10 @@ import styled from 'styled-components';
 const UserInfoModal = ({ user, onClose }) => {
   if (!user) return null;
 
+  const formatPoints = (points) => {
+    return `${new Intl.NumberFormat().format(points)}P`;
+  };
+
   return (
     <ModalOverlay>
       <ModalContainer>
@@ -18,12 +22,16 @@ const UserInfoModal = ({ user, onClose }) => {
 
           <Row>
             <Label>부서 :</Label>
-            <ReadOnlyInput type='text' value={user.department || ''} readOnly />
+            <ReadOnlyInput
+              type='text'
+              value={user.department || '-'}
+              readOnly
+            />
           </Row>
 
           <Row>
             <Label>직위 :</Label>
-            <ReadOnlyInput type='text' value={user.position || ''} readOnly />
+            <ReadOnlyInput type='text' value={user.position || '-'} readOnly />
           </Row>
 
           <Row>
@@ -40,7 +48,16 @@ const UserInfoModal = ({ user, onClose }) => {
             <Label>비상 연락처 :</Label>
             <ReadOnlyInput
               type='text'
-              value={user.emergency_phone || ''}
+              value={user.emergency_phone || '-'}
+              readOnly
+            />
+          </Row>
+
+          <Row>
+            <Label>포인트 :</Label>
+            <ReadOnlyInput
+              type='text'
+              value={formatPoints(user.point)}
               readOnly
             />
           </Row>

@@ -24,12 +24,12 @@ export class RefreshToken {
 
   // 토큰 생성 시각
   @ApiProperty({ description: '토큰 생성시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 토큰 업데이트 시각
   @ApiProperty({ description: '토큰 업데이트 시각' })
-  @UpdateDateColumn({ type: 'date' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
   // RefreshToken : User = 1 : 1 관계

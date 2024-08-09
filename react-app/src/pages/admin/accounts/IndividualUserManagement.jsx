@@ -136,6 +136,7 @@ const IndividualUserManagement = () => {
   };
 
   const handleRefresh = () => {
+    fetchUsers();
     window.location.reload(); // Reload the page
   };
 

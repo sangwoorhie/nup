@@ -38,12 +38,12 @@ export class Image {
 
   // 이미지가 업로드 된 시각
   @ApiProperty({ description: '이미지가 업로드(생성) 된 시각' })
-  @CreateDateColumn({ type: 'date' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
   // 이미지가 분석된 시각
   @ApiProperty({ description: '이미지가 분석된 시각' })
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   detected_at: Date;
 
   // Image : User = N : 1 관계

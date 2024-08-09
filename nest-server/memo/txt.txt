@@ -2,6 +2,7 @@
 DB 생성 : npm 
 개발환경 : npm run start:dev
 
+nest-server 디렉토리 안에서 실행
 npm run migration:create // DB 있어도 새롭게 생성
 npm run migration:generate // DB의 변경된 사항을 찾아 변경점 반영
 npm run migration:run // 마이그레이션 수행
