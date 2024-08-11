@@ -32,6 +32,25 @@ import {
 } from './dto/req.dto';
 import { ImageResDto } from './dto/res.dto';
 import { PageReqDto } from 'src/common/dto/req.dto';
+import * as multer from 'multer';
+import * as multerS3 from 'multer-s3';
+import { S3 } from 'aws-sdk';
+
+const s3 = new S3({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+const s3StorageOptions = multerS3({
+  s3: s3,
+  bucket: process.env.AWS_S3_BUCKET_NAME,
+  acl: 'public-read', // or 'private' depending on your requirements
+  key: (req, file, cb) => {
+    cb(null, `${Date.now().toString()}-${file.originalname}`);
+  },
+});
+
 
 @ApiTags('Images')
 @Controller('images')
@@ -41,24 +60,10 @@ export class ImagesController {
   // 1. 이미지 파일 업로드 (다중 파일 업로드 가능)
   // POST : localhost:3000/images/upload
   @Post('upload')
-  @UseInterceptors(FilesInterceptor('files'))
+  @UseInterceptors(FilesInterceptor('files', undefined, { storage: s3StorageOptions }))
   @ApiOperation({ summary: '이미지 파일 업로드 (다중 파일 업로드 가능)' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'Images uploaded successfully.' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        files: {
-          type: 'array',
-          items: {
-            type: 'string',
-            format: 'binary',
-          },
-        },
-      },
-    },
-  })
   async uploadImages(
     @UploadedFiles() files: Express.Multer.File[],
     @User() user: UserAfterAuth,
@@ -90,18 +95,14 @@ export class ImagesController {
   // GET : localhost:3000/images/view/:id
   @Get('view/:id')
   @ApiOperation({ summary: '업로드된 이미지 보기' })
-  @ApiResponse({
-    status: 200,
-    description: '이미지를 성공적으로 조회했습니다.',
-  })
-  @ApiParam({ name: 'id', required: true, description: 'Image ID' })
   async viewImage(
     @Param('id') id: string,
     @Res() res: Response,
     @User() user: UserAfterAuth,
   ) {
     const image = await this.imagesService.viewImage(id, user.id);
-    res.json(image);
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.end(image, 'binary');
   }
 
   // 4. 이미지 목록 보기

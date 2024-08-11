@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,12 +12,16 @@ import {
   S3Client,
   GetObjectCommand,
   DeleteObjectCommand,
+  PutObjectCommand,
 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { Stream } from 'stream';
 import { User } from 'src/entities/user.entity';
 import { PageResDto } from 'src/common/dto/res.dto';
 import { ImageResDto } from './dto/res.dto';
+import * as multer from 'multer';
+import * as multerS3 from 'multer-s3';
+import { S3 } from 'aws-sdk';
 
 @Injectable()
 export class ImagesService {
@@ -45,11 +50,11 @@ export class ImagesService {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
-    const imagePromises = files.map((file) => {
-      const fileWithLocation = file as any; // Cast to any to bypass TypeScript error
+    const imagePromises = files.map(async (file) => {
+      const uploadResult = await this.uploadToS3(file);
       const newImage = this.imageRepository.create({
         user: user,
-        image_path: fileWithLocation.location,
+        image_path: uploadResult.Key,
         status: ImageStatus.NOT_DETECTED,
       });
       return this.imageRepository.save(newImage);
@@ -63,7 +68,7 @@ export class ImagesService {
     if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
     const images = await this.imageRepository.find({ where: { id: In(ids) } });
-    const fileStreams = await Promise.all(
+    return Promise.all(
       images.map(async (image) => {
         const params = {
           Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
@@ -74,15 +79,23 @@ export class ImagesService {
         return Body as Stream;
       }),
     );
-    return fileStreams;
   }
 
   // 3. 단일 이미지 보기
-  async viewImage(id: string, userId: string): Promise<Image> {
+  async viewImage(id: string, userId: string): Promise<Buffer> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
-    return this.imageRepository.findOne({ where: { id } });
+    const image = await this.imageRepository.findOne({ where: { id } });
+    if (!image) throw new NotFoundException('이미지를 찾을 수 없습니다.');
+
+    const params = {
+      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+      Key: image.image_path,
+    };
+    const command = new GetObjectCommand(params);
+    const { Body } = await this.s3.send(command);
+    return this.streamToBuffer(Body as Stream);
   }
 
   // 4. 이미지 목록 보기
@@ -100,22 +113,12 @@ export class ImagesService {
         id: In(ids),
         user: { id: userId },
       },
-      relations: ['user'],
       skip: (page - 1) * size,
       take: size,
       order: { created_at: 'DESC' },
     });
 
-    const mappedItems = items.map((item) => {
-      return {
-        id: item.id,
-        image_path: item.image_path,
-        status: item.status,
-        is_detected: item.is_detected,
-        created_at: item.created_at,
-        detected_at: item.detected_at,
-      };
-    });
+    const mappedItems = items.map((item) => new ImageResDto(item));
 
     return {
       page,
@@ -135,12 +138,7 @@ export class ImagesService {
 
     const images = await this.imageRepository.findBy({ id: In(ids) });
     const deletePromises = images.map(async (image) => {
-      const params = {
-        Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
-        Key: image.image_path,
-      };
-      const command = new DeleteObjectCommand(params);
-      await this.s3.send(command);
+      await this.deleteFromS3(image.image_path);
       return this.imageRepository.delete({ id: image.id });
     });
     await Promise.all(deletePromises);
@@ -157,7 +155,35 @@ export class ImagesService {
     if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
 
     await this.imageRepository.update({ id }, updateData);
-    await this.imageRepository.findOne({ where: { id } });
     return { message: '이미지 정보가 수정되었습니다.' };
+  }
+
+  private async uploadToS3(file: Express.Multer.File): Promise<{ Key: string }> {
+    const key = `${Date.now()}-${file.originalname}`;
+    const params = {
+        Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+    };
+    const command = new PutObjectCommand(params);
+    await this.s3.send(command);
+    return { Key: key };
+}
+  private async deleteFromS3(key: string): Promise<void> {
+    const params = {
+      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+      Key: key,
+    };
+    await this.s3.send(new DeleteObjectCommand(params));
+  }
+
+  private async streamToBuffer(stream: Stream): Promise<Buffer> {
+    return new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('error', reject);
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+    });
   }
 }
