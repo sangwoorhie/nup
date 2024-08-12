@@ -15,6 +15,7 @@ const UserUpdate = () => {
   const [profileImage, setProfileImage] = useState('');
   const [userType, setUserType] = useState('');
   const navigate = useNavigate();
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -80,11 +81,20 @@ const UserUpdate = () => {
     return '회원';
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Title>정보 수정</Title>
         <UserTypeLabel>{getUserTypeLabel()}</UserTypeLabel>
         <ProfileImageContainer>
@@ -151,6 +161,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

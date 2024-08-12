@@ -12,6 +12,7 @@ const Unregister = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userType = location.state?.userType || 'individual'; // default to individual if not provided
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleUnregister = async () => {
     if (!termsAccepted) {
@@ -40,11 +41,20 @@ const Unregister = () => {
     navigate('/user-profile', { state: { userType } }); // Pass userType on navigation
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Title>회원 탈퇴</Title>
         <Form>
           <TermsContainer>
@@ -130,6 +140,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

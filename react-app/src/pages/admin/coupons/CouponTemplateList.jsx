@@ -45,6 +45,7 @@ const CouponTemplateList = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateName, setTemplateName] = useState('');
   const [searchCriteria, setSearchCriteria] = useState('code');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const templateCriteriaOptions = [
     { label: '전체조회', value: 'all' },
@@ -247,11 +248,20 @@ const CouponTemplateList = () => {
 
   const resetSearchTerm = usePageChange(() => setSearchTerm(''));
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='admin'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='admin' />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         {selectedTemplate ? (
           <>
             <ActionBar>
@@ -476,6 +486,8 @@ const Content = styled.div`
   padding: 20px;
   margin-top: 10px;
   background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const ActionBar = styled.div`

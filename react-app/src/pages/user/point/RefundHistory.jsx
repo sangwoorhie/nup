@@ -26,6 +26,7 @@ const RefundHistory = () => {
   const [selectedRefunds, setSelectedRefunds] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalReason, setModalReason] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchRefundHistory = async (page = 1, size = 10) => {
     try {
@@ -171,9 +172,18 @@ const RefundHistory = () => {
     );
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='user' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='user'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='user' />
       <Header>
         <h2>KO-MAPPER AI 나의 환불 내역</h2>
@@ -181,7 +191,7 @@ const RefundHistory = () => {
       <SecondHeader>
         <SecondHeaderTitle>환불 내역</SecondHeaderTitle>
       </SecondHeader>
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <MiddleWrapper>
           <TotalCount>총 {totalRecords}건</TotalCount>
           <RightAlignedWrapper>
@@ -272,6 +282,8 @@ const Content = styled.div`
   background-color: white;
   width: 80%;
   margin: 0 auto; /* Center the content */
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Header = styled.div`

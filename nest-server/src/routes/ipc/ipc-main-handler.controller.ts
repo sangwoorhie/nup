@@ -18,20 +18,8 @@ export class IpcMainHandlerController {
     private readonly imageTileHandlerService: ImageTileHandlerService,
   ) {}
 
-  // @Post('file')
-  // handleFile(@Body() data: any) {
-  //   return this.fileHandlerService.handle(data);
-  // }
-
   @Post('app')
   handleApp(@Body() data: any) {
     return this.appHandlerService.handle(data);
   }
-
-  // @Post('ai-detection')
-  // handleAiDetection(@Body() data: any) {
-  //   return this.aiDetectionHandlerService.handle(data);
-  // }
-
-  // Add other handler methods similarly
 }

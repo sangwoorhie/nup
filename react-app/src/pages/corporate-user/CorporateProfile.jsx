@@ -10,6 +10,7 @@ import 'primeicons/primeicons.css';
 const CorporateProfile = () => {
   const [CorporateProfile, setCorporateProfile] = useState(null);
   const [activeHeader, setActiveHeader] = useState('User');
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const userType = localStorage.getItem('userType');
 
   useEffect(() => {
@@ -60,11 +61,20 @@ const CorporateProfile = () => {
     return <div>Loading...</div>;
   }
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Title>사업자 정보</Title>
         <Form>
           <FormItem>
@@ -133,6 +143,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

@@ -22,6 +22,7 @@ const ApiKey = () => {
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchApiKeys = useCallback(async (page = 1, size = 10) => {
     try {
@@ -64,12 +65,20 @@ const ApiKey = () => {
     window.location.reload();
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <br />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Header>
           <Title>API Key 관리</Title>
           <ButtonContainer>
@@ -162,7 +171,8 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   padding: 20px;
-  background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Header = styled.div`

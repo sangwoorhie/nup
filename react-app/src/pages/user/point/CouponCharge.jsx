@@ -14,6 +14,7 @@ const CouponCharge = () => {
   const userType = localStorage.getItem('userType') || 'individual';
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
   const navigate = useNavigate(); // Initialize useNavigate
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleCouponCodeChange = (e) => setCouponCode(e.target.value);
 
@@ -44,11 +45,20 @@ const CouponCharge = () => {
     }
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Form>
           <Title>쿠폰 등록</Title>
           <br />
@@ -92,6 +102,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

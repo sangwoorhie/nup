@@ -16,6 +16,7 @@ const PasswordChange = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userType = location.state?.userType || 'individual'; // default to individual if not provided
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmNewPassword) {
@@ -46,11 +47,20 @@ const PasswordChange = () => {
     setVisibility((prevVisibility) => !prevVisibility);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Title>비밀번호 변경</Title>
         <Form>
           <Label>새 비밀번호</Label>
@@ -114,6 +124,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

@@ -10,6 +10,8 @@ import {
   Patch,
   Body,
   Query,
+  Header,
+  BadRequestException,
 } from '@nestjs/common';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -32,25 +34,9 @@ import {
 } from './dto/req.dto';
 import { ImageResDto } from './dto/res.dto';
 import { PageReqDto } from 'src/common/dto/req.dto';
-import * as multer from 'multer';
-import * as multerS3 from 'multer-s3';
-import { S3 } from 'aws-sdk';
-
-const s3 = new S3({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
-
-const s3StorageOptions = multerS3({
-  s3: s3,
-  bucket: process.env.AWS_S3_BUCKET_NAME,
-  acl: 'public-read', // or 'private' depending on your requirements
-  key: (req, file, cb) => {
-    cb(null, `${Date.now().toString()}-${file.originalname}`);
-  },
-});
-
+import { PassThrough } from 'stream';
+import { isUUID } from 'class-validator';
+import { Public } from 'src/decorators/public.decorators';
 
 @ApiTags('Images')
 @Controller('images')
@@ -60,9 +46,13 @@ export class ImagesController {
   // 1. 이미지 파일 업로드 (다중 파일 업로드 가능)
   // POST : localhost:3000/images/upload
   @Post('upload')
-  @UseInterceptors(FilesInterceptor('files', undefined, { storage: s3StorageOptions }))
-  @ApiOperation({ summary: '이미지 파일 업로드 (다중 파일 업로드 가능)' })
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiOperation({ summary: '이미지 파일 업로드 (다중 파일 가능)' })
   @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 업로드했습니다.',
+  })
   @ApiResponse({ status: 201, description: 'Images uploaded successfully.' })
   async uploadImages(
     @UploadedFiles() files: Express.Multer.File[],
@@ -72,41 +62,64 @@ export class ImagesController {
   }
 
   // 2. 이미지 파일 다운로드
-  // GET : localhost:3000/images/:id
+  // GET : localhost:3000/images/download?imageIds=id1,id2,id3&zip=true
+  // GET : localhost:3000/images/download?imageIds=id1,id2,id3&zip=false
   @Get('download')
   @ApiOperation({ summary: '이미지 파일 다운로드 (다중 파일 가능)' })
+  @Header('Content-Type', 'application/zip')
+  @Header('Content-Disposition', 'attachment; filename=images.zip')
   @ApiResponse({
     status: 200,
     description: '이미지를 성공적으로 다운로드했습니다.',
   })
   async downloadImages(
-    @Query() query: DownloadImagesReqDto,
+    @Query('imageIds') imageIds: string | string[],
+    @Query('zip') zip: boolean,
     @Res() res: Response,
     @User() user: UserAfterAuth,
   ) {
-    const files = await this.imagesService.downloadImages(query.ids, user.id);
-    for (const file of files) {
-      file.pipe(res, { end: false });
+    // Ensure imageIds is an array by splitting it if it's a string
+    const ids = typeof imageIds === 'string' ? imageIds.split(',') : imageIds;
+
+    // Validate imageIds as UUIDs
+    const invalidIds = ids.filter((id) => !isUUID(id));
+    if (invalidIds.length > 0) {
+      throw new BadRequestException(
+        `Invalid UUIDs provided: ${invalidIds.join(', ')}`,
+      );
     }
-    res.end();
+    const stream = await this.imagesService.downloadImages(ids, zip, user.id);
+    if (zip) {
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename=images.zip');
+      (stream as PassThrough).pipe(res);
+    } else {
+      for (const fileStream of stream as any[]) {
+        fileStream.pipe(res);
+      }
+    }
   }
 
   // 3. 단일 이미지 보기
   // GET : localhost:3000/images/view/:id
   @Get('view/:id')
-  @ApiOperation({ summary: '업로드된 이미지 보기' })
+  // @Header('Content-Type', 'image/jpeg')
+  @ApiOperation({ summary: '단일 이미지 보기' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 조회했습니다.',
+  })
   async viewImage(
     @Param('id') id: string,
     @Res() res: Response,
     @User() user: UserAfterAuth,
   ) {
-    const image = await this.imagesService.viewImage(id, user.id);
-    res.setHeader('Content-Type', 'image/jpeg');
-    res.end(image, 'binary');
+    const imageStream = await this.imagesService.viewImage(id, user.id);
+    imageStream.pipe(res);
   }
 
   // 4. 이미지 목록 보기
-  // GET : localhost:3000/images/view?page=1&size=10
+  // GET : localhost:3000/images/view?imageIds=id1,id2,id3
   @Get('view')
   @ApiOperation({ summary: '업로드된 이미지 보기 (다중 파일 가능)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
@@ -116,15 +129,32 @@ export class ImagesController {
     description: '이미지를 성공적으로 조회했습니다.',
   })
   async viewImages(
-    @Query() { page, size }: PageReqDto,
-    @Query() query: ViewImagesReqDto,
+    @Query('imageIds') imageIds: string,
+    @Res() res: Response,
     @User() user: UserAfterAuth,
   ) {
-    return await this.imagesService.viewImages(page, size, query.ids, user.id);
+    const ids = typeof imageIds === 'string' ? imageIds.split(',') : imageIds;
+    const invalidIds = ids.filter((id) => !isUUID(id));
+    if (invalidIds.length > 0) {
+      throw new BadRequestException(
+        `Invalid UUIDs provided: ${invalidIds.join(', ')}`,
+      );
+    }
+    const imageStreams = await this.imagesService.viewImages(ids, user.id);
+
+    res.setHeader('Content-Type', 'multipart/mixed');
+    for (const stream of imageStreams) {
+      await new Promise((resolve, reject) => {
+        stream.on('end', resolve);
+        stream.on('error', reject);
+        stream.pipe(res, { end: false });
+      });
+    }
+    res.end();
   }
 
   // 5. 이미지 삭제
-  // DELETE : localhost:3000/images/:id
+  // DELETE : localhost:3000/images { "ids": ["id1","id2", "id3"] }
   @Delete()
   @ApiOperation({ summary: '업로드된 이미지 삭제 (다중 파일 가능)' })
   @ApiResponse({
@@ -136,22 +166,5 @@ export class ImagesController {
     @User() user: UserAfterAuth,
   ) {
     return this.imagesService.deleteImages(deleteImagesDto.ids, user.id);
-  }
-
-  // 6. 이미지 수정
-  // PATCH : localhost:3000/images/:id
-  @Patch(':id')
-  @ApiOperation({ summary: '업로드된 이미지 수정' })
-  @ApiResponse({
-    status: 200,
-    description: '이미지 메타데이터를 성공적으로 수정했습니다.',
-  })
-  @ApiParam({ name: 'id', required: true, description: 'Image ID' })
-  async modifyImage(
-    @Param('id') id: string,
-    @Body() updateData: Partial<Image>,
-    @User() user: UserAfterAuth,
-  ) {
-    return this.imagesService.modifyImage(id, updateData, user.id);
   }
 }

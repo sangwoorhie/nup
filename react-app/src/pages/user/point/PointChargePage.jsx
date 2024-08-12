@@ -11,6 +11,7 @@ const PointChargePage = () => {
   const [step, setStep] = useState(1);
   const [accountHolderName, setAccountHolderName] = useState('');
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleAmountChange = (e) => {
     const value = e.target.value.replace(/,/g, '').replace(/원/g, '');
@@ -53,11 +54,20 @@ const PointChargePage = () => {
     }
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='individual' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='individual'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='individual' />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         {step === 1 ? (
           <Step>
             <Title>KO-MAPPER AI 로 충전 하기</Title>
@@ -175,7 +185,8 @@ const Content = styled.div`
   justify-content: center;
   align-items: center;
   padding: 20px;
-  background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Step = styled.div`

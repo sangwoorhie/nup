@@ -27,6 +27,7 @@ const RefundManagement = () => {
   const [selectedRequests, setSelectedRequests] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalReason, setModalReason] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchRefundRequests = async (page = 1, size = 10) => {
     try {
@@ -135,14 +136,23 @@ const RefundManagement = () => {
     }
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='admin'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='admin' />
       <Header>
         <h2>환불 요청 목록</h2>
       </Header>
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <MiddleWrapper>
           <TotalCount>총 {totalRecords}건</TotalCount>
           <RightAlignedWrapper>
@@ -241,6 +251,8 @@ const Content = styled.div`
   background-color: white;
   width: 80%;
   margin: 0 auto;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Header = styled.div`

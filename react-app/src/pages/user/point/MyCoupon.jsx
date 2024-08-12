@@ -16,6 +16,7 @@ const MyCoupon = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
   const [userType, setUserType] = useState('');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchCoupons = useCallback(async (page = 1, size = 10) => {
     try {
@@ -62,12 +63,21 @@ const MyCoupon = () => {
     return points.toLocaleString() + 'P';
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
       <br />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Header>
           <Title>MY 쿠폰</Title>
           <ButtonContainer>
@@ -131,7 +141,8 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   padding: 20px;
-  background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Header = styled.div`

@@ -12,6 +12,7 @@ const CorporateUpdate = () => {
   const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
   const [detailedAddress, setDetailedAddress] = useState('');
   const navigate = useNavigate();
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const fetchCorporateData = async () => {
@@ -93,11 +94,20 @@ const CorporateUpdate = () => {
       : label;
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={() => {}} userType='corporate' />
+      <MainHeader
+        setActiveHeader={() => {}}
+        userType='corporate'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader='User' userType='corporate' />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Title>사업자 정보 수정</Title>
         <Form>
           <Label>{renderLabel('기업명')}</Label>
@@ -194,6 +204,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

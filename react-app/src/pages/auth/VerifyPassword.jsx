@@ -15,6 +15,7 @@ const VerifyPassword = ({ onSuccess, userType }) => {
   const email = localStorage.getItem('userEmail') || '';
   const nextPath = location.state?.next || '/user-profile';
   const initialActiveSubOption = location.state?.initialActiveSubOption || '';
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handlePasswordCheck = async () => {
     try {
@@ -37,15 +38,24 @@ const VerifyPassword = ({ onSuccess, userType }) => {
     setPasswordVisible((prevVisible) => !prevVisible);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders
         activeHeader={activeHeader}
         userType={userType}
         initialActiveSubOption={initialActiveSubOption}
       />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Title>회원정보 확인</Title>
         <div>본인 인증이 필요한 기능입니다.</div>
         <div>본인 인증을 위해 비밀번호를 입력해 주세요.</div>
@@ -98,6 +108,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

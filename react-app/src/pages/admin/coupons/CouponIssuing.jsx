@@ -16,6 +16,7 @@ const CouponIssuing = () => {
   const [quantity, setQuantity] = useState('');
   const [point, setPoint] = useState('');
   const [expirationDate, setExpirationDate] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const navigate = useNavigate(); // Initialize the navigate function
 
@@ -48,11 +49,20 @@ const CouponIssuing = () => {
     }
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='admin'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='admin' />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <Title>쿠폰 발행</Title>
         <Form>
           <Label>쿠폰 명</Label>
@@ -116,6 +126,8 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Title = styled.h2`

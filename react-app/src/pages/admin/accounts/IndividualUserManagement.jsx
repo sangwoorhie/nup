@@ -37,6 +37,7 @@ const IndividualUserManagement = () => {
   const [chargePage, setChargePage] = useState(0);
   const [chargePageSize, setChargePageSize] = useState(10);
   const [chargeTotalRecords, setChargeTotalRecords] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch functions
   const fetchUsers = useCallback(
@@ -149,17 +150,26 @@ const IndividualUserManagement = () => {
     setSelectedUser(null);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   // JSX rendering
   if (selectedUser) {
     return (
       <Container>
-        <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+        <MainHeader
+          setActiveHeader={setActiveHeader}
+          userType='admin'
+          toggleDarkMode={toggleDarkMode}
+          isDarkMode={isDarkMode}
+        />
         <SubHeaders activeHeader={activeHeader} userType='admin' />
         <Header>
           <h2>{selectedUser.username} 회원의 포인트 충전 내역</h2>
           <div>잔여 포인트: {formatPoints(selectedUser.point)}</div>
         </Header>
-        <UserContent>
+        <UserContent isDarkMode={isDarkMode}>
           <MiddleWrapper>
             <TotalCount>총 {chargeTotal}건</TotalCount>
             <ButtonContainer>
@@ -233,9 +243,14 @@ const IndividualUserManagement = () => {
 
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='admin'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='admin' />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <ActionBar>
           <SearchSection>
             <select
@@ -341,6 +356,8 @@ const Content = styled.div`
   padding: 20px;
   margin-top: 10px;
   background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const SearchSection = styled.div`
@@ -476,6 +493,8 @@ const UserContent = styled.div`
   background-color: white;
   width: 100%;
   margin: 0 auto;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const TableWrapper = styled.div`

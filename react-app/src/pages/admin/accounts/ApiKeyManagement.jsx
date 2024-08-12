@@ -25,6 +25,7 @@ const ApiKeyManagement = () => {
   const [userType, setUserType] = useState('');
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [currentApiKey, setCurrentApiKey] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchApiKeys = useCallback(
     async (page = 1, size = 10, criteria = '', value = '') => {
@@ -63,7 +64,12 @@ const ApiKeyManagement = () => {
 
   const handleSearch = async () => {
     try {
-      const { data } = await listApiKeysSearchAdmin(page, pageSize, searchCriteria, searchValue);
+      const { data } = await listApiKeysSearchAdmin(
+        page,
+        pageSize,
+        searchCriteria,
+        searchValue
+      );
       if (data.items.length === 0) {
         alert('검색어와 일치하는 API 키가 존재하지 않습니다.');
       }
@@ -90,11 +96,20 @@ const ApiKeyManagement = () => {
     setUpdateModalOpen(true);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType={userType} />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType={userType}
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <ActionBar>
           <SearchSection>
             <select
@@ -208,6 +223,8 @@ const Content = styled.div`
   padding: 20px;
   margin-top: 10px;
   background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const ActionBar = styled.div`

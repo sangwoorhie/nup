@@ -25,6 +25,7 @@ const CashChargeRequest = () => {
   const [dates, setDates] = useState(null);
   const [activeHeader, setActiveHeader] = useState('결제 관리');
   const [selectedRequests, setSelectedRequests] = useState([]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchCashChargeRequests = async (
     page = 1,
@@ -232,14 +233,23 @@ const CashChargeRequest = () => {
     setSelectedRequests(e.value);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='admin'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='admin' />
       <Header>
         <h2>현금 포인트 충전 요청 목록</h2>
       </Header>
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <MiddleWrapper>
           <TotalCount>총 {totalRecords}건</TotalCount>
           <RightAlignedWrapper>
@@ -319,6 +329,8 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100vh;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Content = styled.div`
@@ -328,6 +340,8 @@ const Content = styled.div`
   background-color: white;
   width: 80%;
   margin: 0 auto;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Header = styled.div`

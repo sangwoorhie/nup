@@ -16,6 +16,7 @@ const AdminUserManagement = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchUsers = useCallback(
     async (criteria = '', value = '') => {
@@ -48,11 +49,20 @@ const AdminUserManagement = () => {
     window.location.reload(); // Reload the page
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
   return (
     <Container>
-      <MainHeader setActiveHeader={setActiveHeader} userType='admin' />
+      <MainHeader
+        setActiveHeader={setActiveHeader}
+        userType='admin'
+        toggleDarkMode={toggleDarkMode}
+        isDarkMode={isDarkMode}
+      />
       <SubHeaders activeHeader={activeHeader} userType='admin' />
-      <Content>
+      <Content isDarkMode={isDarkMode}>
         <ActionBar>
           <SearchSection>
             <select
@@ -134,6 +144,8 @@ const Content = styled.div`
   padding: 20px;
   margin-top: 10px;
   background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const SearchSection = styled.div`
