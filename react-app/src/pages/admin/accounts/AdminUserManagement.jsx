@@ -8,7 +8,7 @@ import { Paginator } from 'primereact/paginator';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 import isPropValid from '@emotion/is-prop-valid';
 
-const AdminUserManagement = () => {
+const AdminUserManagement = ({ isDarkMode, toggleDarkMode }) => {
   const [users, setUsers] = useState([]);
   const [searchCriteria, setSearchCriteria] = useState('email');
   const [searchValue, setSearchValue] = useState('');
@@ -16,7 +16,6 @@ const AdminUserManagement = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchUsers = useCallback(
     async (criteria = '', value = '') => {
@@ -47,10 +46,6 @@ const AdminUserManagement = () => {
 
   const handleRefresh = () => {
     window.location.reload(); // Reload the page
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (
@@ -100,7 +95,7 @@ const AdminUserManagement = () => {
           <tbody>
             {users.map((user) => (
               <tr key={user.id}>
-                <TdEmail banned={user.banned ? 'true' : undefined}>
+                <TdEmail banned={user.banned} isDarkMode={isDarkMode}>
                   {user.email}
                 </TdEmail>
                 <td>{user.username}</td>
@@ -142,8 +137,7 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   padding: 20px;
-  margin-top: 10px;
-  background-color: white;
+  /* margin-top: 10px; */
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
@@ -195,9 +189,11 @@ const Table = styled.table`
 `;
 
 const TdEmail = styled.td.withConfig({
-  shouldForwardProp: (prop) => isPropValid(prop) && prop !== 'banned',
+  shouldForwardProp: (prop) =>
+    isPropValid(prop) && prop !== 'banned' && prop !== 'isDarkMode',
 })`
-  color: ${({ banned }) => (banned === 'true' ? 'red' : 'black')};
+  color: ${({ banned, isDarkMode }) =>
+    banned ? 'red' : isDarkMode ? 'white' : 'black'};
 `;
 
 const ButtonContainer = styled.div`

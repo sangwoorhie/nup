@@ -6,11 +6,10 @@ import httpClient from '../../services/httpClient';
 import Footer from '../../components/etc/ui/Footer';
 import userIcon from '../../assets/img/individual.png';
 
-const UserProfile = () => {
+const UserProfile = ({ isDarkMode, toggleDarkMode }) => {
   const [activeHeader, setActiveHeader] = useState('User');
   const [userData, setUserData] = useState(null);
   const [userType, setUserType] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -38,10 +37,6 @@ const UserProfile = () => {
     if (userType === 'corporate') return '사업자 회원';
     if (userType === 'admin') return '관리자 회원';
     if (userType === 'individual') return '개인 회원';
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (

@@ -6,13 +6,12 @@ import SubHeaders from '../../components/etc/ui/SubHeaders';
 import httpClient from '../../services/httpClient';
 import Footer from '../../components/etc/ui/Footer';
 
-const Unregister = () => {
+const Unregister = ({ isDarkMode, toggleDarkMode }) => {
   const [activeHeader, setActiveHeader] = useState('User');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const userType = location.state?.userType || 'individual'; // default to individual if not provided
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleUnregister = async () => {
     if (!termsAccepted) {
@@ -41,10 +40,6 @@ const Unregister = () => {
     navigate('/user-profile', { state: { userType } }); // Pass userType on navigation
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
     <Container>
       <MainHeader
@@ -55,11 +50,13 @@ const Unregister = () => {
       />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
       <Content isDarkMode={isDarkMode}>
-        <Title>회원 탈퇴</Title>
+        <Title isDarkMode={isDarkMode}>회원 탈퇴</Title>
         <Form>
-          <TermsContainer>
+          <TermsContainer isDarkMode={isDarkMode}>
             <Section>
-              <h3>KO-MAPPER AI 회원 탈퇴</h3>
+              <SectionTitle isDarkMode={isDarkMode}>
+                KO-MAPPER AI 회원 탈퇴
+              </SectionTitle>
               <Terms>
                 <p>
                   <strong>1. 회원정보 삭제:</strong>
@@ -111,7 +108,7 @@ const Unregister = () => {
                 checked={termsAccepted}
                 onChange={() => setTermsAccepted(!termsAccepted)}
               />
-              <Label>
+              <Label isDarkMode={isDarkMode}>
                 위 내용을 모두 확인하였으며, 회원 탈퇴에 동의합니다. (필수)
               </Label>
             </Section>
@@ -146,6 +143,8 @@ const Content = styled.div`
 
 const Title = styled.h2`
   margin-bottom: 20px;
+  color: ${({ isDarkMode }) =>
+    isDarkMode ? '#fff' : '#000'}; /* Make text white in dark mode */
 `;
 
 const Form = styled.div`
@@ -158,10 +157,16 @@ const Form = styled.div`
 const TermsContainer = styled.div`
   width: 100%;
   margin-top: 20px;
+  color: #000; /* Ensure text color in TermsContainer is black, regardless of dark mode */
 `;
 
 const Section = styled.div`
   margin-bottom: 40px;
+`;
+
+const SectionTitle = styled.h3`
+  color: ${({ isDarkMode }) =>
+    isDarkMode ? '#fff' : '#000'}; /* Make text white in dark mode */
 `;
 
 const Terms = styled.div`
@@ -173,6 +178,7 @@ const Terms = styled.div`
   background-color: #f5f5f5;
   font-size: 14px;
   line-height: 1.5;
+  color: #000; /* Ensure text color in Terms is black */
 `;
 
 const Checkbox = styled.input`
@@ -181,6 +187,8 @@ const Checkbox = styled.input`
 
 const Label = styled.label`
   font-size: 14px;
+  color: ${({ isDarkMode }) =>
+    isDarkMode ? '#fff' : '#000'}; /* Make label text white in dark mode */
 `;
 
 const ButtonContainer = styled.div`

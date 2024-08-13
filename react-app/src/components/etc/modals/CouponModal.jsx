@@ -2,6 +2,15 @@ import React from 'react';
 import styled from 'styled-components';
 
 const CouponModal = ({ data, onClose, onApply }) => {
+  // Function to format the date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based in JS
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <ModalOverlay>
       <ModalContainer>
@@ -26,7 +35,11 @@ const CouponModal = ({ data, onClose, onApply }) => {
           </Row>
           <Row>
             <Label>유효 기간 :</Label>
-            <ReadOnlyInput type='text' value={data.expiration_date} readOnly />
+            <ReadOnlyInput
+              type='text'
+              value={formatDate(data.expiration_date)}
+              readOnly
+            />
           </Row>
         </ModalContent>
         <ButtonContainer>
@@ -39,7 +52,8 @@ const CouponModal = ({ data, onClose, onApply }) => {
 };
 
 const StyledParagraph = styled.p`
-  font-size: 14px; /* Set your desired font size here */
+  font-size: 14px;
+  color: #000; /* Ensures text color remains black */
 `;
 
 const ModalOverlay = styled.div`
@@ -69,6 +83,7 @@ const Title = styled.h2`
   text-align: center;
   font-size: 20px;
   margin-bottom: 20px;
+  color: #000; /* Ensures text color remains black */
 `;
 
 const ModalContent = styled.div`
@@ -86,6 +101,7 @@ const Row = styled.div`
 const Label = styled.label`
   margin-right: 10px;
   flex: 1;
+  color: #000; /* Ensures text color remains black */
 `;
 
 const ReadOnlyInput = styled.input`

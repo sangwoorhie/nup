@@ -15,7 +15,7 @@ import refreshImage from '../../../assets/img/refresh_icon.png';
 import { FaCheck } from 'react-icons/fa';
 import UserInfoModal from '../../../components/etc/modals/UserInfoModal';
 
-const CorporateUserManagement = () => {
+const CorporateUserManagement = ({ isDarkMode, toggleDarkMode }) => {
   const [users, setUsers] = useState([]);
   const [searchCriteria, setSearchCriteria] = useState('corporate_name');
   const [searchValue, setSearchValue] = useState('');
@@ -25,7 +25,6 @@ const CorporateUserManagement = () => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
   const [selectedUser, setSelectedUser] = useState(null); // State to manage selected user
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch functions
   const fetchUsers = useCallback(
@@ -41,8 +40,6 @@ const CorporateUserManagement = () => {
         setTotalRecords(data.total);
       } catch (error) {
         if (error.response?.status === 404) {
-          // setUsers([]);
-          // setTotalRecords(0);
           alert('해당 조건에 맞는 기업을 찾을 수 없습니다.');
         } else {
           console.error('Error fetching corporate users:', error);
@@ -157,10 +154,6 @@ const CorporateUserManagement = () => {
     window.location.reload(); // Reload the page
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
     <Container>
       <MainHeader
@@ -226,7 +219,7 @@ const CorporateUserManagement = () => {
                     onChange={() => handleCheckboxChange(user.id)}
                   />
                 </td>
-                <TdCorporateName banned={user.banned ? 'true' : undefined}>
+                <TdCorporateName banned={user.banned} isDarkMode={isDarkMode}>
                   {user.corporate_name}
                 </TdCorporateName>
                 <td>{user.business_type}</td>
@@ -291,7 +284,7 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   padding: 20px;
-  margin-top: 10px;
+  /* margin-top: 10px; */
   background-color: white;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
@@ -300,12 +293,12 @@ const Content = styled.div`
 const SearchSection = styled.div`
   display: flex;
   align-items: center;
-  margin-right: 20px; /* Adjusted margin for alignment */
+  margin-right: 20px;
 
   select {
     margin-right: 10px;
     padding: 5px;
-    width: 100px; /* Adjusted width */
+    width: 100px;
   }
 
   input {
@@ -325,7 +318,7 @@ const SearchSection = styled.div`
 `;
 
 const Table = styled.table`
-  width: 80%; /* Adjusted width */
+  width: 80%;
   margin: 0 auto;
   margin-top: 10px;
   border-collapse: collapse;
@@ -364,7 +357,7 @@ const ActionBar = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  width: 80%; /* Adjusted width */
+  width: 80%;
   margin: 0 auto;
 `;
 
@@ -384,10 +377,15 @@ const RefreshButton = styled.button`
 const Pagination = styled.div`
   display: flex;
   justify-content: center;
-  width: 80%; /* Adjusted width */
+  width: 80%;
   margin: 0 auto;
 `;
 
 const TdCorporateName = styled.td`
-  color: ${({ banned }) => (banned === 'true' ? 'red' : 'black')};
+  color: ${({ banned, isDarkMode }) => {
+    if (banned) {
+      return 'red';
+    }
+    return isDarkMode ? 'white' : 'black';
+  }};
 `;

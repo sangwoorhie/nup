@@ -18,7 +18,7 @@ import { Button } from 'primereact/button';
 import UserPointModal from '../../../components/etc/modals/UserPointModal';
 import 'primeicons/primeicons.css';
 
-const ChargeHistory = () => {
+const ChargeHistory = ({ isDarkMode, toggleDarkMode }) => {
   const [chargeHistory, setChargeHistory] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [first, setFirst] = useState(0);
@@ -28,7 +28,6 @@ const ChargeHistory = () => {
   const [dates, setDates] = useState(null);
   const [showModal, setShowModal] = useState(false); // State for showing modal
   const [userData, setUserData] = useState(null); // State for storing user data
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchChargeHistory = async (page = 1, size = 10) => {
     try {
@@ -172,12 +171,8 @@ const ChargeHistory = () => {
     }
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
-    <Container>
+    <Container isDarkMode={isDarkMode}>
       <MainHeader
         setActiveHeader={setActiveHeader}
         userType='user'
@@ -187,11 +182,13 @@ const ChargeHistory = () => {
       <SubHeaders activeHeader={activeHeader} userType='user' />
       <Header>
         <h2>KO-MAPPER AI 나의 포인트</h2>
-        <h3>{formatNumber(userPoints)} 포인트</h3>
+        <h3>총 포인트 : {formatNumber(userPoints)}P</h3>
       </Header>
+
       <SecondHeader>
         <SecondHeaderTitle>충전 내역</SecondHeaderTitle>
       </SecondHeader>
+
       <Content isDarkMode={isDarkMode}>
         <MiddleWrapper>
           <TotalCount>총 {totalRecords}건</TotalCount>
@@ -257,6 +254,7 @@ const ChargeHistory = () => {
           />
         </TableWrapper>
       </Content>
+
       <Footer />
       {showModal && (
         <UserPointModal
@@ -276,22 +274,21 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100vh;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
 `;
 
 const Content = styled.div`
   flex: 1;
   padding: 20px;
   margin-top: 10px;
-  background-color: white;
   width: 80%;
-  margin: 0 auto; /* Center the content */
+  margin: 0 auto;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Header = styled.div`
   text-align: center;
-  /* margin-bottom: 20px; */
   background-color: #33556d;
   padding: 50px;
 
@@ -311,9 +308,8 @@ const Header = styled.div`
 const SecondHeader = styled.div`
   text-align: center;
   padding: 20px;
-  background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   border-bottom: 1px solid #afafaf;
-  margin-bottom: 10px;
 `;
 
 const SecondHeaderTitle = styled.h2`
@@ -330,7 +326,7 @@ const MiddleWrapper = styled.div`
 const RightAlignedWrapper = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px; /* Added to ensure proper spacing */
+  gap: 10px;
 `;
 
 const TotalCount = styled.div`
@@ -339,7 +335,7 @@ const TotalCount = styled.div`
 
 const TableWrapper = styled.div`
   margin: 0 auto;
-  width: 100%; /* Adjusted to ensure it aligns with other elements */
+  width: 100%;
 `;
 
 const ButtonWrapper = styled.div`

@@ -10,13 +10,12 @@ import { createCouponTemplate } from '../../../services/adminService';
 import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 
-const CouponIssuing = () => {
+const CouponIssuing = ({ isDarkMode, toggleDarkMode }) => {
   const [activeHeader, setActiveHeader] = useState('쿠폰 관리');
   const [couponName, setCouponName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [point, setPoint] = useState('');
   const [expirationDate, setExpirationDate] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const navigate = useNavigate(); // Initialize the navigate function
 
@@ -47,10 +46,6 @@ const CouponIssuing = () => {
         console.error(error);
       }
     }
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (

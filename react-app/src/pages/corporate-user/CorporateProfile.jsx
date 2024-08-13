@@ -7,10 +7,9 @@ import Footer from '../../components/etc/ui/Footer';
 import { saveAs } from 'file-saver';
 import 'primeicons/primeicons.css';
 
-const CorporateProfile = () => {
+const CorporateProfile = ({ isDarkMode, toggleDarkMode }) => {
   const [CorporateProfile, setCorporateProfile] = useState(null);
   const [activeHeader, setActiveHeader] = useState('User');
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const userType = localStorage.getItem('userType');
 
   useEffect(() => {
@@ -60,10 +59,6 @@ const CorporateProfile = () => {
   if (!CorporateProfile) {
     return <div>Loading...</div>;
   }
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
 
   return (
     <Container>

@@ -14,7 +14,7 @@ import {
 } from '../../../services/apiKeysService';
 import UpdateApiKeyModal from '../../../components/etc/modals/UpdateApiKeyModal'; // Import the modal
 
-const ApiKeyManagement = () => {
+const ApiKeyManagement = ({ isDarkMode, toggleDarkMode }) => {
   const [apiKeys, setApiKeys] = useState([]);
   const [searchCriteria, setSearchCriteria] = useState('email');
   const [searchValue, setSearchValue] = useState('');
@@ -25,7 +25,6 @@ const ApiKeyManagement = () => {
   const [userType, setUserType] = useState('');
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [currentApiKey, setCurrentApiKey] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchApiKeys = useCallback(
     async (page = 1, size = 10, criteria = '', value = '') => {
@@ -94,10 +93,6 @@ const ApiKeyManagement = () => {
   const handleUpdateIps = (apiKey) => {
     setCurrentApiKey(apiKey);
     setUpdateModalOpen(true);
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (
@@ -221,7 +216,7 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   padding: 20px;
-  margin-top: 10px;
+  /* margin-top: 10px; */
   background-color: white;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
@@ -289,9 +284,10 @@ const Th = styled.th`
 `;
 
 const Tr = styled.tr`
-  &:nth-child(even) {
+  // Removed the background color styling for even rows
+  /* &:nth-child(even) {
     background-color: #f9f9f9;
-  }
+  } */
 `;
 
 const Td = styled.td`

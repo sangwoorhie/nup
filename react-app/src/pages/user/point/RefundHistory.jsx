@@ -16,7 +16,7 @@ import {
 import { Button } from 'primereact/button';
 import RefundRequestModal from '../../../components/etc/modals/RefundRequestModal';
 
-const RefundHistory = () => {
+const RefundHistory = ({ isDarkMode, toggleDarkMode }) => {
   const [refundHistory, setRefundHistory] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
@@ -26,7 +26,6 @@ const RefundHistory = () => {
   const [selectedRefunds, setSelectedRefunds] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalReason, setModalReason] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchRefundHistory = async (page = 1, size = 10) => {
     try {
@@ -172,12 +171,8 @@ const RefundHistory = () => {
     );
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
-    <Container>
+    <Container isDarkMode={isDarkMode}>
       <MainHeader
         setActiveHeader={setActiveHeader}
         userType='user'
@@ -273,15 +268,15 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100vh;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
 `;
 
 const Content = styled.div`
   flex: 1;
   padding: 20px;
   margin-top: 10px;
-  background-color: white;
   width: 80%;
-  margin: 0 auto; /* Center the content */
+  margin: 0 auto;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
@@ -301,9 +296,8 @@ const Header = styled.div`
 const SecondHeader = styled.div`
   text-align: center;
   padding: 20px;
-  background-color: white;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   border-bottom: 1px solid #afafaf;
-  margin-bottom: 10px;
 `;
 
 const SecondHeaderTitle = styled.h2`
@@ -329,7 +323,7 @@ const TotalCount = styled.div`
 
 const TableWrapper = styled.div`
   margin: 0 auto;
-  width: 100%; /* Adjusted to ensure it aligns with other elements */
+  width: 100%;
 `;
 
 const StyledCalendar = styled(Calendar)`

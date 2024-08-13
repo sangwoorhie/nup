@@ -6,7 +6,12 @@ import MainHeader from '../../components/etc/ui/MainHeader';
 import SubHeaders from '../../components/etc/ui/SubHeaders';
 import Footer from '../../components/etc/ui/Footer';
 
-const VerifyPassword = ({ onSuccess, userType }) => {
+const VerifyPassword = ({
+  onSuccess,
+  userType,
+  isDarkMode,
+  toggleDarkMode,
+}) => {
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [activeHeader, setActiveHeader] = useState('User');
@@ -15,7 +20,6 @@ const VerifyPassword = ({ onSuccess, userType }) => {
   const email = localStorage.getItem('userEmail') || '';
   const nextPath = location.state?.next || '/user-profile';
   const initialActiveSubOption = location.state?.initialActiveSubOption || '';
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handlePasswordCheck = async () => {
     try {
@@ -38,10 +42,6 @@ const VerifyPassword = ({ onSuccess, userType }) => {
     setPasswordVisible((prevVisible) => !prevVisible);
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
     <Container>
       <MainHeader
@@ -61,11 +61,11 @@ const VerifyPassword = ({ onSuccess, userType }) => {
         <div>본인 인증을 위해 비밀번호를 입력해 주세요.</div>
         <br />
         <Form>
-          <Label>
+          <Label isDarkMode={isDarkMode}>
             E-mail:
             <Input type='text' value={email} readOnly />
           </Label>
-          <Label>
+          <Label isDarkMode={isDarkMode}>
             비밀번호:
             <InputWrapper>
               <Input
@@ -104,7 +104,6 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   display: flex;
-  margin-top: 10px;
   flex-direction: column;
   align-items: center;
   padding: 20px;
@@ -134,6 +133,8 @@ const Label = styled.label`
   font-weight: bold;
   width: 100%;
   text-align: left;
+  color: ${({ isDarkMode }) =>
+    isDarkMode ? '#000' : '#000'}; /* Force black color */
 `;
 
 const InputWrapper = styled.div`

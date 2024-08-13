@@ -31,7 +31,7 @@ const MainHeader = ({
       ];
     } else {
       return [
-        { label: 'AI 모델', key: 'AI 모델' },
+        { label: 'Ko-Detect', key: 'Ko-Detect' },
         { label: '조사 이미지', key: '조사 이미지' },
         { label: 'MY 포인트', key: 'MY 포인트' },
       ];
@@ -56,6 +56,7 @@ const MainHeader = ({
         </MainOptions>
       </LeftSection>
       <UserActions>
+        <DarkModeLabel>Dark Mode</DarkModeLabel>
         <ToggleSwitch>
           <input
             type='checkbox'
@@ -183,6 +184,12 @@ const ToggleSwitch = styled.label`
   & input:checked + .slider:before {
     transform: translateX(14px);
   }
+`;
+
+const DarkModeLabel = styled.span`
+  color: white;
+  font-size: 12px;
+  margin-right: 10px;
 `;
 
 export default MainHeader;

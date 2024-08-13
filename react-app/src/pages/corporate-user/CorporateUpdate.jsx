@@ -7,12 +7,11 @@ import httpClient from '../../services/httpClient';
 import { useNavigate } from 'react-router-dom';
 import AddressModal from '../../components/etc/modals/AddressModal';
 
-const CorporateUpdate = () => {
+const CorporateUpdate = ({ isDarkMode, toggleDarkMode }) => {
   const [corporateData, setCorporateData] = useState({});
   const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
   const [detailedAddress, setDetailedAddress] = useState('');
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const fetchCorporateData = async () => {
@@ -92,10 +91,6 @@ const CorporateUpdate = () => {
     return corporateData.corporate_type === 'organization'
       ? mapping[label]
       : label;
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (

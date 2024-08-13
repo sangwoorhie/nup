@@ -5,13 +5,12 @@ import SubHeaders from '../../../components/etc/ui/SubHeaders';
 import Footer from '../../../components/etc/ui/Footer';
 import { sendChargeEmail } from '../../../services/userServices';
 
-const PointChargePage = () => {
+const PointChargePage = ({ isDarkMode, toggleDarkMode }) => {
   const [amount, setAmount] = useState('');
   const [chargeType, setChargeType] = useState('CASH');
   const [step, setStep] = useState(1);
   const [accountHolderName, setAccountHolderName] = useState('');
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleAmountChange = (e) => {
     const value = e.target.value.replace(/,/g, '').replace(/원/g, '');
@@ -54,10 +53,6 @@ const PointChargePage = () => {
     }
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
     <Container>
       <MainHeader
@@ -96,7 +91,7 @@ const PointChargePage = () => {
                   checked={chargeType === 'CASH'}
                   onChange={() => setChargeType('CASH')}
                 />
-                현금 충전
+                <TextBlack>현금 충전</TextBlack>
               </RadioButton>
               <RadioButton>
                 <input
@@ -104,7 +99,7 @@ const PointChargePage = () => {
                   checked={chargeType === 'CARD'}
                   onChange={() => setChargeType('CARD')}
                 />
-                카드 충전
+                <TextBlack>카드 충전</TextBlack>
               </RadioButton>
               <RadioButton>
                 <input
@@ -112,7 +107,7 @@ const PointChargePage = () => {
                   checked={chargeType === 'PAYPAL'}
                   onChange={() => setChargeType('PAYPAL')}
                 />
-                Pay-pal 충전
+                <TextBlack>Pay-pal 충전</TextBlack>
               </RadioButton>
             </RadioArea>
             <SmallComment>
@@ -124,9 +119,13 @@ const PointChargePage = () => {
         ) : (
           <Step>
             <Title>현금 충전 안내</Title>
-            <AmountDisplay>충전 금액: {amount}</AmountDisplay>
+            <AmountDisplay>
+              <TextBlack>충전 금액: {amount}</TextBlack>
+            </AmountDisplay>
             <InputArea>
-              <label>입금자 명 (개인이름/회사이름)</label>
+              <label>
+                <TextBlack>입금자 명 (개인이름/회사이름)</TextBlack>
+              </label>
               <input
                 type='text'
                 value={accountHolderName}
@@ -311,6 +310,10 @@ const DepositInfo = styled.div`
   p {
     margin-bottom: 10px;
   }
+`;
+
+const TextBlack = styled.span`
+  color: #000;
 `;
 
 export default PointChargePage;

@@ -18,7 +18,7 @@ import 'primeicons/primeicons.css';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 import RefundRequestModal from '../../../components/etc/modals/RefundRequestModal';
 
-const RefundManagement = () => {
+const RefundManagement = ({ isDarkMode, toggleDarkMode }) => {
   const [refundRequests, setRefundRequests] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [first, setFirst] = useState(0);
@@ -27,7 +27,6 @@ const RefundManagement = () => {
   const [selectedRequests, setSelectedRequests] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalReason, setModalReason] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchRefundRequests = async (page = 1, size = 10) => {
     try {
@@ -136,12 +135,8 @@ const RefundManagement = () => {
     }
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
-    <Container>
+    <Container isDarkMode={isDarkMode}>
       <MainHeader
         setActiveHeader={setActiveHeader}
         userType='admin'
@@ -242,6 +237,7 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100vh;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
 `;
 
 const Content = styled.div`
@@ -318,7 +314,7 @@ const SmallButton = styled(Button)`
 
 const RefreshButton = styled.button`
   padding: 5px;
-  background-color: transparent;
+  background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;

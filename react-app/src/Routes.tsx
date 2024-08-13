@@ -28,7 +28,15 @@ import RefundHistory from './pages/user/point/RefundHistory';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
-const MainRoutes = () => (
+interface MainRoutesProps {
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
+}
+
+const MainRoutes: React.FC<MainRoutesProps> = ({
+  isDarkMode,
+  toggleDarkMode,
+}) => (
   <Routes>
     {/* <Route element={<PublicRoutes />}> */}
     <Route path='/' element={<LoginPage />} />
@@ -39,27 +47,177 @@ const MainRoutes = () => (
     {/* </Route> */}
 
     {/* <Route element={<PrivateRoutes />}> */}
-    <Route path='/user-profile' element={<UserProfile />} />
-    <Route path='/corporate-info' element={<CorporateProfile />} />
-    <Route path='/verify-password' element={<VerifyPasswordWrapper />} />
-    <Route path='/user-update' element={<UserUpdate />} />
-    <Route path='/corporate-update' element={<CorporateUpdate />} />
-    <Route path='/password-change' element={<PasswordChange />} />
-    <Route path='/unregister' element={<Unregister />} />
-    <Route path='/api-key' element={<ApiKey />} />
-    <Route path='/individual-members' element={<IndividualUserManagement />} />
-    <Route path='/corporate-members' element={<CorporateUserManagement />} />
-    <Route path='/point-charge' element={<PointChargePage />} />
-    <Route path='/admin-members' element={<AdminUserManagement />} />
-    <Route path='/api-key-view' element={<ApiKeyManagement />} />
-    <Route path='/coupon-issue' element={<CouponIssuing />} />
-    <Route path='/coupon-view' element={<CouponTemplateList />} />
-    <Route path='/coupon-register' element={<CouponCharge />} />
-    <Route path='/my-coupons' element={<MyCoupon />} />
-    <Route path='/charge-history' element={<ChargeHistory />} />
-    <Route path='/cash-charge-request' element={<CashChargeRequest />} />
-    <Route path='/refund-process' element={<RefundManagement />} />
-    <Route path='/refund-history' element={<RefundHistory />} />
+    <Route
+      path='/user-profile'
+      element={
+        <UserProfile isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      }
+    />
+    <Route
+      path='/corporate-info'
+      element={
+        <CorporateProfile
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/verify-password'
+      element={
+        <VerifyPasswordWrapper
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/user-update'
+      element={
+        <UserUpdate isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      }
+    />
+    <Route
+      path='/corporate-update'
+      element={
+        <CorporateUpdate
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/password-change'
+      element={
+        <PasswordChange
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/unregister'
+      element={
+        <Unregister isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      }
+    />
+    <Route
+      path='/api-key'
+      element={
+        <ApiKey isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      }
+    />
+    <Route
+      path='/individual-members'
+      element={
+        <IndividualUserManagement
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/corporate-members'
+      element={
+        <CorporateUserManagement
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/point-charge'
+      element={
+        <PointChargePage
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/admin-members'
+      element={
+        <AdminUserManagement
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/api-key-view'
+      element={
+        <ApiKeyManagement
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/coupon-issue'
+      element={
+        <CouponIssuing
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/coupon-view'
+      element={
+        <CouponTemplateList
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/coupon-register'
+      element={
+        <CouponCharge isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      }
+    />
+    <Route
+      path='/my-coupons'
+      element={
+        <MyCoupon isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      }
+    />
+    <Route
+      path='/charge-history'
+      element={
+        <ChargeHistory
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/cash-charge-request'
+      element={
+        <CashChargeRequest
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/refund-process'
+      element={
+        <RefundManagement
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/refund-history'
+      element={
+        <RefundHistory
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
     {/* </Route> */}
   </Routes>
 );

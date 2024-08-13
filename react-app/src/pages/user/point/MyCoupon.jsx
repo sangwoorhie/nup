@@ -9,14 +9,13 @@ import SubHeaders from '../../../components/etc/ui/SubHeaders';
 import Footer from '../../../components/etc/ui/Footer';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 
-const MyCoupon = () => {
+const MyCoupon = ({ isDarkMode, toggleDarkMode }) => {
   const [coupons, setCoupons] = useState([]);
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
   const [userType, setUserType] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchCoupons = useCallback(async (page = 1, size = 10) => {
     try {
@@ -63,10 +62,6 @@ const MyCoupon = () => {
     return points.toLocaleString() + 'P';
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
     <Container>
       <MainHeader
@@ -76,7 +71,6 @@ const MyCoupon = () => {
         isDarkMode={isDarkMode}
       />
       <SubHeaders activeHeader={activeHeader} userType={userType} />
-      <br />
       <Content isDarkMode={isDarkMode}>
         <Header>
           <Title>MY 쿠폰</Title>
@@ -86,7 +80,7 @@ const MyCoupon = () => {
             </RefreshButton>
           </ButtonContainer>
         </Header>
-        <StyledTable>
+        <StyledTable isDarkMode={isDarkMode}>
           <thead>
             <tr>
               <Th>쿠폰 명</Th>
@@ -99,13 +93,17 @@ const MyCoupon = () => {
           </thead>
           <tbody>
             {coupons.map((coupon) => (
-              <Tr key={coupon.code}>
-                <Td>{coupon.coupon_name}</Td>
-                <Td>{coupon.code}</Td>
-                <Td>{formatPoints(coupon.point)}</Td>
-                <Td>{new Date(coupon.used_at).toLocaleDateString()}</Td>
-                <Td>{new Date(coupon.expiration_date).toLocaleDateString()}</Td>
-                <Td>
+              <Tr key={coupon.code} isDarkMode={isDarkMode}>
+                <Td isDarkMode={isDarkMode}>{coupon.coupon_name}</Td>
+                <Td isDarkMode={isDarkMode}>{coupon.code}</Td>
+                <Td isDarkMode={isDarkMode}>{formatPoints(coupon.point)}</Td>
+                <Td isDarkMode={isDarkMode}>
+                  {new Date(coupon.used_at).toLocaleDateString()}
+                </Td>
+                <Td isDarkMode={isDarkMode}>
+                  {new Date(coupon.expiration_date).toLocaleDateString()}
+                </Td>
+                <Td isDarkMode={isDarkMode}>
                   <DeleteButton onClick={() => handleDelete(coupon.id)}>
                     삭제
                   </DeleteButton>
@@ -167,7 +165,7 @@ const ButtonContainer = styled.div`
 
 const RefreshButton = styled.button`
   padding: 10px;
-  background-color: transparent;
+  background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
@@ -182,7 +180,6 @@ const StyledTable = styled.table`
   width: 80%;
   margin: 0 auto;
   border-collapse: collapse;
-  background-color: #fff;
 `;
 
 const Th = styled.th`
@@ -193,26 +190,25 @@ const Th = styled.th`
 `;
 
 const Tr = styled.tr`
-  &:nth-child(even) {
-    background-color: #f2f2f2;
-  }
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
 `;
 
 const Td = styled.td`
   padding: 10px;
   border: 1px solid #ddd;
   text-align: center;
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const DeleteButton = styled.button`
   padding: 5px 10px;
-  background-color: #fff;
-  color: #000;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#666' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
   &:hover {
-    background-color: #e0e0e0;
+    background-color: ${({ isDarkMode }) => (isDarkMode ? '#777' : '#e0e0e0')};
   }
 `;
 

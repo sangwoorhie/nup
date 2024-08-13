@@ -13,15 +13,9 @@ import {
 import { Paginator } from 'primereact/paginator';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 import { FaCheck } from 'react-icons/fa'; // Import check icon
-import isPropValid from '@emotion/is-prop-valid';
+// import isPropValid from '@emotion/is-prop-valid';
 
-// Helper functions
-const formatPoints = (points) =>
-  points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'P';
-const formatCurrency = (amount) =>
-  amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
-
-const IndividualUserManagement = () => {
+const IndividualUserManagement = ({ isDarkMode, toggleDarkMode }) => {
   // State management
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -37,12 +31,11 @@ const IndividualUserManagement = () => {
   const [chargePage, setChargePage] = useState(0);
   const [chargePageSize, setChargePageSize] = useState(10);
   const [chargeTotalRecords, setChargeTotalRecords] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch functions
   const fetchUsers = useCallback(
     async (criteria = '', value = '') => {
-      const { data } = await getUsers(page + 1, pageSize, criteria, value); // Page is 1-based index
+      const { data } = await getUsers(page + 1, pageSize, criteria, value);
       setUsers(data.items);
       setTotalRecords(data.total);
     },
@@ -53,7 +46,7 @@ const IndividualUserManagement = () => {
     async (userId) => {
       const { data } = await getUserChargeRequest(
         userId,
-        chargePage + 1, // Page is 1-based index
+        chargePage + 1,
         chargePageSize
       );
       setChargeHistory(data.items);
@@ -148,10 +141,6 @@ const IndividualUserManagement = () => {
 
   const handleBackToUserList = () => {
     setSelectedUser(null);
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   // JSX rendering
@@ -302,7 +291,7 @@ const IndividualUserManagement = () => {
                     onChange={() => handleCheckboxChange(user.id)}
                   />
                 </td>
-                <TdEmail banned={user.banned ? 'true' : undefined}>
+                <TdEmail banned={user.banned} isDarkMode={isDarkMode}>
                   {user.email}
                 </TdEmail>
                 <td>{user.username}</td>
@@ -354,8 +343,7 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   padding: 20px;
-  margin-top: 10px;
-  background-color: white;
+  /* margin-top: 10px; */
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
@@ -406,10 +394,13 @@ const Table = styled.table`
   }
 `;
 
-const TdEmail = styled.td.withConfig({
-  shouldForwardProp: (prop) => isPropValid(prop) && prop !== 'banned',
-})`
-  color: ${({ banned }) => (banned === 'true' ? 'red' : 'black')};
+const TdEmail = styled.td`
+  color: ${({ banned, isDarkMode }) => {
+    if (banned) {
+      return 'red';
+    }
+    return isDarkMode ? 'white' : 'black';
+  }};
 `;
 
 const ButtonContainer = styled.div`
@@ -501,3 +492,8 @@ const TableWrapper = styled.div`
   margin: 0 auto;
   width: 100%;
 `;
+
+const formatPoints = (points) =>
+  points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'P';
+const formatCurrency = (amount) =>
+  amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';

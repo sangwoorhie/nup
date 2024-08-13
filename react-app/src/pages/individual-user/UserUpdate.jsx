@@ -6,7 +6,7 @@ import SubHeaders from '../../components/etc/ui/SubHeaders';
 import httpClient from '../../services/httpClient';
 import Footer from '../../components/etc/ui/Footer';
 
-const UserUpdate = () => {
+const UserUpdate = ({ isDarkMode, toggleDarkMode }) => {
   const [activeHeader, setActiveHeader] = useState('User');
   const [userData, setUserData] = useState(null);
   const [username, setUsername] = useState('');
@@ -15,7 +15,6 @@ const UserUpdate = () => {
   const [profileImage, setProfileImage] = useState('');
   const [userType, setUserType] = useState('');
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -79,10 +78,6 @@ const UserUpdate = () => {
     if (userType === 'admin') return '관리자 회원';
     if (userType === 'individual') return '개인 회원';
     return '회원';
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (

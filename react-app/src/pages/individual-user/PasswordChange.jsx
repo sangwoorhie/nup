@@ -6,7 +6,7 @@ import SubHeaders from '../../components/etc/ui/SubHeaders';
 import httpClient from '../../services/httpClient';
 import Footer from '../../components/etc/ui/Footer';
 
-const PasswordChange = () => {
+const PasswordChange = ({ isDarkMode, toggleDarkMode }) => {
   const [activeHeader, setActiveHeader] = useState('User');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -16,7 +16,6 @@ const PasswordChange = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userType = location.state?.userType || 'individual'; // default to individual if not provided
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmNewPassword) {
@@ -45,10 +44,6 @@ const PasswordChange = () => {
 
   const togglePasswordVisibility = (setVisibility) => {
     setVisibility((prevVisibility) => !prevVisibility);
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (

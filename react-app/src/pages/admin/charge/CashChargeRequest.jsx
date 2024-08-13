@@ -17,7 +17,7 @@ import { Button } from 'primereact/button';
 import 'primeicons/primeicons.css';
 import refreshImage from '../../../assets/img/refresh_icon.png';
 
-const CashChargeRequest = () => {
+const CashChargeRequest = ({ isDarkMode, toggleDarkMode }) => {
   const [chargeRequests, setChargeRequests] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [first, setFirst] = useState(0);
@@ -25,7 +25,6 @@ const CashChargeRequest = () => {
   const [dates, setDates] = useState(null);
   const [activeHeader, setActiveHeader] = useState('결제 관리');
   const [selectedRequests, setSelectedRequests] = useState([]);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchCashChargeRequests = async (
     page = 1,
@@ -233,12 +232,8 @@ const CashChargeRequest = () => {
     setSelectedRequests(e.value);
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
-    <Container>
+    <Container isDarkMode={isDarkMode}>
       <MainHeader
         setActiveHeader={setActiveHeader}
         userType='admin'
@@ -330,14 +325,12 @@ const Container = styled.div`
   justify-content: space-between;
   height: 100vh;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
-  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const Content = styled.div`
   flex: 1;
   padding: 20px;
   margin-top: 10px;
-  background-color: white;
   width: 80%;
   margin: 0 auto;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
@@ -396,11 +389,11 @@ const StyledCalendar = styled(Calendar)`
   .p-datepicker-trigger {
     position: absolute;
     top: 50%;
-    right: 0; /* Remove right spacing */
+    right: 0;
     transform: translateY(-50%);
     cursor: pointer;
-    color: #007bff; /* Match the button color */
-    border: 1px solid #ced4da; /* Match the border color of StyledCalendar */
+    color: #007bff;
+    border: 1px solid #ced4da;
   }
 `;
 
@@ -424,7 +417,7 @@ const StyledButton = styled(Button)`
 
 const RefreshButton = styled.button`
   padding: 5px;
-  background-color: transparent;
+  background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;

@@ -30,7 +30,7 @@ const usePageChange = (callback) => {
   return () => setPageChanged(true);
 };
 
-const CouponTemplateList = () => {
+const CouponTemplateList = ({ isDarkMode, toggleDarkMode }) => {
   const [dates, setDates] = useState(null);
   const [templates, setTemplates] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -45,7 +45,6 @@ const CouponTemplateList = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [templateName, setTemplateName] = useState('');
   const [searchCriteria, setSearchCriteria] = useState('code');
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const templateCriteriaOptions = [
     { label: '전체조회', value: 'all' },
@@ -247,10 +246,6 @@ const CouponTemplateList = () => {
   };
 
   const resetSearchTerm = usePageChange(() => setSearchTerm(''));
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
 
   return (
     <Container>
@@ -484,7 +479,7 @@ const Container = styled.div`
 const Content = styled.div`
   flex: 1;
   padding: 20px;
-  margin-top: 10px;
+  /* margin-top: 10px; */
   background-color: white;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};

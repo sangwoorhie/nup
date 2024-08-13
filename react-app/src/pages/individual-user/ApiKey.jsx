@@ -12,7 +12,7 @@ import SubHeaders from '../../components/etc/ui/SubHeaders';
 import Footer from '../../components/etc/ui/Footer';
 import refreshImage from '../../assets/img/refresh_icon.png';
 
-const ApiKey = () => {
+const ApiKey = ({ isDarkMode, toggleDarkMode }) => {
   const [apiKeys, setApiKeys] = useState([]);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -22,12 +22,11 @@ const ApiKey = () => {
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const fetchApiKeys = useCallback(async (page = 1, size = 10) => {
     try {
       const { data } = await listApiKeys(page, size);
-      setApiKeys(data.items); // Remove the incorrect is_active setting
+      setApiKeys(data.items);
       setTotalRecords(data.total || 0);
     } catch (error) {
       console.error('Failed to fetch API keys:', error);
@@ -65,10 +64,6 @@ const ApiKey = () => {
     window.location.reload();
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
-
   return (
     <Container>
       <MainHeader
@@ -90,7 +85,7 @@ const ApiKey = () => {
             </RefreshButton>
           </ButtonContainer>
         </Header>
-        <StyledTable>
+        <StyledTable isDarkMode={isDarkMode}>
           <thead>
             <tr>
               <Th>API Key</Th>
@@ -104,19 +99,21 @@ const ApiKey = () => {
           </thead>
           <tbody>
             {apiKeys.map((key) => (
-              <Tr key={key.api_key}>
-                <Td>{key.api_key}</Td>
-                <Td>{key.ips.join(', ')}</Td>
-                <Td>{key.today_usage}</Td>
-                <Td>{key.total_usage}</Td>
-                <Td>{new Date(key.created_at).toLocaleDateString()}</Td>
-                <Td>
+              <Tr key={key.api_key} isDarkMode={isDarkMode}>
+                <Td isDarkMode={isDarkMode}>{key.api_key}</Td>
+                <Td isDarkMode={isDarkMode}>{key.ips.join(', ')}</Td>
+                <Td isDarkMode={isDarkMode}>{key.today_usage}</Td>
+                <Td isDarkMode={isDarkMode}>{key.total_usage}</Td>
+                <Td isDarkMode={isDarkMode}>
+                  {new Date(key.created_at).toLocaleDateString()}
+                </Td>
+                <Td isDarkMode={isDarkMode}>
                   <InputSwitch
                     checked={key.is_active}
                     onChange={() => handleToggleStatus(key.api_key)}
                   />
                 </Td>
-                <Td>
+                <Td isDarkMode={isDarkMode}>
                   <ActionButton
                     onClick={() => {
                       setCurrentApiKey(key.api_key);
@@ -209,7 +206,7 @@ const Button = styled.button`
 
 const RefreshButton = styled.button`
   padding: 10px;
-  background-color: transparent;
+  background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
@@ -224,37 +221,35 @@ const StyledTable = styled.table`
   width: 80%;
   margin: 0 auto;
   border-collapse: collapse;
-  background-color: #fff;
 `;
 
 const Th = styled.th`
   padding: 10px;
-  background-color: #007bff;
+  background-color: #007bff; /* Always blue */
   color: #fff;
   border: 1px solid #ddd;
 `;
 
 const Tr = styled.tr`
-  &:nth-child(even) {
-    background-color: #f2f2f2;
-  }
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
 `;
 
 const Td = styled.td`
   padding: 10px;
   border: 1px solid #ddd;
   text-align: center;
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
 `;
 
 const ActionButton = styled.button`
   padding: 5px 10px;
-  background-color: #fff;
-  color: #000;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#666' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
   border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
   &:hover {
-    background-color: #e0e0e0;
+    background-color: ${({ isDarkMode }) => (isDarkMode ? '#777' : '#e0e0e0')};
   }
 `;
 

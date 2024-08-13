@@ -7,14 +7,13 @@ import Footer from '../../../components/etc/ui/Footer';
 import httpClient from '../../../services/httpClient';
 import CouponModal from '../../../components/etc/modals/CouponModal';
 
-const CouponCharge = () => {
+const CouponCharge = ({ isDarkMode, toggleDarkMode }) => {
   const [couponCode, setCouponCode] = useState('');
   const [modalData, setModalData] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const userType = localStorage.getItem('userType') || 'individual';
   const [activeHeader, setActiveHeader] = useState('MY 포인트');
   const navigate = useNavigate(); // Initialize useNavigate
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleCouponCodeChange = (e) => setCouponCode(e.target.value);
 
@@ -43,10 +42,6 @@ const CouponCharge = () => {
         error.response?.data?.message || '쿠폰 적용에 실패했습니다.';
       alert(errorMessage);
     }
-  };
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prevMode) => !prevMode);
   };
 
   return (
@@ -108,6 +103,7 @@ const Content = styled.div`
 
 const Title = styled.h2`
   margin-bottom: 20px;
+  color: #000; /* Ensures text color remains black */
 `;
 
 const CouponInput = styled.input`

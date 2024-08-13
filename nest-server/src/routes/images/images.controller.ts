@@ -53,12 +53,20 @@ export class ImagesController {
     status: 200,
     description: '이미지를 성공적으로 업로드했습니다.',
   })
-  @ApiResponse({ status: 201, description: 'Images uploaded successfully.' })
   async uploadImages(
     @UploadedFiles() files: Express.Multer.File[],
     @User() user: UserAfterAuth,
   ) {
-    return this.imagesService.uploadImages(files, user.id);
+    const { images, totalCost } = await this.imagesService.uploadImages(
+      files,
+      user.id,
+    );
+
+    return {
+      message: 'Images uploaded successfully.',
+      images,
+      totalCost,
+    };
   }
 
   // 2. 이미지 파일 다운로드
@@ -118,7 +126,19 @@ export class ImagesController {
     imageStream.pipe(res);
   }
 
-  // 4. 이미지 목록 보기
+  // 4. 이미지 목록 보기(텍스트 형태)
+  // GET : localhost:3000/images/list
+  @Get('list')
+  @ApiOperation({ summary: '이미지 목록 보기 (텍스트 형태)' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지 목록을 성공적으로 조회했습니다.',
+  })
+  async listImages(@User() user: UserAfterAuth) {
+    return this.imagesService.listImages(user.id);
+  }
+
+  // 5. 이미지 목록 보기(갤러리 형태)
   // GET : localhost:3000/images/view?imageIds=id1,id2,id3
   @Get('view')
   @ApiOperation({ summary: '업로드된 이미지 보기 (다중 파일 가능)' })
@@ -153,7 +173,7 @@ export class ImagesController {
     res.end();
   }
 
-  // 5. 이미지 삭제
+  // 6. 이미지 삭제
   // DELETE : localhost:3000/images { "ids": ["id1","id2", "id3"] }
   @Delete()
   @ApiOperation({ summary: '업로드된 이미지 삭제 (다중 파일 가능)' })

@@ -1,0 +1,19 @@
+1. crackFinder/src/express-app/app.js => 타일링 백엔드 API 서버단
+
+2. crackFinder/src/react-app/features/workspace/Workspace.jsx => 분석결과 Workspace
+(src 이미지 파일 객체 혹은 이미지 경로)
+(vectorSrc 벡터 경로)
+
+src={src} jsonSrc={vectorSrc} => Json 웹에서 제공하는 src로 바꿔야 함.
+
+도면위에 도면을 얹는 개념
+
+
+3. crackFinder/src/react-app/features/ui/classed/viewer/ImageViewer.jsx => 실제 이미지 뷰어
+
+4. crackFinder/src/react-app/context/WorkspaceContext.jsx
+
+5. crackFinder/src/react-app/hooks/useTilingImage.js
+타일링 이미지는 id등을 path에 담아와야 함.
+
+저장되는 곳 : 내 PC > 로컬 디스크 (C:) > 사용자 > power > AppData > Roaming > Ko-Mapper > KO-Detect-for-Desktop > public > images (이미지가 차면 주기적으로 비워줘야됨)

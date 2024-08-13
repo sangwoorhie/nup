@@ -16,6 +16,7 @@ import {
   DeleteObjectCommand,
   NoSuchKey,
   DeleteObjectsCommand,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { Stream } from 'stream';
@@ -26,6 +27,7 @@ import { uploadFileToS3 } from 'src/config/s3-storage.config';
 import { createReadStream } from 'fs';
 import * as archiver from 'archiver';
 import { PassThrough, Readable } from 'stream';
+import * as sharp from 'sharp';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -67,14 +69,22 @@ export class ImagesService {
       const imagePromises = files.map(async (file) => {
         const key = await uploadFileToS3(file);
 
+        const { width, height } = await this.getImageDimensions(file);
+        const cost = this.calculateCost(width, height);
+
         const newImage = this.imageRepository.create({
           user: user,
           image_path: key,
           status: ImageStatus.NOT_DETECTED,
         });
-        return this.imageRepository.save(newImage);
+        return { image: await this.imageRepository.save(newImage), cost };
       });
-      return Promise.all(imagePromises);
+
+      const results = await Promise.all(imagePromises);
+      const totalCost = results.reduce((sum, result) => sum + result.cost, 0);
+
+      await queryRunner.commitTransaction();
+      return { images: results.map((result) => result.image), totalCost };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       error = e;
@@ -82,6 +92,21 @@ export class ImagesService {
       await queryRunner.release();
       if (error) throw error;
     }
+  }
+
+  // 사진 장당 계산법
+  // 1920x1080 / 100 = 20,736 => 1000원 미만 절사 = 20,000원
+  // 3840x2160 / 100 = 82,944 => 1000원 미만 절사 = 82,000원
+  private calculateCost(width: number, height: number): number {
+    const pixels = (width * height) / 100;
+    return Math.ceil(pixels / 1000) * 1000;
+  }
+
+  private async getImageDimensions(
+    file: Express.Multer.File,
+  ): Promise<{ width: number; height: number }> {
+    const metadata = await sharp(file.buffer).metadata();
+    return { width: metadata.width, height: metadata.height };
   }
 
   // 2. 이미지 파일 다운로드
@@ -215,7 +240,44 @@ export class ImagesService {
     }
   }
 
-  // 4. 이미지 목록 보기
+  // 4. 이미지 목록 보기(텍스트 형태)
+  async listImages(userId: string) {
+    const images = await this.imageRepository.find({
+      where: { user: { id: userId } },
+    });
+
+    const imageDetails = await Promise.all(
+      images.map(async (image) => {
+        const fileCreationDate = await this.getFileCreationDate(
+          image.image_path,
+        );
+        return {
+          title: image.image_path.split('/').pop(), // Extract file name as title
+          created_at: fileCreationDate,
+        };
+      }),
+    );
+
+    return imageDetails;
+  }
+
+  private async getFileCreationDate(key: string): Promise<Date> {
+    const command = new HeadObjectCommand({
+      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+      Key: key,
+    });
+
+    try {
+      const response = await this.s3.send(command);
+      return response.LastModified || new Date(); // Fallback to current date if unavailable
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error retrieving file creation date from S3',
+      );
+    }
+  }
+
+  // 5. 이미지 목록 보기 (갤러리 형태)
   async viewImages(ids: string[], userId: string): Promise<Readable[]> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
@@ -258,7 +320,7 @@ export class ImagesService {
     return imageStreams;
   }
 
-  // 5. 이미지 삭제
+  // 6. 이미지 삭제
   async deleteImages(
     ids: string[],
     userId: string,

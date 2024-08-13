@@ -56,7 +56,7 @@ const SubHeaders = ({ activeHeader, userType, initialActiveSubOption }) => {
           { label: '회원 탈퇴', path: '/unregister' },
         ];
       }
-    } else if (activeHeader === 'AI 모델') {
+    } else if (activeHeader === 'Ko-Detect') {
       return [
         { label: '파일 입력', path: '/file-input' },
         { label: '나의 주문함', path: '/my-orders' },
