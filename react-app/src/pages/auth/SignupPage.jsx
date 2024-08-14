@@ -78,6 +78,7 @@ const Content = styled.div`
 const Title = styled.h2`
   margin-bottom: 40px;
   font-size: 24px;
+  margin-bottom: 100px;
   color: #1a1a1a;
 `;
 

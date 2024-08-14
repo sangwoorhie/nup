@@ -27,6 +27,7 @@ import { uploadFileToS3 } from 'src/config/s3-storage.config';
 import { createReadStream } from 'fs';
 import * as archiver from 'archiver';
 import { PassThrough, Readable } from 'stream';
+import { decode } from 'iconv-lite';
 import * as sharp from 'sharp';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -95,8 +96,9 @@ export class ImagesService {
   }
 
   // 사진 장당 계산법
-  // 1920x1080 / 100 = 20,736 => 1000원 미만 절사 = 20,000원
-  // 3840x2160 / 100 = 82,944 => 1000원 미만 절사 = 82,000원
+  // 사진 A => 1920x1080 픽셀 / 100 = 20,736 => 1000원 미만 절사 = 20,000원
+  // 사진 B => 3840x2160 픽셀 / 100 = 82,944 => 1000원 미만 절사 = 82,000원
+  // 사진 A + 사진 B = 20,000 + 82,000 = 102,000
   private calculateCost(width: number, height: number): number {
     const pixels = (width * height) / 100;
     return Math.ceil(pixels / 1000) * 1000;
@@ -245,36 +247,59 @@ export class ImagesService {
     const images = await this.imageRepository.find({
       where: { user: { id: userId } },
     });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const point = user.point;
 
     const imageDetails = await Promise.all(
       images.map(async (image) => {
-        const fileCreationDate = await this.getFileCreationDate(
-          image.image_path,
+        const command = new GetObjectCommand({
+          Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+          Key: image.image_path,
+        });
+
+        const response = await this.s3.send(command);
+
+        // Get image dimensions from the image stream
+        const stream = response.Body as unknown as Readable;
+        const buffer = await this.streamToBuffer(stream);
+        const metadata = await sharp(buffer).metadata();
+
+        const cost = this.calculateCost(metadata.width, metadata.height);
+
+        const encodedTitle = image.image_path.split('/').pop();
+        const decodedTitle = decode(
+          Buffer.from(encodedTitle, 'binary'),
+          'utf-8',
         );
+        // const fileCreationDate = await this.getFileCreationDate(
+        //   image.image_path,
+        // );
+
         return {
-          title: image.image_path.split('/').pop(), // Extract file name as title
-          created_at: fileCreationDate,
+          id: image.id,
+          title: decodedTitle,
+          cost: cost,
         };
       }),
     );
 
-    return imageDetails;
+    const totalCost = imageDetails.reduce((sum, image) => sum + image.cost, 0);
+
+    return {
+      total: images.length,
+      images: imageDetails,
+      totalCost: totalCost,
+      point: point,
+    };
   }
 
-  private async getFileCreationDate(key: string): Promise<Date> {
-    const command = new HeadObjectCommand({
-      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
-      Key: key,
+  private streamToBuffer(stream: Readable): Promise<Buffer> {
+    return new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+      stream.on('error', reject);
     });
-
-    try {
-      const response = await this.s3.send(command);
-      return response.LastModified || new Date(); // Fallback to current date if unavailable
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Error retrieving file creation date from S3',
-      );
-    }
   }
 
   // 5. 이미지 목록 보기 (갤러리 형태)

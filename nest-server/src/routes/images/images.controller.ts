@@ -36,7 +36,6 @@ import { ImageResDto } from './dto/res.dto';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { PassThrough } from 'stream';
 import { isUUID } from 'class-validator';
-import { Public } from 'src/decorators/public.decorators';
 
 @ApiTags('Images')
 @Controller('images')
@@ -141,7 +140,7 @@ export class ImagesController {
   // 5. 이미지 목록 보기(갤러리 형태)
   // GET : localhost:3000/images/view?imageIds=id1,id2,id3
   @Get('view')
-  @ApiOperation({ summary: '업로드된 이미지 보기 (다중 파일 가능)' })
+  @ApiOperation({ summary: '업로드된 이미지 보기 (갤러리 형태)' })
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
   @ApiResponse({

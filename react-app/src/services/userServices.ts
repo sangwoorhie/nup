@@ -179,3 +179,28 @@ export const deleteRefundRequests = async (ids: string) => {
   });
   return data;
 };
+
+// 이미지 목록
+export const listImages = async () => {
+  const { data } = await httpClient.get('/images/list');
+  return data;
+};
+
+// 이미지 업로드
+export const uploadImages = async (files: FileList | File[]) => {
+  const formData = new FormData();
+  Array.from(files).forEach((file: File) => formData.append('files', file));
+
+  const { data } = await httpClient.post('/images/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return data;
+};
+
+// 이미지 삭제
+export const deleteImages = async (ids: string) => {
+  const { data } = await httpClient.delete('/images', { data: { ids } });
+  return data;
+};

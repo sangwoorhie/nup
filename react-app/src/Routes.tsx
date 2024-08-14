@@ -25,6 +25,7 @@ import ChargeHistory from './pages/user/point/ChargeHistory';
 import CashChargeRequest from './pages/admin/charge/CashChargeRequest';
 import RefundManagement from './pages/admin/charge/RefundManagement';
 import RefundHistory from './pages/user/point/RefundHistory';
+import FileInput from './pages/user/image/FileInput';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -216,6 +217,12 @@ const MainRoutes: React.FC<MainRoutesProps> = ({
           isDarkMode={isDarkMode}
           toggleDarkMode={toggleDarkMode}
         />
+      }
+    />
+    <Route
+      path='/file-input'
+      element={
+        <FileInput isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       }
     />
     {/* </Route> */}
