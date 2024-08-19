@@ -117,6 +117,9 @@ export class PaymentRecordsService {
       },
     });
 
+    const now = moment().tz('Asia/Seoul');
+    const formattedDate = now.format('YYYY-MM-DD HH:mm');
+
     const mappedItems = items.map((item) => {
       if (item.charge_type === ChargeType.COUPON) {
         item.charge_status = ChargeStatus.CONFIRMED;
@@ -422,6 +425,141 @@ export class PaymentRecordsService {
         // created_at: moment(item.created_at)
         //   .tz('Asia/Seoul')
         //   .format('YYYY-MM-DD HH:mm'),
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 10, 11. 개인회원, 사업자회원 결제내역 조회 (관리자)
+  async getUsersPaymentHistory(
+    userType: UserType,
+    page: number,
+    size: number,
+  ): Promise<PageResDto<ChargeResAdminDto>> {
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.USE,
+        user: { user_type: userType },
+        deleted_at: IsNull(),
+      },
+      relations: ['user'],
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    const mappedItems = items.map((item) => {
+      const username = item.user.username;
+      return {
+        id: item.id,
+        charge_type: item.charge_type,
+        charge_status: item.charge_status,
+        amount: item.point,
+        point: item.point,
+        user_point: item.user_point,
+        created_at: item.created_at,
+        username: username,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 12. 본인 포인트 사용 내역 조회 (사용자)
+  async getUseHistory(
+    page: number,
+    size: number,
+    userId: string,
+  ): Promise<PageResDto<ChargeResDto>> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.USE,
+        user: { id: userId },
+        deleted_at: IsNull(),
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    const mappedItems = items.map((item) => {
+      return {
+        id: item.id,
+        charge_type: item.charge_type,
+        charge_status: item.charge_status,
+        amount: item.point,
+        point: item.point,
+        user_point: user.point,
+        created_at: item.created_at,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 13. 본인 포인트 사용내역 날짜별 조회 (사용자)
+  async findUseHistoryByDateRange(
+    page: number,
+    size: number,
+    dateReqDto: DateReqDto,
+    userId: string,
+  ): Promise<PageResDto<ChargeResDto>> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const startDate = new Date(dateReqDto.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(dateReqDto.end_date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        created_at: Between(startDate, endDate),
+        payment_type: PaymentType.USE,
+        user: { id: userId },
+        deleted_at: IsNull(),
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: { created_at: 'DESC' },
+    });
+
+    const mappedItems = items.map((item) => {
+      return {
+        id: item.id,
+        charge_type: item.charge_type,
+        charge_status: item.charge_status,
+        amount: item.point,
+        point: item.point,
+        user_point: user.point,
+        created_at: item.created_at,
       };
     });
 

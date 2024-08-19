@@ -5,10 +5,12 @@ import SubHeaders from '../../../components/etc/ui/SubHeaders';
 import MainSidebar from '../../../components/etc/ui/MainSidebar';
 import Footer from '../../../components/etc/ui/Footer';
 import { Button } from 'primereact/button';
+import ImageViewer from './viewer/ImageViewer';
 import {
   listImages,
   uploadImages,
   deleteImages,
+  fetchSingleImage,
 } from '../../../services/userServices';
 
 const FileInput = ({ isDarkMode, toggleDarkMode }) => {
@@ -18,7 +20,9 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
   const [selectedImages, setSelectedImages] = useState([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [totalCost, setTotalCost] = useState(0);
-  const [point, setPoint] = useState(0); // Point state
+  const [point, setPoint] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -27,7 +31,7 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
         setImages(images);
         setTotalImages(total);
         setTotalCost(totalCost);
-        setPoint(point); // Set the point state
+        setPoint(point);
       } catch (error) {
         console.error('Failed to fetch images:', error);
       }
@@ -41,7 +45,7 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
       setImages([...images, ...response.images]);
       setTotalImages(totalImages + response.images.length);
       setTotalCost(response.totalCost);
-      setPoint(response.point); // Update the point state after upload
+      setPoint(response.point);
     } catch (error) {
       console.error('Failed to upload images:', error);
     }
@@ -61,6 +65,7 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
       setImages(images.filter((image) => !selectedImages.includes(image.id)));
       setTotalImages(totalImages - selectedImages.length);
       setSelectedImages([]);
+      setSelectedImage(null);
     } catch (error) {
       console.error('Failed to delete images:', error);
     }
@@ -74,6 +79,18 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
     );
   };
 
+  const handleImageClick = async (image) => {
+    setLoading(true);
+    try {
+      const imageUrl = await fetchSingleImage(image.id);
+      setSelectedImage({ url: imageUrl, title: image.title });
+    } catch (error) {
+      console.error('Failed to fetch image data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleSidebar = () => {
     setSidebarVisible((prev) => !prev);
   };
@@ -84,7 +101,7 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
       setImages(images);
       setTotalImages(total);
       setTotalCost(totalCost);
-      setPoint(point); // Update the point state after refresh
+      setPoint(point);
     } catch (error) {
       console.error('Failed to refresh images:', error);
     }
@@ -115,10 +132,18 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
           onDeleteSelected={handleDeleteSelected}
           images={images}
           onImageSelection={handleImageSelection}
+          onImageClick={handleImageClick} // Pass the click handler
           totalCost={totalCost}
-          point={point} // Pass the point prop to MainSidebar
+          point={point}
           onRefresh={handleRefresh}
         />
+        {loading ? (
+          <LoadingMessage>Loading image...</LoadingMessage>
+        ) : selectedImage ? (
+          <ImageViewerContainer>
+            <ImageViewer imageUrl={selectedImage.url} isDarkMode={isDarkMode} />
+          </ImageViewerContainer>
+        ) : null}
       </Content>
       <Footer />
     </Container>
@@ -139,6 +164,7 @@ const Content = styled.div`
   margin: 0 auto;
   background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
   color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
+  display: flex;
 `;
 
 const StyledButton = styled(Button)`
@@ -164,6 +190,20 @@ const StyledButton = styled(Button)`
     outline: none;
     box-shadow: 0px 0px 0px 3px rgba(0, 188, 212, 0.5);
   }
+`;
+
+const ImageViewerContainer = styled.div`
+  flex: 1;
+  margin-left: 20px;
+`;
+
+const LoadingMessage = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2em;
+  color: #666;
 `;
 
 export default FileInput;

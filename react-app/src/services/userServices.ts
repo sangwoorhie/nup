@@ -204,3 +204,19 @@ export const deleteImages = async (ids: string) => {
   const { data } = await httpClient.delete('/images', { data: { ids } });
   return data;
 };
+
+// 단일 이미지 조회
+export const fetchSingleImage = async (id: string) => {
+  try {
+    const response = await httpClient.get(`/images/view/${id}`, {
+      responseType: 'arraybuffer',
+    });
+    const contentType = response.headers['content-type'];
+    const blob = new Blob([response.data], { type: contentType });
+
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error('Failed to fetch image data:', error);
+    throw error;
+  }
+};

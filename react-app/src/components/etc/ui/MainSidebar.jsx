@@ -14,11 +14,14 @@ const MainSidebar = ({
   images,
   onImageSelection,
   totalCost,
-  point, // Ensure point is received here
+  point,
   setSelectedImages,
   onRefresh,
+  onImageClick, // New prop for handling image click
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [hoveredImage, setHoveredImage] = useState(null); // State to track hovered image
+  const [clickedImage, setClickedImage] = useState(null); // State to track clicked image
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -41,6 +44,13 @@ const MainSidebar = ({
 
   const handleCloseModal = () => {
     setIsModalVisible(false);
+  };
+
+  const handleImageClick = (image) => {
+    setClickedImage(image.id);
+    if (onImageClick) {
+      onImageClick(image);
+    }
   };
 
   return (
@@ -94,7 +104,15 @@ const MainSidebar = ({
                   checked={selectedImages.includes(image.id)}
                   onChange={() => onImageSelection(image.id)}
                 />
-                <span>{image.title}</span>
+                <ImageName
+                  onMouseEnter={() => setHoveredImage(image.id)}
+                  onMouseLeave={() => setHoveredImage(null)}
+                  onClick={() => handleImageClick(image)}
+                  isHovered={hoveredImage === image.id}
+                  isClicked={clickedImage === image.id}
+                >
+                  {image.title}
+                </ImageName>
               </SidebarListItem>
             ))}
           </SidebarList>
@@ -115,7 +133,7 @@ const MainSidebar = ({
       <AnalyzeModal
         visible={isModalVisible}
         onClose={handleCloseModal}
-        point={point} // Pass the point prop to AnalyzeModal
+        point={point}
         totalCost={totalCost}
       />
     </>
@@ -172,12 +190,6 @@ const CheckboxRow = styled.div`
   input[type='checkbox'] {
     margin-top: 15px; /* Lower the checkbox */
     margin-right: 5px;
-    margin-right: 80px;
-  }
-
-  span {
-    margin-left: 5px;
-    margin-top: 10px; /* Ensure the text remains in its original position */
   }
 `;
 
@@ -231,11 +243,13 @@ const AnalyzeButton = styled.button`
 const TotalText = styled.span`
   font-weight: bold;
   color: blue;
-  margin-left: 30px; /* Adjust the space as per your need */
+  margin-left: 20px;
+  margin-top: 10px;
 `;
 
 const SelectText = styled.span`
   margin-right: 10px;
+  margin-top: 10px;
   margin-left: 10px;
 `;
 
@@ -249,6 +263,21 @@ const RefreshButton = styled.button`
   img {
     width: 10px;
     height: 10px;
+  }
+`;
+
+const ImageName = styled.span`
+  cursor: pointer;
+  text-decoration: none; /* Remove underline */
+  background-color: ${(props) =>
+    props.isClicked ? '#004494' : props.isHovered ? '#34609e' : 'transparent'};
+  color: ${(props) =>
+    props.isClicked ? '#fff' : 'inherit'}; /* White text if clicked */
+
+  &:hover {
+    background-color: ${(props) =>
+      props.isClicked ? '#004494' : '#34609e'}; /* Lighter shade of #004494 */
+    color: #fff; /* White text on hover */
   }
 `;
 

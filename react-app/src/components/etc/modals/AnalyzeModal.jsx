@@ -64,6 +64,7 @@ const AnalyzeModal = ({ visible, onClose, point, totalCost }) => {
     </ModalOverlay>
   );
 };
+
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;

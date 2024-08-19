@@ -12,6 +12,7 @@ import {
   Query,
   Header,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -121,7 +122,14 @@ export class ImagesController {
     @Res() res: Response,
     @User() user: UserAfterAuth,
   ) {
-    const imageStream = await this.imagesService.viewImage(id, user.id);
+    const { imageStream, contentType } = await this.imagesService.viewImage(
+      id,
+      user.id,
+    );
+    if (!imageStream) {
+      throw new NotFoundException('이미지를 찾을 수 없습니다.');
+    }
+    res.setHeader('Content-Type', contentType);
     imageStream.pipe(res);
   }
 

@@ -207,7 +207,10 @@ export class ImagesService {
   }
 
   // 3. 단일 이미지 보기
-  async viewImage(id: string, userId: string): Promise<Readable> {
+  async viewImage(
+    id: string,
+    userId: string,
+  ): Promise<{ imageStream: Readable; contentType: string }> {
     const image = await this.imageRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -230,7 +233,10 @@ export class ImagesService {
 
     try {
       const response = await this.s3.send(command);
-      return response.Body as unknown as Readable;
+      const contentType =
+        response.ContentType || this.getContentType(image.image_path);
+
+      return { imageStream: response.Body as unknown as Readable, contentType };
     } catch (error) {
       if (error.name === 'NoSuchKey') {
         throw new NotFoundException('이미지를 찾을 수 없습니다.');
@@ -239,6 +245,21 @@ export class ImagesService {
           '이미지를 가져오는 중 오류가 발생했습니다.',
         );
       }
+    }
+  }
+
+  private getContentType(filePath: string): string {
+    const extension = filePath.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'gif':
+        return 'image/gif';
+      default:
+        return 'application/octet-stream'; // fallback content type
     }
   }
 

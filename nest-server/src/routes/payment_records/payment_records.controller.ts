@@ -195,4 +195,81 @@ export class PaymentRecordsController {
       size,
     );
   }
+
+  // 10. 개인회원 결제내역 조회 (관리자)
+  // GET : localhost:3000/payment-records/admin/payment-history/individual?page=1&size=20
+  @Get('admin/payment-history/individual')
+  @Usertype(UserType.ADMIN)
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiOperation({ summary: '개인회원 결제내역 조회 (관리자)' })
+  @ApiResponse({ status: 200, description: '성공' })
+  async getIndividualUsersPaymentHistory(@Query() pageReqDto: PageReqDto) {
+    const { page, size } = pageReqDto;
+    return await this.paymentRecordsService.getUsersPaymentHistory(
+      UserType.INDIVIDUAL,
+      page,
+      size,
+    );
+  }
+
+  // 11. 사업자회원 결제내역 조회 (관리자)
+  // GET : localhost:3000/payment-records/admin/payment-history/corporate?page=1&size=20
+  @Get('admin/payment-history/corporate')
+  @Usertype(UserType.ADMIN)
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiOperation({ summary: '사업자회원 결제내역 조회 (관리자)' })
+  @ApiResponse({ status: 200, description: '성공' })
+  async getCorporateUsersPaymentHistory(@Query() pageReqDto: PageReqDto) {
+    const { page, size } = pageReqDto;
+    return await this.paymentRecordsService.getUsersPaymentHistory(
+      UserType.CORPORATE,
+      page,
+      size,
+    );
+  }
+
+  // 12. 본인 포인트 사용 내역 조회 (사용자)
+  // GET : localhost:3000/payment-records/use?page=1&size=20
+  @Get('use')
+  @ApiOperation({ summary: '본인 포인트 사용 내역 조회 (사용자)' })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiResponse({ status: 200, description: '성공', type: PageResDto })
+  async getUseHistory(
+    @Query() pageReqDto: PageReqDto,
+    @User() user: UserAfterAuth,
+  ) {
+    const { page, size } = pageReqDto;
+    return await this.paymentRecordsService.getUseHistory(page, size, user.id);
+  }
+
+  // 13. 본인 포인트 사용내역 날짜별 조회 (사용자)
+  // GET : localhost:3000/payment-records/use/date-range?page=1&size=10&start_date=2023-01-01&end_date=2023-12-31
+  @Get('use/date-range')
+  @ApiOperation({ summary: '본인 포인트 사용내역 날짜별 조회 (사용자)' })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiQuery({ name: 'start_date', required: true, description: '사용 시작일' })
+  @ApiQuery({ name: 'end_date', required: true, description: '사용 종료일' })
+  @ApiResponse({ status: 200, description: '성공', type: PageResDto })
+  async findUseHistoryByDateRange(
+    @Query() { page, size }: PageReqDto,
+    @Query('start_date') start_date: string,
+    @Query('end_date') end_date: string,
+    @User() user: UserAfterAuth,
+  ) {
+    const dateReqDto: DateReqDto = {
+      start_date: new Date(start_date),
+      end_date: new Date(end_date),
+    };
+
+    return await this.paymentRecordsService.findUseHistoryByDateRange(
+      page,
+      size,
+      dateReqDto,
+      user.id,
+    );
+  }
 }
