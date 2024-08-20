@@ -30,6 +30,7 @@ import { Image } from 'src/entities/image.entity';
 import { Response } from 'express';
 import {
   DeleteImagesReqDto,
+  DetectImagesReqDto,
   DownloadImagesReqDto,
   ViewImagesReqDto,
 } from './dto/req.dto';
@@ -40,7 +41,7 @@ import { isUUID } from 'class-validator';
 
 @ApiTags('Images')
 @Controller('images')
-export class ImagesController {
+export default class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
   // 1. 이미지 파일 업로드 (다중 파일 업로드 가능)
@@ -193,5 +194,28 @@ export class ImagesController {
     @User() user: UserAfterAuth,
   ) {
     return this.imagesService.deleteImages(deleteImagesDto.ids, user.id);
+  }
+
+  // 7. 이미지 감지 및 포인트 차감
+  // POST : localhost:3000/images/detect { "ids": ["id1","id2", "id3"] }
+  @Post('detect')
+  @ApiOperation({ summary: '이미지 감지 및 포인트 차감' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 감지했습니다.',
+  })
+  async detectImages(
+    @Body() detectImagesDto: ViewImagesReqDto, // Reuse DTO for listing images
+    @User() user: UserAfterAuth,
+  ) {
+    const { detectedImages, usedPoints, remainingPoints } =
+      await this.imagesService.detectImages(detectImagesDto.ids, user.id);
+
+    return {
+      message: 'Images detected successfully.',
+      detectedImages,
+      usedPoints,
+      remainingPoints,
+    };
   }
 }

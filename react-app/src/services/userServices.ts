@@ -220,3 +220,42 @@ export const fetchSingleImage = async (id: string) => {
     throw error;
   }
 };
+
+// 날짜별 포인트 사용내역 조회
+export const findUseHistoryByDateRange = async (
+  start_date: string,
+  end_date: string,
+  page = 1,
+  size = 10
+) => {
+  try {
+    const response = await httpClient.get(
+      `/payment-records/use/date-range?start_date=${start_date}&end_date=${end_date}&page=${page}&size=${size}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    // const message =
+    //   error.response?.data?.message ||
+    //   error.message ||
+    //   'Failed to fetch use history by date range';
+    // throw new Error(message);
+  }
+};
+
+// 포인트 사용내역 조회
+export const getUseHistory = async (page: number, size: number) => {
+  try {
+    const response = await httpClient.get(
+      `/payment-records/use?page=${page}&size=${size}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    // const message =
+    //   error.response?.data?.message ||
+    //   error.message ||
+    //   'Failed to fetch use history';
+    // throw new Error(message);
+  }
+};

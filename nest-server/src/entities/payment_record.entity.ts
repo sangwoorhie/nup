@@ -52,6 +52,11 @@ export class PaymentRecord {
   @Column({ type: 'int', nullable: true })
   user_point: number;
 
+  // 디텍팅된 이미지의 갯수
+  @ApiProperty({ description: '디텍팅된 이미지의 갯수' })
+  @Column({ type: 'int', nullable: true })
+  detected_images_count: number;
+
   // 거래 상태
   @ApiProperty({ description: '거래 상태' })
   @Column({

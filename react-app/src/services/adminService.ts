@@ -287,3 +287,38 @@ export const downloadBusinessLicenseAdmin = async (corporateId: string) => {
 
   return { fileBuffer: response.data, fileName };
 };
+
+// 유저 포인트 사용내역 조회 (관리자)
+export const getUserPointUse = async (
+  userId: string,
+  page: number,
+  size: number
+) => {
+  return httpClient.get(
+    `/payment-records/admin/use/${userId}?page=${page}&size=${size}`
+  );
+};
+
+// 개인회원 결제기록 조회 (관리자)
+export const getIndividualUsersPaymentHistory = async (
+  page: number,
+  size: number
+) => {
+  const response = await httpClient.get(
+    `/payment-records/admin/payment-history/individual?page=${page}&size=${size}`
+  );
+  return response.data;
+};
+
+// 개인회원 결제기록 날짜별 조회 (관리자)
+export const findIndividualUsersPaymentHistoryByDateRange = async (
+  page: number,
+  size: number,
+  startDate: string,
+  endDate: string
+) => {
+  const response = await httpClient.get(
+    `/payment-records/admin/payment-history/individual/date-range?page=${page}&size=${size}&start_date=${startDate}&end_date=${endDate}`
+  );
+  return response.data;
+};

@@ -21,6 +21,8 @@ import {
   AdminChargeResDto,
   ChargeResAdminDto,
   ChargeResDto,
+  UseResAdminDto,
+  UseResDto,
 } from './dto/res.dto';
 import { createTransporter } from 'src/config/mailer.config';
 import * as moment from 'moment-timezone';
@@ -441,7 +443,7 @@ export class PaymentRecordsService {
     userType: UserType,
     page: number,
     size: number,
-  ): Promise<PageResDto<ChargeResAdminDto>> {
+  ): Promise<PageResDto<UseResAdminDto>> {
     const [items, total] = await this.paymentRecordRepository.findAndCount({
       where: {
         payment_type: PaymentType.USE,
@@ -460,13 +462,12 @@ export class PaymentRecordsService {
       const username = item.user.username;
       return {
         id: item.id,
-        charge_type: item.charge_type,
-        charge_status: item.charge_status,
-        amount: item.point,
-        point: item.point,
-        user_point: item.user_point,
-        created_at: item.created_at,
+        user_point: item.user.point,
         username: username,
+        detected_images_count: item.detected_images_count,
+        point: item.point,
+        user_point_after: item.user_point,
+        created_at: item.created_at,
       };
     });
 
@@ -478,12 +479,60 @@ export class PaymentRecordsService {
     };
   }
 
-  // 12. 본인 포인트 사용 내역 조회 (사용자)
+  // 12, 13. 개인회원, 사업자회원 결제내역 날짜별 조회 (관리자)
+  async findUsersPaymentHistoryByDateRange(
+    userType: UserType,
+    page: number,
+    size: number,
+    dateReqDto: DateReqDto,
+  ): Promise<PageResDto<UseResAdminDto>> {
+    const startDate = new Date(dateReqDto.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(dateReqDto.end_date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.USE,
+        user: { user_type: userType },
+        created_at: Between(startDate, endDate),
+        deleted_at: IsNull(),
+      },
+      relations: ['user'],
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    const mappedItems = items.map((item) => {
+      const username = item.user.username;
+      return {
+        id: item.id,
+        user_point: item.user.point,
+        username: username,
+        detected_images_count: item.detected_images_count,
+        point: item.point,
+        user_point_after: item.user_point,
+        created_at: item.created_at,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 14. 본인 포인트 사용 내역 조회 (사용자)
   async getUseHistory(
     page: number,
     size: number,
     userId: string,
-  ): Promise<PageResDto<ChargeResDto>> {
+  ): Promise<PageResDto<UseResDto>> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new BadRequestException('User not found');
@@ -505,11 +554,10 @@ export class PaymentRecordsService {
     const mappedItems = items.map((item) => {
       return {
         id: item.id,
-        charge_type: item.charge_type,
-        charge_status: item.charge_status,
-        amount: item.point,
-        point: item.point,
         user_point: user.point,
+        detected_images_count: item.detected_images_count,
+        point: item.point,
+        user_point_after: item.user_point,
         created_at: item.created_at,
       };
     });
@@ -522,13 +570,13 @@ export class PaymentRecordsService {
     };
   }
 
-  // 13. 본인 포인트 사용내역 날짜별 조회 (사용자)
+  // 15. 본인 포인트 사용내역 날짜별 조회 (사용자)
   async findUseHistoryByDateRange(
     page: number,
     size: number,
     dateReqDto: DateReqDto,
     userId: string,
-  ): Promise<PageResDto<ChargeResDto>> {
+  ): Promise<PageResDto<UseResDto>> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new BadRequestException('User not found');
@@ -554,11 +602,55 @@ export class PaymentRecordsService {
     const mappedItems = items.map((item) => {
       return {
         id: item.id,
-        charge_type: item.charge_type,
-        charge_status: item.charge_status,
-        amount: item.point,
-        point: item.point,
         user_point: user.point,
+        detected_images_count: item.detected_images_count,
+        point: item.point,
+        user_point_after: item.user_point,
+        created_at: item.created_at,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 16. 회원 포인트 사용내역 조회 (관리자)
+  async getUserPointUse(
+    userId: string,
+    page: number,
+    size: number,
+  ): Promise<PageResDto<UseResDto>> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    const username = user.username;
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.USE,
+        user: { id: userId },
+        deleted_at: IsNull(),
+      },
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    const mappedItems = items.map((item) => {
+      return {
+        id: item.id,
+        username: username,
+        user_point: user.point,
+        detected_images_count: item.detected_images_count,
+        point: item.point,
+        user_point_after: item.user_point,
         created_at: item.created_at,
       };
     });

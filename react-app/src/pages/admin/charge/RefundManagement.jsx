@@ -135,6 +135,10 @@ const RefundManagement = ({ isDarkMode, toggleDarkMode }) => {
     }
   };
 
+  const formatDate = (dateString) => {
+    return dateString.split('T')[0];
+  };
+
   return (
     <Container isDarkMode={isDarkMode}>
       <MainHeader
@@ -171,7 +175,11 @@ const RefundManagement = ({ isDarkMode, toggleDarkMode }) => {
               style={{ width: '3em' }}
               body={() => <Checkbox />}
             />
-            <Column field='requested_at' header='환불 요청 일시' />
+            <Column
+              field='requested_at'
+              header='환불 요청 일시'
+              body={(rowData) => formatDate(rowData.requested_at)}
+            />
             <Column
               field='is_refunded'
               header='환불 상태'

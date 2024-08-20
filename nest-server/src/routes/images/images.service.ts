@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { Image } from 'src/entities/image.entity';
-import { ImageStatus } from 'src/enums/enums';
+import { ChargeStatus, ImageStatus, PaymentType } from 'src/enums/enums';
 import {
   S3Client,
   GetObjectCommand,
@@ -30,6 +30,7 @@ import { PassThrough, Readable } from 'stream';
 import { decode } from 'iconv-lite';
 import * as sharp from 'sharp';
 import * as dotenv from 'dotenv';
+import { PaymentRecord } from 'src/entities/payment_record.entity';
 dotenv.config();
 
 @Injectable()
@@ -43,6 +44,8 @@ export class ImagesService {
     private readonly configService: ConfigService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(PaymentRecord)
+    private readonly paymentRecordRepository: Repository<PaymentRecord>,
   ) {
     this.s3 = new S3Client({
       region: this.configService.get<string>('AWS_REGION'),
@@ -418,6 +421,95 @@ export class ImagesService {
       await queryRunner.rollbackTransaction();
       error = e;
       console.error(error);
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // 7. 이미지 감지 및 포인트 차감
+  async detectImages(
+    imageIds: string[],
+    userId: string,
+  ): Promise<{
+    detectedImages: Image[];
+    usedPoints: number;
+    remainingPoints: number;
+  }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) throw new UnauthorizedException('회원이 존재하지 않습니다.');
+
+      const images = await this.imageRepository.find({
+        where: { id: In(imageIds), user: { id: userId } },
+      });
+
+      if (images.length === 0) {
+        throw new NotFoundException('이미지 파일을 찾을 수 없습니다.');
+      }
+
+      let totalCost = 0;
+
+      for (const image of images) {
+        // Get the image dimensions from S3
+        const command = new GetObjectCommand({
+          Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+          Key: image.image_path,
+        });
+
+        const response = await this.s3.send(command);
+        const stream = response.Body as unknown as Readable;
+        const buffer = await this.streamToBuffer(stream);
+        const metadata = await sharp(buffer).metadata();
+
+        const cost = this.calculateCost(metadata.width, metadata.height);
+        totalCost += cost;
+      }
+
+      if (user.point < totalCost) {
+        throw new BadRequestException('포인트가 부족합니다.');
+      }
+
+      // Deduct points and update images status
+      user.point -= totalCost;
+      await queryRunner.manager.save(user);
+
+      const detectedImages = [];
+      for (const image of images) {
+        image.status = ImageStatus.DETECT_SUCCEED;
+        image.is_detected = true;
+        image.detected_at = new Date();
+        detectedImages.push(await queryRunner.manager.save(image));
+      }
+
+      // Log point usage in the PaymentRecord
+      const paymentRecord = this.paymentRecordRepository.create({
+        user: user,
+        payment_type: PaymentType.USE,
+        point: -totalCost,
+        user_point: user.point,
+        detected_images_count: images.length,
+        charge_status: ChargeStatus.CONFIRMED,
+        created_at: new Date(),
+      });
+
+      await queryRunner.manager.save(paymentRecord);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        detectedImages: detectedImages,
+        usedPoints: totalCost,
+        remainingPoints: user.point,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
     } finally {
       await queryRunner.release();
       if (error) throw error;

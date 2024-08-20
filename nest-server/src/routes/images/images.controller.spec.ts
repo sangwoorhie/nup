@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ImagesController } from './images.controller';
+import ImagesController from './images.controller';
 import { ImagesService } from './images.service';
 
 describe('ImagesController', () => {

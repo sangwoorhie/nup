@@ -9,6 +9,8 @@ import {
   unbanCorporateUser,
   verifyBusinessLicense,
   downloadBusinessLicenseAdmin,
+  getUserChargeRequest,
+  getUserPointUse,
 } from '../../../services/adminService';
 import { Paginator } from 'primereact/paginator';
 import refreshImage from '../../../assets/img/refresh_icon.png';
@@ -25,6 +27,20 @@ const CorporateUserManagement = ({ isDarkMode, toggleDarkMode }) => {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [activeHeader, setActiveHeader] = useState('계정 관리');
   const [selectedUser, setSelectedUser] = useState(null); // State to manage selected user
+  const [selectedUserInfo, setSelectedUserInfo] = useState(null);
+
+  const [chargeHistory, setChargeHistory] = useState([]);
+  const [chargeTotal, setChargeTotal] = useState(0);
+  const [chargePage, setChargePage] = useState(0);
+  const [chargePageSize, setChargePageSize] = useState(10);
+  const [chargeTotalRecords, setChargeTotalRecords] = useState(0);
+
+  const [useHistory, setUseHistory] = useState([]);
+  const [useTotal, setUseTotal] = useState(0);
+  const [usePage, setUsePage] = useState(0);
+  const [usePageSize, setUsePageSize] = useState(10);
+  const [useTotalRecords, setUseTotalRecords] = useState(0);
+  const [showUseHistory, setShowUseHistory] = useState(false);
 
   // Fetch functions
   const fetchUsers = useCallback(
@@ -49,6 +65,44 @@ const CorporateUserManagement = ({ isDarkMode, toggleDarkMode }) => {
       }
     },
     [page, pageSize]
+  );
+
+  const fetchChargeHistory = useCallback(
+    async (userId) => {
+      try {
+        const { data } = await getUserChargeRequest(
+          userId,
+          chargePage + 1,
+          chargePageSize
+        );
+        setChargeHistory(data.items);
+        setChargeTotal(data.total);
+        setChargeTotalRecords(data.total);
+      } catch (error) {
+        console.error('Error fetching charge history:', error);
+        alert('충전 내역을 불러오는 데 실패했습니다.' + error.message);
+      }
+    },
+    [chargePage, chargePageSize]
+  );
+
+  const fetchUseHistory = useCallback(
+    async (userId) => {
+      try {
+        const { data } = await getUserPointUse(
+          userId,
+          usePage + 1,
+          usePageSize
+        );
+        setUseHistory(data.items);
+        setUseTotal(data.total);
+        setUseTotalRecords(data.total);
+      } catch (error) {
+        console.error('Error fetching use history:', error);
+        alert('사용 내역을 불러오는 데 실패했습니다.' + error.message);
+      }
+    },
+    [usePage, usePageSize]
   );
 
   useEffect(() => {
@@ -154,6 +208,176 @@ const CorporateUserManagement = ({ isDarkMode, toggleDarkMode }) => {
     window.location.reload(); // Reload the page
   };
 
+  const handleViewChargeHistory = async (user) => {
+    setSelectedUser(user);
+    setShowUseHistory(false);
+    await fetchChargeHistory(user.userId);
+  };
+
+  const handleViewUseHistory = async (user) => {
+    setSelectedUser(user);
+    setShowUseHistory(true);
+    await fetchUseHistory(user.userId);
+  };
+
+  const handleBackToUserList = () => {
+    setSelectedUser(null);
+    setShowUseHistory(false);
+  };
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    return new Date(dateString).toLocaleDateString('ko-KR', options);
+  };
+
+  // JSX rendering
+  if (selectedUser) {
+    if (showUseHistory) {
+      return (
+        <Container>
+          <MainHeader
+            setActiveHeader={setActiveHeader}
+            userType='admin'
+            toggleDarkMode={toggleDarkMode}
+            isDarkMode={isDarkMode}
+          />
+          <SubHeaders activeHeader={activeHeader} userType='admin' />
+          <Header>
+            <h2>{selectedUser.username} 회원의 포인트 사용 내역</h2>
+          </Header>
+          <UserContent isDarkMode={isDarkMode}>
+            <MiddleWrapper>
+              <TotalCount>총 {useTotal}건</TotalCount>
+              <ButtonContainer>
+                <button onClick={handleBackToUserList}>뒤로가기</button>
+              </ButtonContainer>
+            </MiddleWrapper>
+            <TableWrapper>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>사용 일시</th>
+                    <th>이미지 장수</th>
+                    <th>사용 포인트</th>
+                    <th>사용 후 포인트</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {useHistory.map((record) => (
+                    <tr key={record.id}>
+                      <td>{formatDate(record.created_at)}</td>
+                      <td>{record.detected_images_count}장</td>
+                      <td>{formatPoints(Math.abs(record.point))}</td>
+                      <td>{formatPoints(record.user_point_after)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Pagination>
+                <Paginator
+                  first={usePage * usePageSize}
+                  rows={usePageSize}
+                  totalRecords={useTotalRecords}
+                  rowsPerPageOptions={[10, 20, 30]}
+                  onPageChange={(e) => {
+                    setUsePage(e.page);
+                    setUsePageSize(e.rows);
+                    fetchUseHistory(selectedUser.id);
+                  }}
+                />
+              </Pagination>
+            </TableWrapper>
+          </UserContent>
+          <Footer />
+        </Container>
+      );
+    } else {
+      return (
+        <Container>
+          <MainHeader
+            setActiveHeader={setActiveHeader}
+            userType='admin'
+            toggleDarkMode={toggleDarkMode}
+            isDarkMode={isDarkMode}
+          />
+          <SubHeaders activeHeader={activeHeader} userType='admin' />
+          <Header>
+            <h2>{selectedUser.username} 회원의 포인트 충전 내역</h2>
+            <div>잔여 포인트: {formatPoints(selectedUser.point)}</div>
+          </Header>
+          <UserContent isDarkMode={isDarkMode}>
+            <MiddleWrapper>
+              <TotalCount>총 {chargeTotal}건</TotalCount>
+              <ButtonContainer>
+                <button onClick={handleBackToUserList}>뒤로가기</button>
+              </ButtonContainer>
+            </MiddleWrapper>
+            <TableWrapper>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>충전 일시</th>
+                    <th>충전 상태</th>
+                    <th>충전 유형</th>
+                    <th>온라인 영수증</th>
+                    <th>충전 금액</th>
+                    <th>충전 포인트</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chargeHistory.map((record) => (
+                    <tr key={record.id}>
+                      <td>{formatDate(record.created_at)}</td>
+                      <td>
+                        {record.charge_status === 'pending'
+                          ? '대기중'
+                          : record.charge_status === 'confirmed'
+                            ? '충전 완료'
+                            : '반려'}
+                      </td>
+                      <td>
+                        {record.charge_type === 'card'
+                          ? '카드 충전'
+                          : record.charge_type === 'cash'
+                            ? '현금 충전'
+                            : record.charge_type === 'paypal'
+                              ? '페이팔 충전'
+                              : '쿠폰 충전'}
+                      </td>
+                      <td>
+                        <button>온라인 영수증</button>
+                      </td>
+                      <td>
+                        {record.charge_type === 'coupon'
+                          ? '-'
+                          : formatCurrency(record.amount)}
+                      </td>
+                      <td>{formatPoints(record.point)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+              <Pagination>
+                <Paginator
+                  first={chargePage * chargePageSize}
+                  rows={chargePageSize}
+                  totalRecords={chargeTotalRecords}
+                  rowsPerPageOptions={[10, 20, 30]}
+                  onPageChange={(e) => {
+                    setChargePage(e.page);
+                    setChargePageSize(e.rows);
+                    fetchChargeHistory(selectedUser.id);
+                  }}
+                />
+              </Pagination>
+            </TableWrapper>
+          </UserContent>
+          <Footer />
+        </Container>
+      );
+    }
+  }
+
   return (
     <Container>
       <MainHeader
@@ -233,16 +457,20 @@ const CorporateUserManagement = ({ isDarkMode, toggleDarkMode }) => {
                 <td>{user.business_license_verified ? '확인' : '미확인'}</td>
                 <td>{user.address}</td>
                 <td>
-                  <button onClick={() => setSelectedUser(user)}>
+                  <button onClick={() => setSelectedUserInfo(user)}>
                     회원 정보
                   </button>
                 </td>
                 <td>{user.banned ? <FaCheck /> : ''}</td>
                 <td>
-                  <button>충전 내역</button>
+                  <button onClick={() => handleViewChargeHistory(user)}>
+                    충전 내역
+                  </button>
                 </td>
                 <td>
-                  <button>사용 내역</button>
+                  <button onClick={() => handleViewUseHistory(user)}>
+                    사용 내역
+                  </button>
                 </td>
               </tr>
             ))}
@@ -265,8 +493,8 @@ const CorporateUserManagement = ({ isDarkMode, toggleDarkMode }) => {
       </Content>
       <Footer />
       <UserInfoModal
-        user={selectedUser}
-        onClose={() => setSelectedUser(null)}
+        user={selectedUserInfo}
+        onClose={() => setSelectedUserInfo(null)}
       />
     </Container>
   );
@@ -279,6 +507,10 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100vh;
+
+  button {
+    cursor: pointer;
+  }
 `;
 
 const Content = styled.div`
@@ -389,3 +621,56 @@ const TdCorporateName = styled.td`
     return isDarkMode ? 'white' : 'black';
   }};
 `;
+
+const Header = styled.div`
+  text-align: center;
+  background-color: #33556d;
+  padding: 50px;
+
+  h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+  }
+  div {
+    margin-top: 20px;
+    font-size: 16px;
+    color: white;
+  }
+`;
+
+const UserContent = styled.div`
+  flex: 1;
+  padding: 20px;
+  margin-top: 10px;
+  background-color: white;
+  width: 100%;
+  margin: 0 auto;
+  background-color: ${({ isDarkMode }) => (isDarkMode ? '#212121' : '#fff')};
+  color: ${({ isDarkMode }) => (isDarkMode ? '#fff' : '#000')};
+`;
+
+const TotalCount = styled.div`
+  font-size: 16px;
+  display: inline-block;
+`;
+
+const MiddleWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 80%;
+  margin: 0 auto;
+`;
+
+const TableWrapper = styled.div`
+  margin: 0 auto;
+  width: 100%;
+`;
+
+const formatPoints = (points) =>
+  points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + 'P';
+const formatCurrency = (amount) =>
+  amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';

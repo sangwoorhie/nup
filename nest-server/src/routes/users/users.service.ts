@@ -364,6 +364,7 @@ export class UsersService {
 
     const items = corporates.map((corporate) => ({
       id: corporate.id,
+      userId: corporate.user.id,
       corporate_type: corporate.corporate_type,
       corporate_name: corporate.corporate_name,
       business_type: corporate.business_type,
@@ -428,6 +429,7 @@ export class UsersService {
 
     const items = corporates.map((corporate) => ({
       id: corporate.id,
+      userId: corporate.user.id,
       corporate_type: corporate.corporate_type,
       corporate_name: corporate.corporate_name,
       business_type: corporate.business_type,

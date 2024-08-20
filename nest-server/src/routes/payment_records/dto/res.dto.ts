@@ -146,3 +146,62 @@ export class ChargeResAdminDto {
   @IsDate()
   readonly created_at: Date;
 }
+
+export class UseResDto {
+  // 거래 ID
+  @ApiProperty({ description: '거래 ID' })
+  @IsUUID()
+  id: string;
+
+  // 유저 포인트
+  @ApiProperty({ description: '유저의 포인트' })
+  @IsNumber()
+  readonly user_point: number;
+
+  // 디텍팅된 이미지의 갯수
+  @ApiProperty({ description: '디텍팅된 이미지의 갯수' })
+  @IsNumber()
+  readonly detected_images_count: number;
+
+  // 사용 포인트
+  @ApiProperty({ description: '사용 포인트' })
+  @IsNumber()
+  readonly point: number;
+
+  // 사용 일시
+  @ApiProperty({ description: '사용 일시' })
+  @IsDate()
+  readonly created_at: Date;
+}
+
+export class UseResAdminDto {
+  // 거래 ID
+  @ApiProperty({ description: '거래 ID' })
+  @IsUUID()
+  id: string;
+
+  // 회원 이름
+  @ApiProperty({ description: '회원 이름' })
+  @IsString()
+  readonly username: string;
+
+  // 유저 포인트
+  @ApiProperty({ description: '유저의 포인트' })
+  @IsNumber()
+  readonly user_point: number;
+
+  // 디텍팅된 이미지의 갯수
+  @ApiProperty({ description: '디텍팅된 이미지의 갯수' })
+  @IsNumber()
+  readonly detected_images_count: number;
+
+  // 사용 포인트
+  @ApiProperty({ description: '사용 포인트' })
+  @IsNumber()
+  readonly point: number;
+
+  // 사용 일시
+  @ApiProperty({ description: '사용 일시' })
+  @IsDate()
+  readonly created_at: Date;
+}

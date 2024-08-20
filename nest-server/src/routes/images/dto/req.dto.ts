@@ -21,3 +21,10 @@ export class DeleteImagesReqDto {
   @IsUUID('all', { each: true })
   readonly ids: string[];
 }
+
+export class DetectImagesReqDto {
+  @ApiProperty({ description: '이미지 ID 목록', type: [String] })
+  @IsArray()
+  @IsUUID('all', { each: true })
+  readonly ids: string[];
+}

@@ -119,7 +119,9 @@ const MainSidebar = ({
 
           <SidebarFooter>
             <TotalCost>총 결제 포인트: {totalCost.toLocaleString()}P</TotalCost>
-            <AnalyzeButton onClick={handleAnalyzeClick}>분석하기</AnalyzeButton>
+            <AnalyzeButton onClick={handleAnalyzeClick}>
+              분석 실행
+            </AnalyzeButton>
           </SidebarFooter>
         </SidebarContent>
         <input

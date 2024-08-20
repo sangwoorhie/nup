@@ -134,11 +134,11 @@ const CouponGuidelines = styled.ul`
 `;
 
 const Form = styled.div`
-  margin-top: 30px;
+  margin-top: 60px;
   background: #f9f9f9;
   width: 400px;
   height: 250px;
-  padding: 20px;
+  padding: 40px;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   display: flex;

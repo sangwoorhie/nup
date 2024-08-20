@@ -51,6 +51,10 @@ export class FindCorpUserResDto {
   readonly id: string;
 
   @ApiProperty({ required: true })
+  @IsString()
+  readonly userId: string;
+
+  @ApiProperty({ required: true })
   @IsEnum(CorporateType)
   readonly corporate_type: CorporateType;
 
