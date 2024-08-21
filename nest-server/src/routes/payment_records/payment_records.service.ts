@@ -22,6 +22,7 @@ import {
   ChargeResAdminDto,
   ChargeResDto,
   UseResAdminDto,
+  UseResCorpAdminDto,
   UseResDto,
 } from './dto/res.dto';
 import { createTransporter } from 'src/config/mailer.config';
@@ -438,8 +439,8 @@ export class PaymentRecordsService {
     };
   }
 
-  // 10, 11. 개인회원, 사업자회원 결제내역 조회 (관리자)
-  async getUsersPaymentHistory(
+  // 10 개인회원 결제내역 조회 (관리자)
+  async getIndividualUsersPaymentHistory(
     userType: UserType,
     page: number,
     size: number,
@@ -463,6 +464,7 @@ export class PaymentRecordsService {
       return {
         id: item.id,
         user_point: item.user.point,
+        email: item.user.email,
         username: username,
         detected_images_count: item.detected_images_count,
         point: item.point,
@@ -479,8 +481,51 @@ export class PaymentRecordsService {
     };
   }
 
-  // 12, 13. 개인회원, 사업자회원 결제내역 날짜별 조회 (관리자)
-  async findUsersPaymentHistoryByDateRange(
+  // 11. 사업자회원 결제내역 조회 (관리자)
+  async getCorporateUsersPaymentHistory(
+    userType: UserType,
+    page: number,
+    size: number,
+  ): Promise<PageResDto<UseResCorpAdminDto>> {
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.USE,
+        user: { user_type: userType },
+        deleted_at: IsNull(),
+      },
+      relations: ['user', 'user.corporate'],
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    const mappedItems = items.map((item) => {
+      const corporate_name = item.user.corporate?.corporate_name;
+      return {
+        id: item.id,
+        user_point: item.user.point,
+        email: item.user.email,
+        username: item.user.username,
+        corporate_name: corporate_name,
+        detected_images_count: item.detected_images_count,
+        point: item.point,
+        user_point_after: item.user_point,
+        created_at: item.created_at,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 12 개인회원 결제내역 날짜별 조회 (관리자)
+  async findIndividualUsersPaymentHistoryByDateRange(
     userType: UserType,
     page: number,
     size: number,
@@ -511,7 +556,58 @@ export class PaymentRecordsService {
       return {
         id: item.id,
         user_point: item.user.point,
+        email: item.user.email,
         username: username,
+        detected_images_count: item.detected_images_count,
+        point: item.point,
+        user_point_after: item.user_point,
+        created_at: item.created_at,
+      };
+    });
+
+    return {
+      page,
+      size,
+      total,
+      items: mappedItems,
+    };
+  }
+
+  // 13. 사업자회원 결제내역 날짜별 조회 (관리자)
+  async findCorporateUsersPaymentHistoryByDateRange(
+    userType: UserType,
+    page: number,
+    size: number,
+    dateReqDto: DateReqDto,
+  ): Promise<PageResDto<UseResCorpAdminDto>> {
+    const startDate = new Date(dateReqDto.start_date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(dateReqDto.end_date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const [items, total] = await this.paymentRecordRepository.findAndCount({
+      where: {
+        payment_type: PaymentType.USE,
+        user: { user_type: userType },
+        created_at: Between(startDate, endDate),
+        deleted_at: IsNull(),
+      },
+      relations: ['user', 'user.corporate'],
+      skip: (page - 1) * size,
+      take: size,
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    const mappedItems = items.map((item) => {
+      const corporate_name = item.user.corporate?.corporate_name;
+      return {
+        id: item.id,
+        user_point: item.user.point,
+        email: item.user.email,
+        username: item.user.username,
+        corporate_name: corporate_name,
         detected_images_count: item.detected_images_count,
         point: item.point,
         user_point_after: item.user_point,

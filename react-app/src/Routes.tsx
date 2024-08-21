@@ -28,6 +28,7 @@ import RefundHistory from './pages/user/point/RefundHistory';
 import FileInput from './pages/user/image/FileInput';
 import UseHistory from './pages/user/point/UseHistory';
 import IndividualUserPointUse from './pages/admin/charge/IndividualUserPointUse';
+import CorporateUserPointUse from './pages/admin/charge/CorporateUserPointUse';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -159,6 +160,15 @@ const MainRoutes: React.FC<MainRoutesProps> = ({
       path='/individual-payments'
       element={
         <IndividualUserPointUse
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      }
+    />
+    <Route
+      path='/corporate-payments'
+      element={
+        <CorporateUserPointUse
           isDarkMode={isDarkMode}
           toggleDarkMode={toggleDarkMode}
         />

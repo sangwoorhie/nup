@@ -322,3 +322,27 @@ export const findIndividualUsersPaymentHistoryByDateRange = async (
   );
   return response.data;
 };
+
+// 사업자회원 결제기록 조회 (관리자)
+export const getCorporateUsersPaymentHistory = async (
+  page: number,
+  size: number
+) => {
+  const response = await httpClient.get(
+    `/payment-records/admin/payment-history/corporate?page=${page}&size=${size}`
+  );
+  return response.data;
+};
+
+// 사업자회원 결제기록 날짜별 조회 (관리자)
+export const findCorporateUsersPaymentHistoryByDateRange = async (
+  page: number,
+  size: number,
+  startDate: string,
+  endDate: string
+) => {
+  const response = await httpClient.get(
+    `/payment-records/admin/payment-history/corporate/date-range?page=${page}&size=${size}&start_date=${startDate}&end_date=${endDate}`
+  );
+  return response.data;
+};

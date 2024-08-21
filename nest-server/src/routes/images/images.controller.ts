@@ -13,6 +13,7 @@ import {
   Header,
   BadRequestException,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -38,11 +39,15 @@ import { ImageResDto } from './dto/res.dto';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { PassThrough } from 'stream';
 import { isUUID } from 'class-validator';
+import { ImageTilingService } from './image-tiling.service';
 
 @ApiTags('Images')
 @Controller('images')
 export default class ImagesController {
-  constructor(private readonly imagesService: ImagesService) {}
+  constructor(
+    private readonly imagesService: ImagesService,
+    private readonly imageTilingService: ImageTilingService,
+  ) {}
 
   // 1. 이미지 파일 업로드 (다중 파일 업로드 가능)
   // POST : localhost:3000/images/upload
@@ -58,15 +63,14 @@ export default class ImagesController {
     @UploadedFiles() files: Express.Multer.File[],
     @User() user: UserAfterAuth,
   ) {
-    const { images, totalCost } = await this.imagesService.uploadImages(
-      files,
-      user.id,
-    );
+    const { images, totalCost, imageCosts } =
+      await this.imagesService.uploadImages(files, user.id);
 
     return {
       message: 'Images uploaded successfully.',
       images,
       totalCost,
+      imageCosts, // Returning the cost of each individual image
     };
   }
 
@@ -123,14 +127,13 @@ export default class ImagesController {
     @Res() res: Response,
     @User() user: UserAfterAuth,
   ) {
-    const { imageStream, contentType } = await this.imagesService.viewImage(
-      id,
-      user.id,
-    );
+    const { imageStream, contentType, cost } =
+      await this.imagesService.viewImage(id, user.id);
     if (!imageStream) {
       throw new NotFoundException('이미지를 찾을 수 없습니다.');
     }
     res.setHeader('Content-Type', contentType);
+    res.setHeader('X-Image-Cost', cost.toString()); // You can also send cost in headers or in the response body
     imageStream.pipe(res);
   }
 
@@ -196,10 +199,10 @@ export default class ImagesController {
     return this.imagesService.deleteImages(deleteImagesDto.ids, user.id);
   }
 
-  // 7. 이미지 감지 및 포인트 차감
+  // 7. 이미지 디텍팅 및 포인트 차감
   // POST : localhost:3000/images/detect { "ids": ["id1","id2", "id3"] }
   @Post('detect')
-  @ApiOperation({ summary: '이미지 감지 및 포인트 차감' })
+  @ApiOperation({ summary: '이미지 디텍팅 및 포인트 차감' })
   @ApiResponse({
     status: 200,
     description: '이미지를 성공적으로 감지했습니다.',
@@ -217,5 +220,41 @@ export default class ImagesController {
       usedPoints,
       remainingPoints,
     };
+  }
+
+  // 8. 단일 이미지 메타데이터 보기
+  // GET : localhost:3000/images/metadata/:id
+  @Get('metadata/:id')
+  @ApiOperation({ summary: '단일 이미지 메타데이터 보기' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지 메타데이터를 성공적으로 조회했습니다.',
+  })
+  async getImageMetadata(@Param('id') id: string, @User() user: UserAfterAuth) {
+    const metadata = await this.imagesService.getImageMetadata(id, user.id);
+    return {
+      message: 'Image metadata retrieved successfully.',
+      metadata,
+    };
+  }
+
+  // 9. 이미지 타일링
+  @Get('process')
+  @ApiOperation({ summary: '이미지 타일링' })
+  async processTilingImage(
+    @Query('imagePath') imagePath: string,
+    @Res() res: Response,
+  ) {
+    if (!imagePath) {
+      throw new BadRequestException('imagePath query parameter is required');
+    }
+
+    try {
+      const result =
+        await this.imageTilingService.processTilingImage(imagePath);
+      res.json(result);
+    } catch (error) {
+      throw new InternalServerErrorException('Error processing image tiling');
+    }
   }
 }

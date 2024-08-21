@@ -12,6 +12,7 @@ import {
   deleteImages,
   fetchSingleImage,
 } from '../../../services/userServices';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 const FileInput = ({ isDarkMode, toggleDarkMode }) => {
   const [activeHeader, setActiveHeader] = useState('Ko-Detect');
@@ -26,6 +27,7 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
 
   useEffect(() => {
     const fetchImages = async () => {
+      setLoading(true); // Start loading
       try {
         const { images, total, totalCost, point } = await listImages();
         setImages(images);
@@ -34,12 +36,15 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
         setPoint(point);
       } catch (error) {
         console.error('Failed to fetch images:', error);
+      } finally {
+        setLoading(false); // End loading
       }
     };
     fetchImages();
   }, []);
 
   const handleFileSelect = async (files) => {
+    setLoading(true); // Start loading
     try {
       const response = await uploadImages(files);
       setImages([...images, ...response.images]);
@@ -48,6 +53,8 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
       setPoint(response.point);
     } catch (error) {
       console.error('Failed to upload images:', error);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -60,6 +67,7 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
     const confirmDelete = window.confirm('정말 삭제하시겠습니까?');
     if (!confirmDelete) return;
 
+    setLoading(true); // Start loading
     try {
       await deleteImages(selectedImages);
       setImages(images.filter((image) => !selectedImages.includes(image.id)));
@@ -68,6 +76,8 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
       setSelectedImage(null);
     } catch (error) {
       console.error('Failed to delete images:', error);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -80,14 +90,14 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
   };
 
   const handleImageClick = async (image) => {
-    setLoading(true);
+    setLoading(true); // Start loading
     try {
       const imageUrl = await fetchSingleImage(image.id);
       setSelectedImage({ url: imageUrl, title: image.title });
     } catch (error) {
       console.error('Failed to fetch image data:', error);
     } finally {
-      setLoading(false);
+      setLoading(false); // End loading
     }
   };
 
@@ -96,6 +106,7 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
   };
 
   const handleRefresh = async () => {
+    setLoading(true); // Start loading
     try {
       const { images, total, totalCost, point } = await listImages();
       setImages(images);
@@ -104,6 +115,8 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
       setPoint(point);
     } catch (error) {
       console.error('Failed to refresh images:', error);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -138,7 +151,10 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
           onRefresh={handleRefresh}
         />
         {loading ? (
-          <LoadingMessage>Loading image...</LoadingMessage>
+          <LoadingContainer>
+            <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+            <LoadingMessage>Loading image...</LoadingMessage>
+          </LoadingContainer>
         ) : selectedImage ? (
           <ImageViewerContainer>
             <ImageViewer imageUrl={selectedImage.url} isDarkMode={isDarkMode} />
@@ -197,11 +213,16 @@ const ImageViewerContainer = styled.div`
   margin-left: 20px;
 `;
 
-const LoadingMessage = styled.div`
+const LoadingContainer = styled.div`
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+`;
+
+const LoadingMessage = styled.div`
+  margin-top: 10px;
   font-size: 1.2em;
   color: #666;
 `;

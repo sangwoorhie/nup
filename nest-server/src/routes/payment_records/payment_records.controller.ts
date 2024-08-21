@@ -206,7 +206,7 @@ export class PaymentRecordsController {
   @ApiResponse({ status: 200, description: '성공' })
   async getIndividualUsersPaymentHistory(@Query() pageReqDto: PageReqDto) {
     const { page, size } = pageReqDto;
-    return await this.paymentRecordsService.getUsersPaymentHistory(
+    return await this.paymentRecordsService.getIndividualUsersPaymentHistory(
       UserType.INDIVIDUAL,
       page,
       size,
@@ -223,7 +223,7 @@ export class PaymentRecordsController {
   @ApiResponse({ status: 200, description: '성공' })
   async getCorporateUsersPaymentHistory(@Query() pageReqDto: PageReqDto) {
     const { page, size } = pageReqDto;
-    return await this.paymentRecordsService.getUsersPaymentHistory(
+    return await this.paymentRecordsService.getCorporateUsersPaymentHistory(
       UserType.CORPORATE,
       page,
       size,
@@ -260,7 +260,7 @@ export class PaymentRecordsController {
       end_date: new Date(end_date),
     };
 
-    return await this.paymentRecordsService.findUsersPaymentHistoryByDateRange(
+    return await this.paymentRecordsService.findIndividualUsersPaymentHistoryByDateRange(
       UserType.INDIVIDUAL,
       page,
       size,
@@ -298,7 +298,7 @@ export class PaymentRecordsController {
       end_date: new Date(end_date),
     };
 
-    return await this.paymentRecordsService.findUsersPaymentHistoryByDateRange(
+    return await this.paymentRecordsService.findCorporateUsersPaymentHistoryByDateRange(
       UserType.CORPORATE,
       page,
       size,

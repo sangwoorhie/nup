@@ -2,11 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const SubHeaders = ({ activeHeader, userType, initialActiveSubOption }) => {
+const SubHeaders = ({ activeHeader, userType, activeMainOption }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeSubOption, setActiveSubOption] = React.useState(
-    initialActiveSubOption
+    location.pathname
   );
 
   const handleNavigation = (destination) => {
@@ -27,7 +27,6 @@ const SubHeaders = ({ activeHeader, userType, initialActiveSubOption }) => {
         state: {
           next: destination,
           userType,
-          initialActiveSubOption: destination,
         },
       });
     } else {

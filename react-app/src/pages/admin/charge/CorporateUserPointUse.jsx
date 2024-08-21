@@ -8,12 +8,12 @@ import MainHeader from '../../../components/etc/ui/MainHeader';
 import SubHeaders from '../../../components/etc/ui/SubHeaders';
 import Footer from '../../../components/etc/ui/Footer';
 import {
-  getIndividualUsersPaymentHistory,
-  findIndividualUsersPaymentHistoryByDateRange,
+  getCorporateUsersPaymentHistory,
+  findCorporateUsersPaymentHistoryByDateRange,
 } from '../../../services/adminService';
 import 'primeicons/primeicons.css';
 
-const IndividualUserPointUse = ({ isDarkMode, toggleDarkMode }) => {
+const CorporateUserPointUse = ({ isDarkMode, toggleDarkMode }) => {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const [activeHeader, setActiveHeader] = useState('결제 관리');
@@ -43,14 +43,14 @@ const IndividualUserPointUse = ({ isDarkMode, toggleDarkMode }) => {
     try {
       let data;
       if (startDate && endDate) {
-        data = await findIndividualUsersPaymentHistoryByDateRange(
+        data = await findCorporateUsersPaymentHistoryByDateRange(
           page,
           size,
           startDate,
           endDate
         );
       } else {
-        data = await getIndividualUsersPaymentHistory(page, size);
+        data = await getCorporateUsersPaymentHistory(page, size);
       }
       setPaymentHistory(data.items);
       setTotalRecords(data.total);
@@ -96,7 +96,7 @@ const IndividualUserPointUse = ({ isDarkMode, toggleDarkMode }) => {
       />
       <SubHeaders activeHeader={activeHeader} userType='admin' />
       <Header>
-        <h2>개인 회원 결제 목록</h2>
+        <h2>사업자 회원 결제 목록</h2>
       </Header>
       <Content isDarkMode={isDarkMode}>
         <MiddleWrapper>
@@ -122,7 +122,8 @@ const IndividualUserPointUse = ({ isDarkMode, toggleDarkMode }) => {
               header='결제 일시'
               body={(rowData) => rowData.created_at.split('T')[0]}
             />
-            <Column field='username' header='사용자 이름' />
+            <Column field='corporate_name' header='기업명(기관명)' />
+            <Column field='username' header='담당자 이름' />
             <Column field='email' header='E-mail' />
             <Column
               field='detected_images_count'
@@ -157,7 +158,7 @@ const IndividualUserPointUse = ({ isDarkMode, toggleDarkMode }) => {
   );
 };
 
-export default IndividualUserPointUse;
+export default CorporateUserPointUse;
 
 // Styled components are used here for layout and aesthetics
 const Container = styled.div`

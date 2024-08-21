@@ -36,6 +36,11 @@ export class Image {
   @Column({ type: 'boolean', default: false })
   is_detected: boolean;
 
+  // 비용
+  @ApiProperty({ description: '이미지 업로드 비용' })
+  @Column({ type: 'int', nullable: true })
+  cost: number | null;
+
   // 이미지가 업로드 된 시각
   @ApiProperty({ description: '이미지가 업로드(생성) 된 시각' })
   @CreateDateColumn({ type: 'timestamp' })

@@ -29,6 +29,7 @@ import * as archiver from 'archiver';
 import { PassThrough, Readable } from 'stream';
 import { decode } from 'iconv-lite';
 import * as sharp from 'sharp';
+import * as ExifParser from 'exif-parser';
 import * as dotenv from 'dotenv';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
 dotenv.config();
@@ -80,15 +81,24 @@ export class ImagesService {
           user: user,
           image_path: key,
           status: ImageStatus.NOT_DETECTED,
+          cost: cost,
         });
         return { image: await this.imageRepository.save(newImage), cost };
       });
 
       const results = await Promise.all(imagePromises);
       const totalCost = results.reduce((sum, result) => sum + result.cost, 0);
+      const imageCosts = results.map((result) => ({
+        id: result.image.id,
+        cost: result.cost,
+      }));
 
       await queryRunner.commitTransaction();
-      return { images: results.map((result) => result.image), totalCost };
+      return {
+        images: results.map((result) => result.image),
+        totalCost,
+        imageCosts, // Return the cost of each individual image
+      };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       error = e;
@@ -213,7 +223,7 @@ export class ImagesService {
   async viewImage(
     id: string,
     userId: string,
-  ): Promise<{ imageStream: Readable; contentType: string }> {
+  ): Promise<{ imageStream: Readable; contentType: string; cost: number }> {
     const image = await this.imageRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -239,7 +249,11 @@ export class ImagesService {
       const contentType =
         response.ContentType || this.getContentType(image.image_path);
 
-      return { imageStream: response.Body as unknown as Readable, contentType };
+      return {
+        imageStream: response.Body as unknown as Readable,
+        contentType,
+        cost: image.cost,
+      };
     } catch (error) {
       if (error.name === 'NoSuchKey') {
         throw new NotFoundException('이미지를 찾을 수 없습니다.');
@@ -513,6 +527,63 @@ export class ImagesService {
     } finally {
       await queryRunner.release();
       if (error) throw error;
+    }
+  }
+
+  // 8. 단일 이미지 메타데이터 보기
+  async getImageMetadata(id: string, userId: string): Promise<any> {
+    const image = await this.imageRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!image) {
+      throw new NotFoundException('이미지를 찾을 수 없습니다.');
+    }
+
+    if (image.user.id !== userId) {
+      throw new ForbiddenException(
+        '본인이 업로드 한 이미지의 메타데이터만 조회할 수 있습니다.',
+      );
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+      Key: image.image_path,
+    });
+
+    try {
+      const response = await this.s3.send(command);
+      const stream = response.Body as unknown as Readable;
+      const buffer = await this.streamToBuffer(stream);
+      const metadata = await sharp(buffer).metadata();
+
+      // Use exif-parser to extract additional EXIF data
+      const exifData = ExifParser.create(buffer).parse();
+      const {
+        FocalLength,
+        FocalLengthIn35mmFormat,
+        ExifImageWidth,
+        ExifImageHeight,
+      } = exifData.tags;
+
+      return {
+        format: metadata.format,
+        width: metadata.width,
+        height: metadata.height,
+        focalLength: FocalLength,
+        focalLength35mm: FocalLengthIn35mmFormat,
+        sensorWidth: ExifImageWidth,
+        sensorHeight: ExifImageHeight,
+      };
+    } catch (error) {
+      if (error.name === 'NoSuchKey') {
+        throw new NotFoundException('이미지를 찾을 수 없습니다.');
+      } else {
+        throw new InternalServerErrorException(
+          '이미지 메타데이터를 가져오는 중 오류가 발생했습니다.',
+        );
+      }
     }
   }
 }

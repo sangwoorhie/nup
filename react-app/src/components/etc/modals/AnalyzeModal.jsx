@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom'; // Import the useNavigate hook
+import { useNavigate } from 'react-router-dom';
 
 const AnalyzeModal = ({ visible, onClose, point, totalCost }) => {
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
 
   if (!visible) return null;
 
@@ -13,7 +13,7 @@ const AnalyzeModal = ({ visible, onClose, point, totalCost }) => {
         '현재 회원님의 포인트가 결제 포인트보다 부족합니다. 포인트를 충전하시겠습니까?'
       );
       if (confirmCharge) {
-        navigate('/point-charge'); // Redirect to PointChargePage
+        navigate('/point-charge');
       }
     } else {
       // Continue with the analysis process
@@ -84,12 +84,12 @@ const ModalContent = styled.div`
   width: 400px;
   max-width: 80%;
   text-align: center;
-  color: black; /* Ensures text remains black */
+  color: black;
 `;
 
 const ModalTitle = styled.h2`
   margin-bottom: 20px;
-  color: black; /* Ensures text remains black */
+  color: black;
 `;
 
 const InputRow = styled.div`
@@ -102,7 +102,7 @@ const InputRow = styled.div`
 const Label = styled.label`
   margin-right: 10px;
   font-weight: bold;
-  color: black; /* Ensures text remains black */
+  color: black;
 `;
 
 const ReadOnlyInput = styled.input`
@@ -112,13 +112,13 @@ const ReadOnlyInput = styled.input`
   width: 60%;
   background-color: #f9f9f9;
   text-align: right;
-  color: black; /* Ensures text remains black */
+  color: black;
 `;
 
 const ModalText = styled.p`
   margin-bottom: 20px;
   font-size: 15px;
-  color: black; /* Ensures text remains black */
+  color: black;
 `;
 
 const CheckboxGroup = styled.div`
@@ -131,7 +131,7 @@ const CheckboxLabel = styled.label`
   display: flex;
   align-items: center;
   font-size: 14px;
-  color: black; /* Ensures text remains black */
+  color: black;
 
   input {
     margin-right: 5px;

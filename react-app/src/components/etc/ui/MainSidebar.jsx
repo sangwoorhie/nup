@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from 'primereact/sidebar';
 import styled from 'styled-components';
-import refreshIcon from '../../../assets/img/refresh_icon.png';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import AnalyzeModal from '../modals/AnalyzeModal';
 
 const MainSidebar = ({
@@ -13,15 +13,29 @@ const MainSidebar = ({
   onDeleteSelected,
   images,
   onImageSelection,
-  totalCost,
   point,
   setSelectedImages,
   onRefresh,
-  onImageClick, // New prop for handling image click
+  onImageClick,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [hoveredImage, setHoveredImage] = useState(null); // State to track hovered image
-  const [clickedImage, setClickedImage] = useState(null); // State to track clicked image
+  const [hoveredImage, setHoveredImage] = useState(null);
+  const [clickedImage, setClickedImage] = useState(null);
+  const [totalSelectedCost, setTotalSelectedCost] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const totalCost = images
+      .filter((image) => selectedImages.includes(image.id))
+      .reduce((sum, image) => sum + image.cost, 0);
+    setTotalSelectedCost(totalCost);
+  }, [selectedImages, images]);
+
+  useEffect(() => {
+    if (images.length > 0) {
+      setIsLoading(false); // Set loading to false once images are loaded
+    }
+  }, [images]);
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -33,6 +47,7 @@ const MainSidebar = ({
   };
 
   const handleRefresh = () => {
+    setIsLoading(true); // Set loading to true when refresh is triggered
     if (onRefresh) {
       onRefresh();
     }
@@ -79,46 +94,57 @@ const MainSidebar = ({
                 선택 삭제
               </SidebarButton>
               <RefreshButton onClick={handleRefresh}>
-                <img src={refreshIcon} alt='새로고침' />
+                <i className='pi pi-refresh' />
               </RefreshButton>
             </ButtonGroup>
           </ControlsRow>
 
-          <CheckboxRow>
-            <input
-              type='checkbox'
-              onChange={handleSelectAll}
-              checked={
-                images.length > 0 && selectedImages.length === images.length
-              }
-            />
-            <SelectText>Select {selectedImages.length}</SelectText>{' '}
-            <TotalText>Total {totalImages}</TotalText>
-          </CheckboxRow>
-
-          <SidebarList>
-            {images.map((image) => (
-              <SidebarListItem key={image.id}>
+          {isLoading ? (
+            <LoadingContainer>
+              <ProgressSpinner />
+              <LoadingMessage>Loading data, please wait...</LoadingMessage>
+            </LoadingContainer>
+          ) : (
+            <>
+              <CheckboxRow>
                 <input
                   type='checkbox'
-                  checked={selectedImages.includes(image.id)}
-                  onChange={() => onImageSelection(image.id)}
+                  onChange={handleSelectAll}
+                  checked={
+                    images.length > 0 && selectedImages.length === images.length
+                  }
                 />
-                <ImageName
-                  onMouseEnter={() => setHoveredImage(image.id)}
-                  onMouseLeave={() => setHoveredImage(null)}
-                  onClick={() => handleImageClick(image)}
-                  isHovered={hoveredImage === image.id}
-                  isClicked={clickedImage === image.id}
-                >
-                  {image.title}
-                </ImageName>
-              </SidebarListItem>
-            ))}
-          </SidebarList>
+                <SelectText>Select {selectedImages.length}</SelectText>{' '}
+                <TotalText>Total {totalImages}</TotalText>
+              </CheckboxRow>
+
+              <SidebarList>
+                {images.map((image) => (
+                  <SidebarListItem key={image.id}>
+                    <input
+                      type='checkbox'
+                      checked={selectedImages.includes(image.id)}
+                      onChange={() => onImageSelection(image.id)}
+                    />
+                    <ImageName
+                      onMouseEnter={() => setHoveredImage(image.id)}
+                      onMouseLeave={() => setHoveredImage(null)}
+                      onClick={() => handleImageClick(image)}
+                      isHovered={hoveredImage === image.id}
+                      isClicked={clickedImage === image.id}
+                    >
+                      {image.title}
+                    </ImageName>
+                  </SidebarListItem>
+                ))}
+              </SidebarList>
+            </>
+          )}
 
           <SidebarFooter>
-            <TotalCost>총 결제 포인트: {totalCost.toLocaleString()}P</TotalCost>
+            <TotalCost>
+              총 결제 포인트: {totalSelectedCost.toLocaleString()}P
+            </TotalCost>
             <AnalyzeButton onClick={handleAnalyzeClick}>
               분석 실행
             </AnalyzeButton>
@@ -136,7 +162,7 @@ const MainSidebar = ({
         visible={isModalVisible}
         onClose={handleCloseModal}
         point={point}
-        totalCost={totalCost}
+        totalCost={totalSelectedCost} // Pass the selected images' total cost
       />
     </>
   );
@@ -262,9 +288,8 @@ const RefreshButton = styled.button`
   border-radius: 4px;
   cursor: pointer;
 
-  img {
-    width: 10px;
-    height: 10px;
+  .pi.pi-refresh {
+    font-size: 16px;
   }
 `;
 
@@ -281,6 +306,19 @@ const ImageName = styled.span`
       props.isClicked ? '#004494' : '#34609e'}; /* Lighter shade of #004494 */
     color: #fff; /* White text on hover */
   }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 50px;
+`;
+
+const LoadingMessage = styled.div`
+  margin-top: 10px;
+  font-size: 16px;
+  color: #555;
 `;
 
 export default MainSidebar;

@@ -1,0 +1,1524 @@
+I have two projects, crackFinder Project and N-Up Project. crackFinder Project made of node-electron and react for desktop program, and N-Up Project for Nest.js and react. and now I have to apply crackFinder Project code to N-Up Project code. now I have to make image tiling backend server api.  in Workspace, src is image file path and vectorSrc is vector path. and src={src} jsonSrc={vectorSrc} => Json should be changed src provided from web. make the image tiling backend server code in N-Up Project please.
+
+1. crackFinder Project // src/express-app/app.js
+
+const express = require('express');
+const path = require('path');
+
+const app = express();
+const { exec } = require('child_process');
+const cors = require('cors');
+const fs = require('fs');
+const logger = require('../electron-app/utils/logs/winston');
+
+/**
+ * 이미지 타일링 서버
+ * 이미지 타일링을 위한 로컬 서버를 구동한다.
+ */
+class ImageTileServer {
+  /**
+   * 서버 포트
+   * @type {number} default: 3001
+   */
+  port = 3001;
+
+  /**
+   * express 서버
+   * @type {http.Server}
+   */
+  server = null;
+
+  /**
+   * @param {number} port
+   * @param {string} publicPath
+   * @param {string} tilePath
+   * @param {string} vipPath
+   */
+  init({
+    port = 3001, publicPath, tilePath, vipPath,
+  }) {
+    if (fs.existsSync(tilePath)) {
+      // 기존 타일링 이미지 삭제
+      fs.rmdirSync(tilePath, { recursive: true });
+      fs.mkdirSync(tilePath, { recursive: true });
+    }
+    // 포트가 점유중인지 확인하고 점유중이라면 사용하지 않음
+
+    this.port = port;
+    app.use(cors());
+    app.use(express.static(publicPath));
+    app.get('/processTilingImage.do', (req, res) => {
+      const { imagePath } = req.query;
+      const exeName = path.basename(vipPath);
+      const pathName = path.dirname(vipPath);
+      const imageName = path.basename(imagePath);
+      const outputPath = path.join(tilePath, imageName);
+      const command = `${exeName} dzsave "${imagePath}"[autorotate] "${outputPath}"`;
+
+      const dziPath = path.join(tilePath, `${imageName}.dzi`);
+      if (!fs.existsSync(dziPath)) {
+        exec(
+          command,
+          {
+            cwd: pathName,
+          },
+          (err, stdout, stderr) => {
+            res.send({
+              data: stderr,
+              error: err || stderr,
+            });
+          },
+        );
+      } else {
+        res.send({
+          data: '',
+          error: '',
+        });
+      }
+    });
+
+    this.server = app.listen(this.port, 'localhost', () => {
+      // 로컬 네트워크에서만 접근 가능
+      logger.debug(`ImageTileServer: app listening at http://localhost:${port}`);
+    });
+  }
+
+  destroy() {
+    this.server.close();
+  }
+}
+
+module.exports = ImageTileServer;
+
+
+2. crackFinder Project // src/electron-app/ipc/handler/ImageTileHandler.js
+
+const { app } = require('electron');
+const path = require('path');
+const axios = require('axios');
+const ImageTileServer = require('../../../express-app/app');
+const logger = require('../../utils/logs/winston');
+
+class ImageTileHandler {
+  /**
+   * 서버 포트
+   * @type {number}
+   */
+  #port = 3001;
+
+  /**
+   * vips.exe 경로
+   * @type {string}
+   */
+  #vipsPath;
+
+  /**
+   * 정적 파일 경로
+   * @type {string}
+   */
+  #publicPath;
+
+  /**
+   * 정적 파일 경로
+   */
+  #tilePath;
+
+  /**
+   * 타일링 이미지 서버
+   * @type {ImageTileServer}
+   */
+  #imageTileServer;
+
+  constructor() {
+    let resourcePath;
+    if (app.isPackaged) {
+      resourcePath = path.join(process.resourcesPath, 'resources', 'core');
+    } else {
+      const root = path.parse(require('app-root-path').path);
+      resourcePath = path.join(root.dir, root.base, 'resources', 'core');
+    }
+
+    this.#vipsPath = path.join(resourcePath, 'vips', 'bin', 'vips.exe');
+    this.#publicPath = path.join(app.getPath('userData'), 'public');
+    this.#tilePath = path.join(app.getPath('userData'), 'public', 'images');
+
+    logger.debug(`ImageTileHandler vipsPath : ${this.#vipsPath}`);
+    logger.debug(`ImageTileHandler publicPath : ${this.#publicPath}`);
+    logger.debug(`ImageTileHandler tilePath : ${this.#tilePath}`);
+  }
+
+  /**
+   * ipcMain 이벤트 핸들러 초기화
+   * @param {number} port
+   * @param {Electron.IpcMain} ipcMain
+   */
+  init({ port = 3001, ipcMain }) {
+    this.#getAvailablePort(port).then((_port) => {
+      this.#port = _port;
+      this.#imageTileServer = new ImageTileServer();
+      this.#imageTileServer.init({
+        port: _port,
+        publicPath: this.#publicPath,
+        tilePath: this.#tilePath,
+        vipPath: this.#vipsPath,
+      });
+    });
+
+    ipcMain.handle('getTileServerPort', () => this.#port);
+    ipcMain.handle('processTilingImage', this.#processTilingImage.bind(this));
+  }
+
+  destroy() {
+    this.#imageTileServer?.destroy();
+  }
+
+  /**
+   * 포트 점유 여부 확인 및 사용 가능한 포트 반환
+   * @param {number} startPort
+   * @return {Promise<number>}
+   */
+  async #getAvailablePort(startPort) {
+    let port = startPort;
+    // ES Module import
+    const getPort = await import('get-port').then((module) => module.default || module);
+
+    while (true) {
+      if ((await getPort({ port })) === port) return port;
+      port += 1;
+    }
+  }
+
+  /**
+   * 이미지 타일링 처리
+   * @param {IpcMainInvokeEvent} event
+   * @param {string} imagePath
+   * @return {Promise<void>}
+   */
+  async #processTilingImage(event, imagePath) {
+    return await axios
+      .get(
+        `http://localhost:${
+          this.#port
+        }/processTilingImage.do?imagePath=${encodeURIComponent(imagePath)}`,
+      )
+      .then((res) => res.data)
+      .then((data) => {
+        logger.debug(`ImageTileHandler: processTilingImage Result : ${JSON.stringify(data)}`);
+        return data;
+      })
+      .catch(logger.error);
+  }
+}
+
+module.exports = ImageTileHandler;
+
+
+3. crackFinder Project // src/react-app/hooks/useTilingImage.js
+
+import {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
+import useLoadingModal from '@features/modal/hooks/useLoadingModal';
+import { useTranslation } from 'react-i18next';
+import ImageTileUtils from '../client/ImageTileUtils';
+
+/**
+ * 이미지 타일링 Custom Hook
+ */
+export default function useTilingImage() {
+  const { t } = useTranslation();
+  const [tileSource, setTileSource] = useState('');
+  const [withLoadingModal] = useLoadingModal();
+
+  const getTileServerPort = useCallback(() => ImageTileUtils.getTileServerPort(), []);
+
+  const getTileURL = useCallback(async () => {
+    const tilePort = await getTileServerPort();
+    return `http://localhost:${tilePort}/images/`;
+  }, []);
+
+  const getFileBaseName = (path) => path.split('\\').pop();
+
+  const getTileSource = useCallback(async (path) => {
+    const baseName = getFileBaseName(path);
+    const tileURL = await getTileURL();
+    return `${tileURL}${baseName}.dzi`;
+  }, []);
+
+  /**
+   * input type=file 의 이미지를 읽는다.
+   * @param {File} file
+   * @return {Promise<void>}
+   */
+  const tileInputTypeImage = async (file) => {
+    await ImageTileUtils.processTilingImage(file.path);
+    return setTileSource(await getTileSource(file.path));
+  };
+
+  /**
+   * path type 의 이미지를 읽는다.
+   * @param {string} path
+   * @return {Promise<void>}
+   */
+  const tilePathTypeImage = async (path) => {
+    await ImageTileUtils.processTilingImage(path);
+    return setTileSource(await getTileSource(path));
+  };
+
+  const tileImage = async (src) => {
+    if (src instanceof File && src.type.match('image.*')) {
+      return tileInputTypeImage(src);
+    }
+    if (src) {
+      return tilePathTypeImage(src);
+    }
+
+    setTileSource(null);
+    return Promise.resolve();
+  };
+
+  /**
+   * src 변경시마다 LoadingSpinner 로 변경하고, 로드 완료시 이미지를 보여준다.
+   * @param {File | string} src File 객체 또는 이미지 경로
+   * @return {Promise<void>}
+   */
+  const setImageSrc = async (src) => {
+    await withLoadingModal({
+      promise: tileImage(src),
+      messages: [t('message.info.loading.tile-image')],
+    });
+  };
+
+  return [tileSource, setImageSrc];
+}
+
+
+4. crackFinder Project // src/electron-app/main.js
+
+const {
+  app, BrowserWindow, ipcMain, Menu, nativeTheme,
+} = require('electron');
+const isDev = require('electron-is-dev');
+const path = require('path');
+const AutoUpdaterConfig = require('./auto-updater/autoUpdaterConfig');
+const IpcMainHandler = require('./ipc/IpcMainHandler');
+const logger = require('./utils/logs/winston');
+const root = path.parse(require('app-root-path').path);
+
+const envPath = path.join(path.join(root.dir, root.base), '.env');
+
+let win;
+let ipcMainHandler;
+let updater;
+
+require('dotenv').config({ path: envPath });
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    // 사용자가 두 번째 인스턴스를 실행하면, 기존 윈도우를 활성화하고 포커스합니다.
+    if (win) {
+      if (win.isMinimized()) {
+        win.restore();
+      }
+      win.focus();
+    }
+  });
+
+  app.on('ready', () => {
+    const newPath = path.join(app.getPath('appData'), 'Ko-Mapper', app.getName());
+    app.setPath('userData', newPath);
+    if (isDev) {
+      useReactDevtools();
+    }
+
+    createWindow().then(() => {
+      updater = new AutoUpdaterConfig();
+      updater.config();
+    });
+
+    // IPC Main Process 핸들러 등록
+    ipcMainHandler = new IpcMainHandler();
+    ipcMainHandler.init(ipcMain);
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
+    }
+  });
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) return createWindow();
+  });
+}
+
+function createWindow() {
+  const isDarkMode = nativeTheme.shouldUseDarkColors;
+  const iconFileName = isDarkMode ? 'logo-white.png' : 'logo-origin.png';
+  const iconPath = path.join(
+    app.getAppPath(),
+    'public',
+    'images',
+    iconFileName,
+  );
+
+  win = new BrowserWindow({
+    width: 1280,
+    height: 720,
+    minWidth: 1280,
+    minHeight: 630,
+    frame: true,
+    icon: iconPath,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+    titleBarStyle: 'hidden', // 타이틀바 없음
+    titleBarOverlay: {
+      color: '#313131',
+      symbolColor: '#fff',
+      height: 30,
+    },
+  });
+
+  if (isDev) {
+    // 메뉴 설정
+    const menuTemplate = require('./menuTemplate')(win);
+    // noinspection JSCheckFunctionSignatures
+    const menu = Menu.buildFromTemplate(menuTemplate);
+    Menu.setApplicationMenu(menu);
+  } else {
+    Menu.setApplicationMenu(null);
+  }
+
+  let loadingPromise;
+  if (app.isPackaged) {
+    loadingPromise = win.loadFile('./build/index.html'); // prod
+  } else {
+    loadingPromise = win.loadURL('http://localhost:3000'); // dev
+    win.openDevTools();
+  }
+
+  win.on('closed', () => {
+    if (updater) {
+      updater.destroy();
+    }
+
+    if (ipcMainHandler) {
+      ipcMainHandler.destroy();
+    }
+  });
+
+  return loadingPromise;
+}
+
+// react devtools 사용
+function useReactDevtools() {
+  const {
+    default: installExtension,
+    REACT_DEVELOPER_TOOLS,
+  } = require('electron-extension-installer');
+  installExtension(REACT_DEVELOPER_TOOLS, {
+    loadExtensionOptions: {
+      allowFileAccess: true,
+    },
+    forceDownload: false,
+  })
+    // .then((name) => console.log(`Added Extension:  ${name}`))
+    .catch((err) => logger.info('An error occurred: ', err));
+}
+
+
+5. crackFinder Project // src/react-app/features/workspace/Workspace.jsx
+
+import propTypes from 'prop-types';
+import { WorkspaceContextProvider } from '@context/WorkspaceContext';
+import { RibbonMenuProvider } from '@context/RibbonMenuContext';
+import { WorkspaceCanvasProvider } from '@context/CanvasContext';
+import { ViewerContextProvider } from '@context/ViewerContext';
+import { ImageViewer } from 'src/react-app/features/ui/classed/viewer';
+import Container from '@features/ui/styled/layout/Container';
+import SideBar from '@features/ui/styled/layout/sidebar/SideBar';
+import SideBarItem from '@features/ui/styled/layout/sidebar/SideBarItem';
+import SideBarIcon from '@features/ui/styled/layout/sidebar/SideBarIcon';
+import { useTranslation } from 'react-i18next';
+import ImageMetaData from '@features/meta-data/ImageMetaData';
+import DamageList from '@features/damage-list/DamageList';
+import WorkspaceKeyEventHandler from './handler/WorkspaceKeyEventHandler';
+import TabbedRibbons from '../ribbon/TabbedRibbons';
+
+/**
+ * 분석결과 Workspace
+ * 분석결과 Context 관리, Viewer, Navigator 렌더링
+ * @param {File | string} src 이미지 파일 객체 혹은 이미지 경로
+ * @param {string} vectorSrc 벡터 경로
+ * @return {JSX.Element}
+ */
+export default function Workspace({ src, vectorSrc }) {
+  const [t] = useTranslation();
+  return (
+    <WorkspaceContextProvider src={src} jsonSrc={vectorSrc}>
+      <ViewerContextProvider>
+        <WorkspaceCanvasProvider>
+          <WorkspaceKeyEventHandler>
+            <RibbonMenuProvider>
+              <Container disableGutters fillWidth fillHeight direction="column">
+                {vectorSrc ? <TabbedRibbons /> : ''}
+                <Container direction="row" disableGutters fillWidth fillHeight>
+                  <ImageViewer />
+                  <SideBar direction="right">
+                    <SideBarItem
+                      icon={(
+                        <SideBarIcon
+                          title={t('label.image-meta-data')}
+                          imageSrc="images/sidebar/sidebar_imageMetaData.svg"
+                          activeImageSrc="images/sidebar/sidebar_imageMetaData_active.svg"
+                          disableImageSrc="images/sidebar/sidebar_imageMetaData_disable.svg"
+                          itemKey="image-meta-data"
+                          disabled={!src}
+                        />
+                      )}
+                      content={<ImageMetaData />}
+                    />
+                    <SideBarItem
+                      icon={(
+                        <SideBarIcon
+                          title={t('label.damage-list')}
+                          imageSrc="images/sidebar/sidebar_damageList.svg"
+                          activeImageSrc="images/sidebar/sidebar_damageList_active.svg"
+                          disableImageSrc="images/sidebar/sidebar_damageList_disable.svg"
+                          itemKey="idamage-list"
+                          disabled={!vectorSrc}
+                        />
+                      )}
+                      content={<DamageList />}
+                    />
+                  </SideBar>
+                </Container>
+              </Container>
+            </RibbonMenuProvider>
+          </WorkspaceKeyEventHandler>
+        </WorkspaceCanvasProvider>
+      </ViewerContextProvider>
+    </WorkspaceContextProvider>
+  );
+}
+
+Workspace.propTypes = {
+  src: propTypes.oneOfType([propTypes.string, propTypes.instanceOf(File)])
+    .isRequired,
+  vectorSrc: propTypes.string,
+};
+
+Workspace.defaultProps = {
+  vectorSrc: undefined,
+};
+//
+// {vectorSrc ? (
+//     <DetectionResultsNavigator />
+// ) : (
+//     <ImageInputsNavigator />
+// )}
+
+
+6. crackFinder Project // src/react-app/features/view-container/MainViewer.jsx
+
+/** @jsxImportSource @emotion/react */
+import { css, useTheme } from '@emotion/react';
+import { useRecoilValue } from 'recoil';
+import { useEffect, useMemo, useState } from 'react';
+import Container from '@features/ui/styled/layout/Container';
+import Workspace from '@features/workspace/Workspace';
+import {
+  mainNavState,
+  selectedDamageDetectionOutputState,
+  selectedFileState,
+} from '../../recoil/commonState';
+
+/**
+ * 메인 우측 화면 뷰어
+ * 선택된 메인 탭에 따라 Viewer 를 설정한다.
+ * @return {JSX.Element}
+ * @constructor
+ */
+export default function MainViewer() {
+  /** @type {KoMapperTheme} */
+  const theme = useTheme();
+  /**
+   * 메인 화면 네비게이션 상태
+   * @type {'target' | 'result'}
+   */
+  const parentTab = useRecoilValue(mainNavState);
+  const selectedTarget = useRecoilValue(selectedFileState);
+  const selectedResult = useRecoilValue(selectedDamageDetectionOutputState);
+
+  const [imgSrc, setImgSrc] = useState('');
+  const [jsonSrc, setJsonSrc] = useState('');
+  const [imgAlt, setImgAlt] = useState('');
+
+  useEffect(() => {
+    if (parentTab === 'target') {
+      setImgSrc(selectedTarget?.filePath);
+      setJsonSrc(null);
+      setImgAlt(selectedTarget?.fileName);
+    } else {
+      setImgSrc(selectedResult?.originImagePath);
+      setJsonSrc(selectedResult?.jsonPath);
+      setImgAlt(selectedResult?.name);
+    }
+  }, [parentTab, selectedTarget, selectedResult]);
+
+  return (
+    <Container
+      display="flex"
+      fillWidth
+      fillHeight
+      disableGutters
+      css={css`
+        position: relative;
+        overflow: hidden;
+        margin: 0;
+        background-color: ${theme.colors.classes.background.menu};
+      `}
+    >
+      {imgSrc
+        ? (
+          <Workspace
+            src={imgSrc}
+            vectorSrc={jsonSrc}
+            alt={imgAlt}
+          />
+        )
+        : (
+          <div />
+        )}
+
+    </Container>
+  );
+}
+
+
+7. N-Up Project // nest-server/src/routes/images/images.controller.ts
+
+import {
+  Controller,
+  Post,
+  UseInterceptors,
+  UploadedFiles,
+  Get,
+  Param,
+  Res,
+  Delete,
+  Patch,
+  Body,
+  Query,
+  Header,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
+import { User, UserAfterAuth } from 'src/decorators/user.decorators';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ImagesService } from './images.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiBody,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { Image } from 'src/entities/image.entity';
+import { Response } from 'express';
+import {
+  DeleteImagesReqDto,
+  DetectImagesReqDto,
+  DownloadImagesReqDto,
+  ViewImagesReqDto,
+} from './dto/req.dto';
+import { ImageResDto } from './dto/res.dto';
+import { PageReqDto } from 'src/common/dto/req.dto';
+import { PassThrough } from 'stream';
+import { isUUID } from 'class-validator';
+
+@ApiTags('Images')
+@Controller('images')
+export default class ImagesController {
+  constructor(private readonly imagesService: ImagesService) {}
+
+  // 이미지 파일 업로드 (다중 파일 업로드 가능)
+  // POST : localhost:3000/images/upload
+  @Post('upload')
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiOperation({ summary: '이미지 파일 업로드 (다중 파일 가능)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 업로드했습니다.',
+  })
+  async uploadImages(
+    @UploadedFiles() files: Express.Multer.File[],
+    @User() user: UserAfterAuth,
+  ) {
+    const { images, totalCost } = await this.imagesService.uploadImages(
+      files,
+      user.id,
+    );
+
+    return {
+      message: 'Images uploaded successfully.',
+      images,
+      totalCost,
+    };
+  }
+
+  // 이미지 파일 다운로드
+  // GET : localhost:3000/images/download?imageIds=id1,id2,id3&zip=true
+  // GET : localhost:3000/images/download?imageIds=id1,id2,id3&zip=false
+  @Get('download')
+  @ApiOperation({ summary: '이미지 파일 다운로드 (다중 파일 가능)' })
+  @Header('Content-Type', 'application/zip')
+  @Header('Content-Disposition', 'attachment; filename=images.zip')
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 다운로드했습니다.',
+  })
+  async downloadImages(
+    @Query('imageIds') imageIds: string | string[],
+    @Query('zip') zip: boolean,
+    @Res() res: Response,
+    @User() user: UserAfterAuth,
+  ) {
+    // Ensure imageIds is an array by splitting it if it's a string
+    const ids = typeof imageIds === 'string' ? imageIds.split(',') : imageIds;
+
+    // Validate imageIds as UUIDs
+    const invalidIds = ids.filter((id) => !isUUID(id));
+    if (invalidIds.length > 0) {
+      throw new BadRequestException(
+        `Invalid UUIDs provided: ${invalidIds.join(', ')}`,
+      );
+    }
+    const stream = await this.imagesService.downloadImages(ids, zip, user.id);
+    if (zip) {
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename=images.zip');
+      (stream as PassThrough).pipe(res);
+    } else {
+      for (const fileStream of stream as any[]) {
+        fileStream.pipe(res);
+      }
+    }
+  }
+
+  // 단일 이미지 보기
+  // GET : localhost:3000/images/view/:id
+  @Get('view/:id')
+  // @Header('Content-Type', 'image/jpeg')
+  @ApiOperation({ summary: '단일 이미지 보기' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 조회했습니다.',
+  })
+  async viewImage(
+    @Param('id') id: string,
+    @Res() res: Response,
+    @User() user: UserAfterAuth,
+  ) {
+    const { imageStream, contentType } = await this.imagesService.viewImage(
+      id,
+      user.id,
+    );
+    if (!imageStream) {
+      throw new NotFoundException('이미지를 찾을 수 없습니다.');
+    }
+    res.setHeader('Content-Type', contentType);
+    imageStream.pipe(res);
+  }
+
+  // 이미지 목록 보기(텍스트 형태)
+  // GET : localhost:3000/images/list
+  @Get('list')
+  @ApiOperation({ summary: '이미지 목록 보기 (텍스트 형태)' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지 목록을 성공적으로 조회했습니다.',
+  })
+  async listImages(@User() user: UserAfterAuth) {
+    return this.imagesService.listImages(user.id);
+  }
+
+  // 이미지 목록 보기(갤러리 형태)
+  // GET : localhost:3000/images/view?imageIds=id1,id2,id3
+  @Get('view')
+  @ApiOperation({ summary: '업로드된 이미지 보기 (갤러리 형태)' })
+  @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
+  @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 조회했습니다.',
+  })
+  async viewImages(
+    @Query('imageIds') imageIds: string,
+    @Res() res: Response,
+    @User() user: UserAfterAuth,
+  ) {
+    const ids = typeof imageIds === 'string' ? imageIds.split(',') : imageIds;
+    const invalidIds = ids.filter((id) => !isUUID(id));
+    if (invalidIds.length > 0) {
+      throw new BadRequestException(
+        `Invalid UUIDs provided: ${invalidIds.join(', ')}`,
+      );
+    }
+    const imageStreams = await this.imagesService.viewImages(ids, user.id);
+
+    res.setHeader('Content-Type', 'multipart/mixed');
+    for (const stream of imageStreams) {
+      await new Promise((resolve, reject) => {
+        stream.on('end', resolve);
+        stream.on('error', reject);
+        stream.pipe(res, { end: false });
+      });
+    }
+    res.end();
+  }
+
+  // 이미지 삭제
+  // DELETE : localhost:3000/images { "ids": ["id1","id2", "id3"] }
+  @Delete()
+  @ApiOperation({ summary: '업로드된 이미지 삭제 (다중 파일 가능)' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 삭제했습니다.',
+  })
+  async deleteImages(
+    @Body() deleteImagesDto: DeleteImagesReqDto,
+    @User() user: UserAfterAuth,
+  ) {
+    return this.imagesService.deleteImages(deleteImagesDto.ids, user.id);
+  }
+
+  // 이미지 디텍팅 및 포인트 차감
+  // POST : localhost:3000/images/detect { "ids": ["id1","id2", "id3"] }
+  @Post('detect')
+  @ApiOperation({ summary: '이미지 디텍팅 및 포인트 차감' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지를 성공적으로 감지했습니다.',
+  })
+  async detectImages(
+    @Body() detectImagesDto: ViewImagesReqDto, // Reuse DTO for listing images
+    @User() user: UserAfterAuth,
+  ) {
+    const { detectedImages, usedPoints, remainingPoints } =
+      await this.imagesService.detectImages(detectImagesDto.ids, user.id);
+
+    return {
+      message: 'Images detected successfully.',
+      detectedImages,
+      usedPoints,
+      remainingPoints,
+    };
+  }
+
+  // 단일 이미지 메타데이터 보기
+  // GET : localhost:3000/images/metadata/:id
+  @Get('metadata/:id')
+  @ApiOperation({ summary: '단일 이미지 메타데이터 보기' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지 메타데이터를 성공적으로 조회했습니다.',
+  })
+  async getImageMetadata(@Param('id') id: string, @User() user: UserAfterAuth) {
+    const metadata = await this.imagesService.getImageMetadata(id, user.id);
+    return {
+      message: 'Image metadata retrieved successfully.',
+      metadata,
+    };
+  }
+}
+
+
+8. N-Up Project // nest-server/src/routes/images/images.service.ts
+
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, In, Repository } from 'typeorm';
+import { Image } from 'src/entities/image.entity';
+import { ChargeStatus, ImageStatus, PaymentType } from 'src/enums/enums';
+import {
+  S3Client,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  NoSuchKey,
+  DeleteObjectsCommand,
+  HeadObjectCommand,
+} from '@aws-sdk/client-s3';
+import { ConfigService } from '@nestjs/config';
+import { Stream } from 'stream';
+import { User } from 'src/entities/user.entity';
+import { PageResDto } from 'src/common/dto/res.dto';
+import { ImageResDto } from './dto/res.dto';
+import { uploadFileToS3 } from 'src/config/s3-storage.config';
+import { createReadStream } from 'fs';
+import * as archiver from 'archiver';
+import { PassThrough, Readable } from 'stream';
+import { decode } from 'iconv-lite';
+import * as sharp from 'sharp';
+import * as ExifParser from 'exif-parser';
+import * as dotenv from 'dotenv';
+import { PaymentRecord } from 'src/entities/payment_record.entity';
+dotenv.config();
+
+@Injectable()
+export class ImagesService {
+  private s3: S3Client;
+
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(Image)
+    private readonly imageRepository: Repository<Image>,
+    private readonly configService: ConfigService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(PaymentRecord)
+    private readonly paymentRecordRepository: Repository<PaymentRecord>,
+  ) {
+    this.s3 = new S3Client({
+      region: this.configService.get<string>('AWS_REGION'),
+      credentials: {
+        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: this.configService.get<string>(
+          'AWS_SECRET_ACCESS_KEY',
+        ),
+      },
+    });
+  }
+
+  // 이미지 파일 업로드 (다중 파일 업로드 가능)
+  async uploadImages(files: Express.Multer.File[], userId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user)
+        throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
+
+      const imagePromises = files.map(async (file) => {
+        const key = await uploadFileToS3(file);
+
+        const { width, height } = await this.getImageDimensions(file);
+        const cost = this.calculateCost(width, height);
+
+        const newImage = this.imageRepository.create({
+          user: user,
+          image_path: key,
+          status: ImageStatus.NOT_DETECTED,
+        });
+        return { image: await this.imageRepository.save(newImage), cost };
+      });
+
+      const results = await Promise.all(imagePromises);
+      const totalCost = results.reduce((sum, result) => sum + result.cost, 0);
+
+      await queryRunner.commitTransaction();
+      return { images: results.map((result) => result.image), totalCost };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // 사진 장당 계산법
+  // 사진 A => 1920x1080 픽셀 / 100 = 20,736 => 1000원 미만 절사 = 20,000원
+  // 사진 B => 3840x2160 픽셀 / 100 = 82,944 => 1000원 미만 절사 = 82,000원
+  // 사진 A + 사진 B = 20,000 + 82,000 = 102,000
+  private calculateCost(width: number, height: number): number {
+    const pixels = (width * height) / 100;
+    return Math.ceil(pixels / 1000) * 1000;
+  }
+
+  private async getImageDimensions(
+    file: Express.Multer.File,
+  ): Promise<{ width: number; height: number }> {
+    const metadata = await sharp(file.buffer).metadata();
+    return { width: metadata.width, height: metadata.height };
+  }
+
+  // 이미지 파일 다운로드
+  async downloadImages(imageIds: string[], zip: boolean, userId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const images = await this.imageRepository.find({
+        where: {
+          id: In(imageIds),
+        },
+        relations: ['user'], // Ensure the user relationship is loaded
+      });
+
+      if (images.length === 0) {
+        throw new NotFoundException('이미지를 찾을 수 없습니다.');
+      }
+      if (images.some((image) => image.user.id !== userId)) {
+        throw new ForbiddenException(
+          '본인이 업로드 한 이미지만 다운로드 받을 수 있습니다.',
+        );
+      }
+      if (zip) {
+        return this.zipImages(images);
+      }
+
+      const fileStreams = await Promise.all(
+        images.map(async (image) => {
+          try {
+            const command = new GetObjectCommand({
+              Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+              Key: image.image_path,
+            });
+            const response = await this.s3.send(command);
+            const stream = response.Body as unknown as Readable;
+            return stream;
+          } catch (error) {
+            if (error.name === 'NoSuchKey') {
+              console.error(`File not found: ${image.image_path}`);
+              throw new NotFoundException(
+                `File not found: ${image.image_path}`,
+              );
+            } else {
+              throw new InternalServerErrorException(
+                'Error retrieving file from S3',
+              );
+            }
+          }
+        }),
+      );
+      return fileStreams;
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // 다운로드 시 파일압축
+  private async zipImages(images: Image[]) {
+    const passThroughStream = new PassThrough();
+    const archive = archiver('zip', {
+      zlib: { level: 9 }, // Compression level
+    });
+
+    archive.pipe(passThroughStream);
+
+    for (const image of images) {
+      try {
+        const command = new GetObjectCommand({
+          Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+          Key: image.image_path,
+        });
+
+        const response = await this.s3.send(command);
+        const stream = response.Body as unknown as Readable;
+        archive.append(stream, { name: image.image_path.split('/').pop() });
+      } catch (error) {
+        if (error.name === 'NoSuchKey') {
+          console.error(`File not found: ${image.image_path}`);
+          throw new NotFoundException(`File not found: ${image.image_path}`);
+        } else {
+          throw new InternalServerErrorException(
+            'Error retrieving file from S3',
+          );
+        }
+      }
+    }
+    archive.finalize();
+    return passThroughStream;
+  }
+
+  // 단일 이미지 보기
+  async viewImage(
+    id: string,
+    userId: string,
+  ): Promise<{ imageStream: Readable; contentType: string }> {
+    const image = await this.imageRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!image) {
+      throw new NotFoundException('이미지를 찾을 수 없습니다.');
+    }
+
+    if (image.user.id !== userId) {
+      throw new ForbiddenException(
+        '본인이 업로드 한 이미지만 조회할 수 있습니다.',
+      );
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+      Key: image.image_path,
+    });
+
+    try {
+      const response = await this.s3.send(command);
+      const contentType =
+        response.ContentType || this.getContentType(image.image_path);
+
+      return { imageStream: response.Body as unknown as Readable, contentType };
+    } catch (error) {
+      if (error.name === 'NoSuchKey') {
+        throw new NotFoundException('이미지를 찾을 수 없습니다.');
+      } else {
+        throw new InternalServerErrorException(
+          '이미지를 가져오는 중 오류가 발생했습니다.',
+        );
+      }
+    }
+  }
+
+  private getContentType(filePath: string): string {
+    const extension = filePath.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'gif':
+        return 'image/gif';
+      default:
+        return 'application/octet-stream'; // fallback content type
+    }
+  }
+
+  // 이미지 목록 보기(텍스트 형태)
+  async listImages(userId: string) {
+    const images = await this.imageRepository.find({
+      where: { user: { id: userId } },
+    });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const point = user.point;
+
+    const imageDetails = await Promise.all(
+      images.map(async (image) => {
+        const command = new GetObjectCommand({
+          Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+          Key: image.image_path,
+        });
+
+        const response = await this.s3.send(command);
+
+        // Get image dimensions from the image stream
+        const stream = response.Body as unknown as Readable;
+        const buffer = await this.streamToBuffer(stream);
+        const metadata = await sharp(buffer).metadata();
+
+        const cost = this.calculateCost(metadata.width, metadata.height);
+
+        const encodedTitle = image.image_path.split('/').pop();
+        const decodedTitle = decode(
+          Buffer.from(encodedTitle, 'binary'),
+          'utf-8',
+        );
+        // const fileCreationDate = await this.getFileCreationDate(
+        //   image.image_path,
+        // );
+
+        return {
+          id: image.id,
+          title: decodedTitle,
+          cost: cost,
+        };
+      }),
+    );
+
+    const totalCost = imageDetails.reduce((sum, image) => sum + image.cost, 0);
+
+    return {
+      total: images.length,
+      images: imageDetails,
+      totalCost: totalCost,
+      point: point,
+    };
+  }
+
+  private streamToBuffer(stream: Readable): Promise<Buffer> {
+    return new Promise<Buffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+      stream.on('error', reject);
+    });
+  }
+
+  // 이미지 목록 보기 (갤러리 형태)
+  async viewImages(ids: string[], userId: string): Promise<Readable[]> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
+
+    const images = await this.imageRepository.find({
+      where: { id: In(ids) },
+      relations: ['user'],
+    });
+    if (images.length === 0) {
+      throw new NotFoundException('이미지를 찾을 수 없습니다.');
+    }
+    if (images.length !== ids.length) {
+      throw new NotFoundException('하나 이상의 이미지를 찾을 수 없습니다.');
+    }
+
+    const imageStreams = await Promise.all(
+      images.map(async (image) => {
+        const command = new GetObjectCommand({
+          Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+          Key: image.image_path,
+        });
+
+        try {
+          const response = await this.s3.send(command);
+          return response.Body as unknown as Readable;
+        } catch (error) {
+          if (error.name === 'NoSuchKey') {
+            throw new NotFoundException(
+              `이미지를 찾을 수 없습니다: ${image.image_path}`,
+            );
+          } else {
+            throw new InternalServerErrorException(
+              '이미지를 가져오는 중 오류가 발생했습니다.',
+            );
+          }
+        }
+      }),
+    );
+
+    return imageStreams;
+  }
+
+  // 이미지 삭제
+  async deleteImages(
+    ids: string[],
+    userId: string,
+  ): Promise<{ message: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user)
+        throw new UnauthorizedException('회원 정보를 찾을 수 없습니다.');
+
+      const images = await this.imageRepository.find({
+        where: {
+          id: In(ids),
+        },
+        relations: ['user'], // Ensure the user relationship is loaded
+      });
+
+      if (images.length === 0) {
+        throw new NotFoundException('이미지를 찾을 수 없습니다.');
+      }
+      if (images.some((image) => image.user.id !== userId)) {
+        throw new ForbiddenException(
+          '본인이 업로드 한 이미지만 삭제할 수 있습니다.',
+        );
+      }
+
+      // Delete images from S3
+      const deleteObjects = images.map((image) => ({
+        Key: image.image_path,
+      }));
+
+      const deleteParams = {
+        Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+        Delete: {
+          Objects: deleteObjects,
+        },
+      };
+      const deleteCommand = new DeleteObjectsCommand(deleteParams);
+      await this.s3.send(deleteCommand);
+      await this.imageRepository.remove(images);
+
+      await queryRunner.commitTransaction();
+      return { message: '이미지를 성공적으로 삭제했습니다.' };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+      console.error(error);
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // 이미지 감지 및 포인트 차감
+  async detectImages(
+    imageIds: string[],
+    userId: string,
+  ): Promise<{
+    detectedImages: Image[];
+    usedPoints: number;
+    remainingPoints: number;
+  }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) throw new UnauthorizedException('회원이 존재하지 않습니다.');
+
+      const images = await this.imageRepository.find({
+        where: { id: In(imageIds), user: { id: userId } },
+      });
+
+      if (images.length === 0) {
+        throw new NotFoundException('이미지 파일을 찾을 수 없습니다.');
+      }
+
+      let totalCost = 0;
+
+      for (const image of images) {
+        // Get the image dimensions from S3
+        const command = new GetObjectCommand({
+          Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+          Key: image.image_path,
+        });
+
+        const response = await this.s3.send(command);
+        const stream = response.Body as unknown as Readable;
+        const buffer = await this.streamToBuffer(stream);
+        const metadata = await sharp(buffer).metadata();
+
+        const cost = this.calculateCost(metadata.width, metadata.height);
+        totalCost += cost;
+      }
+
+      if (user.point < totalCost) {
+        throw new BadRequestException('포인트가 부족합니다.');
+      }
+
+      // Deduct points and update images status
+      user.point -= totalCost;
+      await queryRunner.manager.save(user);
+
+      const detectedImages = [];
+      for (const image of images) {
+        image.status = ImageStatus.DETECT_SUCCEED;
+        image.is_detected = true;
+        image.detected_at = new Date();
+        detectedImages.push(await queryRunner.manager.save(image));
+      }
+
+      // Log point usage in the PaymentRecord
+      const paymentRecord = this.paymentRecordRepository.create({
+        user: user,
+        payment_type: PaymentType.USE,
+        point: -totalCost,
+        user_point: user.point,
+        detected_images_count: images.length,
+        charge_status: ChargeStatus.CONFIRMED,
+        created_at: new Date(),
+      });
+
+      await queryRunner.manager.save(paymentRecord);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        detectedImages: detectedImages,
+        usedPoints: totalCost,
+        remainingPoints: user.point,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // 단일 이미지 메타데이터 보기
+  async getImageMetadata(id: string, userId: string): Promise<any> {
+    const image = await this.imageRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!image) {
+      throw new NotFoundException('이미지를 찾을 수 없습니다.');
+    }
+
+    if (image.user.id !== userId) {
+      throw new ForbiddenException(
+        '본인이 업로드 한 이미지의 메타데이터만 조회할 수 있습니다.',
+      );
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+      Key: image.image_path,
+    });
+
+    try {
+      const response = await this.s3.send(command);
+      const stream = response.Body as unknown as Readable;
+      const buffer = await this.streamToBuffer(stream);
+      const metadata = await sharp(buffer).metadata();
+
+      // Use exif-parser to extract additional EXIF data
+      const exifData = ExifParser.create(buffer).parse();
+      const {
+        FocalLength,
+        FocalLengthIn35mmFormat,
+        ExifImageWidth,
+        ExifImageHeight,
+      } = exifData.tags;
+
+      return {
+        format: metadata.format,
+        width: metadata.width,
+        height: metadata.height,
+        focalLength: FocalLength,
+        focalLength35mm: FocalLengthIn35mmFormat,
+        sensorWidth: ExifImageWidth,
+        sensorHeight: ExifImageHeight,
+      };
+    } catch (error) {
+      if (error.name === 'NoSuchKey') {
+        throw new NotFoundException('이미지를 찾을 수 없습니다.');
+      } else {
+        throw new InternalServerErrorException(
+          '이미지 메타데이터를 가져오는 중 오류가 발생했습니다.',
+        );
+      }
+    }
+  }
+}
+
+
+9. N-Up Project // nest-server/src/config/s3-storage.config.ts
+
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
+import * as multerS3 from 'multer-s3';
+import * as multer from 'multer';
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+// Create the S3 client instance
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+// 이미지 업로드
+export async function uploadFileToS3(file: Express.Multer.File) {
+  const key = `image/images/${Date.now().toString()}-${file.originalname}`;
+
+  const upload = new Upload({
+    client: s3,
+    params: {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      Body: file.buffer,
+      ACL: 'public-read', // or 'private' depending on your requirements
+    },
+    partSize: 5 * 1024 * 1024, // optional, defaults to 5MB
+    leavePartsOnError: false, // optional, defaults to false
+  });
+
+  await upload.done();
+  console.log('File uploaded to:', key);
+  return key; // Return the key to store in the database
+}
+
+
+10. N-Up Project // nest-server/src/common/multer.options.ts
+
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+
+// Local Storage 업로드
+export const multerOptions = {
+  storage: diskStorage({
+    destination: (req, file, cb) => {
+      let uploadPath: string;
+
+      if (file.fieldname === 'profile_image') {
+        uploadPath = join(__dirname, '../../uploads/profile_images');
+      } else if (file.fieldname === 'business_license') {
+        uploadPath = join(__dirname, '../../uploads/business_licenses');
+      } else if (file.fieldname === 'bank_account_copy') {
+        uploadPath = join(__dirname, '../../uploads/bank_account_copies');
+      }
+
+      // Ensure the upload directory exists
+      if (!existsSync(uploadPath)) {
+        mkdirSync(uploadPath, { recursive: true });
+      }
+
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(
+        null,
+        `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`,
+      );
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (
+      file.fieldname === 'profile_image' ||
+      file.fieldname === 'bank_account_copy'
+    ) {
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        return cb(
+          new Error('이미지 파일 (jpg, jpeg, png, gif)만 업로드 가능합니다.'),
+          false,
+        );
+      }
+    } else if (file.fieldname === 'business_license') {
+      if (!file.originalname.match(/\.(pdf|doc|docx|ppt|pptx|xls|xlsx)$/)) {
+        return cb(
+          new Error('허용된 파일 형식: pdf, doc, docx, ppt, pptx, xls, xlsx'),
+          false,
+        );
+      }
+    }
+    cb(null, true);
+  },
+};
+

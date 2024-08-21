@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsDate,
+  IsEmail,
   IsEnum,
   IsNumber,
   IsString,
@@ -180,10 +181,57 @@ export class UseResAdminDto {
   @IsUUID()
   id: string;
 
+  // 회원 이메일
+  @ApiProperty({ description: '회원 이메일' })
+  @IsEmail()
+  readonly email: string;
+
   // 회원 이름
   @ApiProperty({ description: '회원 이름' })
   @IsString()
   readonly username: string;
+
+  // 유저 포인트
+  @ApiProperty({ description: '유저의 포인트' })
+  @IsNumber()
+  readonly user_point: number;
+
+  // 디텍팅된 이미지의 갯수
+  @ApiProperty({ description: '디텍팅된 이미지의 갯수' })
+  @IsNumber()
+  readonly detected_images_count: number;
+
+  // 사용 포인트
+  @ApiProperty({ description: '사용 포인트' })
+  @IsNumber()
+  readonly point: number;
+
+  // 사용 일시
+  @ApiProperty({ description: '사용 일시' })
+  @IsDate()
+  readonly created_at: Date;
+}
+
+export class UseResCorpAdminDto {
+  // 거래 ID
+  @ApiProperty({ description: '거래 ID' })
+  @IsUUID()
+  id: string;
+
+  // 회원 이메일
+  @ApiProperty({ description: '회원 이메일' })
+  @IsEmail()
+  readonly email: string;
+
+  // 회원 이름
+  @ApiProperty({ description: '회원 이름' })
+  @IsString()
+  readonly username: string;
+
+  // 기업명
+  @ApiProperty({ description: '기업명' })
+  @IsString()
+  readonly corporate_name: string;
 
   // 유저 포인트
   @ApiProperty({ description: '유저의 포인트' })

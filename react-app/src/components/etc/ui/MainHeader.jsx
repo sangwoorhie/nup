@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../services/authServices';
@@ -13,12 +13,18 @@ const MainHeader = ({
   isDarkMode,
 }) => {
   const navigate = useNavigate();
+  const [activeMainOption, setActiveMainOption] = useState('');
 
   const handleLogout = () => {
     if (window.confirm('로그아웃 하시겠습니까?')) {
       logout(navigate);
       alert('로그아웃 되었습니다.');
     }
+  };
+
+  const handleMainOptionClick = (key) => {
+    setActiveMainOption(key);
+    setActiveHeader(key);
   };
 
   const renderMainOptions = () => {
@@ -48,7 +54,8 @@ const MainHeader = ({
           {mainOptions.map((option) => (
             <MainOption
               key={option.key}
-              onClick={() => setActiveHeader(option.key)}
+              onClick={() => handleMainOptionClick(option.key)}
+              active={activeMainOption === option.key}
             >
               {option.label}
             </MainOption>
@@ -104,9 +111,11 @@ const MainOption = styled.div`
   cursor: pointer;
   padding: 5px 10px;
   transition: background-color 0.3s;
+  background-color: ${({ active }) =>
+    active ? 'rgba(255, 255, 255, 0.2)' : 'transparent'};
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.3);
   }
 `;
 
