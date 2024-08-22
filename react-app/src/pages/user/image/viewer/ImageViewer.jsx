@@ -10,7 +10,7 @@ import { Canvas, StaticCanvas } from 'fabric';
 
 initFabricJSOverlay(OpenSeadragon, { Canvas, StaticCanvas });
 
-const ImageViewer = ({ imageUrl, isDarkMode }) => {
+const ImageViewer = ({ imageUrl, isDarkMode, imageId }) => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const viewerRef = useRef(null);
   const viewerInstanceRef = useRef(null);
@@ -26,6 +26,7 @@ const ImageViewer = ({ imageUrl, isDarkMode }) => {
         tileSources: {
           type: 'image',
           url: imageUrl,
+          imageId: imageId,
         },
         showNavigationControl: false,
         showRotationControl: false,
@@ -45,7 +46,7 @@ const ImageViewer = ({ imageUrl, isDarkMode }) => {
 
       viewerInstanceRef.current.fabricjsOverlay({ static: false, scale: 1 });
     }
-  }, [imageUrl]);
+  }, [imageUrl, imageId]);
 
   useEffect(() => {
     initializeViewer();
@@ -62,7 +63,7 @@ const ImageViewer = ({ imageUrl, isDarkMode }) => {
   return (
     <ViewerContainer>
       <div ref={viewerRef} style={{ width: '100%', height: '100%' }} />
-      <ViewerTools viewer={getViewerInstance()} />
+      <ViewerTools viewer={getViewerInstance()} imageId={imageId} />
       <ViewerZoomControl
         viewer={getViewerInstance()}
         zoomLevel={zoomLevel}

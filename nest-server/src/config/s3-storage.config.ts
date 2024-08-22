@@ -38,3 +38,22 @@ export async function uploadFileToS3(file: Express.Multer.File) {
   // console.log('File uploaded to:', result.Location);
   // return result.Location;
 }
+
+// 버퍼 업로드
+export async function uploadBufferToS3(
+  key: string,
+  buffer: Buffer,
+  bucket: string, // Expect the bucket name as a string
+  contentType: string = 'image/jpeg', // default to jpeg
+) {
+  const command = new PutObjectCommand({
+    Bucket: bucket, // Use the bucket name passed as a parameter
+    Key: key,
+    Body: buffer,
+    ContentType: contentType,
+    ACL: 'public-read', // or 'private' based on your requirements
+  });
+
+  await s3.send(command);
+  console.log('Buffer uploaded to:', key);
+}

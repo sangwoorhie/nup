@@ -150,14 +150,18 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
           point={point}
           onRefresh={handleRefresh}
         />
-        {loading ? (
+        {loading && images.length > 0 ? (
           <LoadingContainer>
             <ProgressSpinner style={{ width: '50px', height: '50px' }} />
             <LoadingMessage>Loading image...</LoadingMessage>
           </LoadingContainer>
         ) : selectedImage ? (
           <ImageViewerContainer>
-            <ImageViewer imageUrl={selectedImage.url} isDarkMode={isDarkMode} />
+            <ImageViewer
+              imageUrl={selectedImage.url}
+              imageId={selectedImage.id}
+              isDarkMode={isDarkMode}
+            />
           </ImageViewerContainer>
         ) : null}
       </Content>

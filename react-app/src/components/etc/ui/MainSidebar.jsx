@@ -34,6 +34,8 @@ const MainSidebar = ({
   useEffect(() => {
     if (images.length > 0) {
       setIsLoading(false); // Set loading to false once images are loaded
+    } else if (images.length === 0) {
+      setIsLoading(false); // Set loading to false if no images exist
     }
   }, [images]);
 
@@ -99,7 +101,7 @@ const MainSidebar = ({
             </ButtonGroup>
           </ControlsRow>
 
-          {isLoading ? (
+          {isLoading && images.length > 0 ? (
             <LoadingContainer>
               <ProgressSpinner />
               <LoadingMessage>Loading data, please wait...</LoadingMessage>

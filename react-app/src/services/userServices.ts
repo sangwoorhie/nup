@@ -222,10 +222,10 @@ export const fetchSingleImage = async (id: string) => {
 };
 
 // 이미지 메타데이터 조회
-export const fetchImageMetaData = async (id: string) => {
+export const fetchImageMetadata = async (id: string) => {
   try {
-    const response = await httpClient.get(`/images/metadata/${id}`);
-    return response.data.metadata;
+    const { data } = await httpClient.get(`/images/metadata/${id}`);
+    return data.metadata;
   } catch (error) {
     console.error('Error fetching image metadata:', error);
     throw error;

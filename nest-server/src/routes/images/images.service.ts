@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
+  StreamableFile,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
@@ -23,14 +24,18 @@ import { Stream } from 'stream';
 import { User } from 'src/entities/user.entity';
 import { PageResDto } from 'src/common/dto/res.dto';
 import { ImageResDto } from './dto/res.dto';
-import { uploadFileToS3 } from 'src/config/s3-storage.config';
+import { uploadBufferToS3, uploadFileToS3 } from 'src/config/s3-storage.config';
 import { createReadStream } from 'fs';
 import * as archiver from 'archiver';
 import { PassThrough, Readable } from 'stream';
 import { decode } from 'iconv-lite';
+import { createCanvas, loadImage } from 'canvas';
 import * as sharp from 'sharp';
 import * as ExifParser from 'exif-parser';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
+import axios from 'axios';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
 dotenv.config();
 
@@ -441,7 +446,7 @@ export class ImagesService {
     }
   }
 
-  // 7. 이미지 감지 및 포인트 차감
+  // 7. 이미지 감지 및 포인트 차감 => 9번과 합쳐져야 함
   async detectImages(
     imageIds: string[],
     userId: string,
@@ -584,6 +589,118 @@ export class ImagesService {
           '이미지 메타데이터를 가져오는 중 오류가 발생했습니다.',
         );
       }
+    }
+  }
+
+  // 9.특정 이미지 타일링(디텍팅) 요청 => 7번과 합쳐져야 함
+  async tileImage(
+    id: string,
+    userId: string,
+    jsonData: string,
+  ): Promise<{ tileUrl: string; outputBuffer: Buffer }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const image = await this.imageRepository.findOne({
+        where: { id },
+        relations: ['user'],
+      });
+      if (!image) {
+        throw new NotFoundException('이미지를 찾을 수 없습니다.');
+      }
+
+      if (image.user.id !== userId) {
+        throw new ForbiddenException(
+          '본인이 업로드한 이미지에만 타일링 요청할 수 있습니다.',
+        );
+      }
+
+      const imagePath = image.image_path;
+
+      // Fetch the image from S3
+      const command = new GetObjectCommand({
+        Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'), // Extract bucket name as string
+        Key: imagePath,
+      });
+      const response = await this.s3.send(command);
+      const stream = response.Body as unknown as Readable;
+
+      // Convert stream to buffer
+      const buffer = await this.streamToBuffer(stream);
+
+      // Parse the JSON data that is already a stringified array of objects
+      const crackMapArray = JSON.parse(jsonData);
+
+      // Use sharp to draw cracks on the image
+      let sharpImage = sharp(buffer);
+
+      crackMapArray.forEach((crackMap: { DAMAGE_PATH: any[][] }) => {
+        if (
+          crackMap &&
+          crackMap.DAMAGE_PATH &&
+          Array.isArray(crackMap.DAMAGE_PATH)
+        ) {
+          crackMap.DAMAGE_PATH.forEach((path: any[]) => {
+            if (Array.isArray(path)) {
+              path.forEach((coordinate) => {
+                if (Array.isArray(coordinate) && coordinate.length === 2) {
+                  sharpImage = sharpImage.composite([
+                    {
+                      input: {
+                        create: {
+                          width: 1,
+                          height: 1,
+                          channels: 4,
+                          background: { r: 255, g: 0, b: 0, alpha: 1 }, // Red color
+                        },
+                      },
+                      top: coordinate[1],
+                      left: coordinate[0],
+                    },
+                  ]);
+                } else {
+                  throw new Error(
+                    'Unexpected JSON structure within coordinate array in DAMAGE_PATH',
+                  );
+                }
+              });
+            } else {
+              throw new Error('Unexpected JSON structure within DAMAGE_PATH');
+            }
+          });
+        } else {
+          throw new Error('Unexpected JSON structure in DAMAGE_PATH');
+        }
+      });
+
+      const outputBuffer = await sharpImage.toBuffer();
+
+      // Upload the tiled image back to S3 (with a new path or overwrite)
+      const newKey = `tiled_${imagePath}`;
+      const bucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME'); // Extract the bucket name as a string
+      await uploadBufferToS3(newKey, outputBuffer, bucketName); // Pass bucket name as a string
+
+      // Construct the S3 URL
+      const region = this.configService.get<string>('AWS_REGION');
+      const tileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${newKey}`;
+
+      // Save the tiled image URL in the database
+      image.detected_at = new Date();
+      image.tile_url = tileUrl;
+      await this.imageRepository.save(image);
+
+      await queryRunner.commitTransaction();
+      return { tileUrl, outputBuffer };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+      console.error(e.message); // Log the error message for debugging
+    } finally {
+      await queryRunner.release(); // Corrected
+      if (error) throw error;
     }
   }
 }

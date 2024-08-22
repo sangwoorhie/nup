@@ -36,6 +36,11 @@ export class Image {
   @Column({ type: 'boolean', default: false })
   is_detected: boolean;
 
+  // 타일링된 이미지 저장 URL
+  @ApiProperty({ description: '타일링된 이미지 저장 URL' })
+  @Column({ nullable: true })
+  tile_url: string;
+
   // 비용
   @ApiProperty({ description: '이미지 업로드 비용' })
   @Column({ type: 'int', nullable: true })

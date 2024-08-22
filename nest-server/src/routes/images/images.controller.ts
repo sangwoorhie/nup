@@ -13,10 +13,12 @@ import {
   Header,
   BadRequestException,
   NotFoundException,
+  StreamableFile,
   InternalServerErrorException,
+  UploadedFile,
 } from '@nestjs/common';
 import { User, UserAfterAuth } from 'src/decorators/user.decorators';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ImagesService } from './images.service';
 import {
   ApiTags,
@@ -39,15 +41,11 @@ import { ImageResDto } from './dto/res.dto';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { PassThrough } from 'stream';
 import { isUUID } from 'class-validator';
-import { ImageTilingService } from './image-tiling.service';
 
 @ApiTags('Images')
 @Controller('images')
 export default class ImagesController {
-  constructor(
-    private readonly imagesService: ImagesService,
-    private readonly imageTilingService: ImageTilingService,
-  ) {}
+  constructor(private readonly imagesService: ImagesService) {}
 
   // 1. 이미지 파일 업로드 (다중 파일 업로드 가능)
   // POST : localhost:3000/images/upload
@@ -199,7 +197,7 @@ export default class ImagesController {
     return this.imagesService.deleteImages(deleteImagesDto.ids, user.id);
   }
 
-  // 7. 이미지 디텍팅 및 포인트 차감
+  // 7. 이미지 디텍팅 및 포인트 차감 => 9번과 합쳐져야 함
   // POST : localhost:3000/images/detect { "ids": ["id1","id2", "id3"] }
   @Post('detect')
   @ApiOperation({ summary: '이미지 디텍팅 및 포인트 차감' })
@@ -238,23 +236,38 @@ export default class ImagesController {
     };
   }
 
-  // 9. 이미지 타일링
-  @Get('process')
-  @ApiOperation({ summary: '이미지 타일링' })
-  async processTilingImage(
-    @Query('imagePath') imagePath: string,
+  // 9. 특정 이미지 타일링(디텍팅) 요청 => 7번과 합쳐져야 함
+  // POST : localhost:3000/images/tile/:id
+  @Post('tile/:id')
+  @ApiOperation({ summary: '특정 이미지에 대한 타일링 요청' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지 타일링 요청이 성공적으로 처리되었습니다.',
+  })
+  async tileImage(
+    @Param('id') id: string,
+    @User() user: UserAfterAuth,
+    @Body('data') jsonData: string, // JSON data as string
     @Res() res: Response,
   ) {
-    if (!imagePath) {
-      throw new BadRequestException('imagePath query parameter is required');
+    const { tileUrl, outputBuffer } = await this.imagesService.tileImage(
+      id,
+      user.id,
+      jsonData,
+    );
+
+    // Determine the content type based on the image extension
+    const imageExtension = tileUrl.split('.').pop()?.toLowerCase();
+    let contentType = 'image/jpeg'; // Default to jpeg
+
+    if (imageExtension === 'png') {
+      contentType = 'image/png';
+    } else if (imageExtension === 'jpg' || imageExtension === 'jpeg') {
+      contentType = 'image/jpeg';
     }
 
-    try {
-      const result =
-        await this.imageTilingService.processTilingImage(imagePath);
-      res.json(result);
-    } catch (error) {
-      throw new InternalServerErrorException('Error processing image tiling');
-    }
+    res.setHeader('Content-Type', contentType); // Set appropriate content type
+    res.setHeader('X-Tile-Url', tileUrl); // Optionally include the URL in headers
+    res.send(outputBuffer); // Stream the image buffer back to the client
   }
 }

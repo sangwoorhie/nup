@@ -1,3 +1,5 @@
+// react-app/src/pages/user/image/viewer/utils/openseadragon-fabricjs-overlay.js
+
 import { Point } from 'fabric';
 
 function initFabricJSOverlay(OpenSeadragon, { Canvas, StaticCanvas }) {
@@ -99,16 +101,29 @@ function initFabricJSOverlay(OpenSeadragon, { Canvas, StaticCanvas }) {
       this._fabricCanvas.renderAll();
     }
     resize() {
-      if (this._containerWidth !== this._viewer.container.clientWidth) {
-        this._containerWidth = this._viewer.container.clientWidth;
-        this._canvasdiv.setAttribute('width', this._containerWidth);
-        this._canvas.setAttribute('width', this._containerWidth);
-      }
+      const viewerContainer = this._viewer.container;
 
-      if (this._containerHeight !== this._viewer.container.clientHeight) {
-        this._containerHeight = this._viewer.container.clientHeight;
-        this._canvasdiv.setAttribute('height', this._containerHeight);
-        this._canvas.setAttribute('height', this._containerHeight);
+      // Check if container exists and has valid dimensions before proceeding
+      if (
+        viewerContainer &&
+        viewerContainer.clientWidth &&
+        viewerContainer.clientHeight
+      ) {
+        if (this._containerWidth !== viewerContainer.clientWidth) {
+          this._containerWidth = viewerContainer.clientWidth;
+          this._canvasdiv.setAttribute('width', this._containerWidth);
+          this._canvas.setAttribute('width', this._containerWidth);
+        }
+
+        if (this._containerHeight !== viewerContainer.clientHeight) {
+          this._containerHeight = viewerContainer.clientHeight;
+          this._canvasdiv.setAttribute('height', this._containerHeight);
+          this._canvas.setAttribute('height', this._containerHeight);
+        }
+      } else {
+        console.warn(
+          'Viewer container is not available or has invalid dimensions.'
+        );
       }
     }
     resizeCanvas() {
