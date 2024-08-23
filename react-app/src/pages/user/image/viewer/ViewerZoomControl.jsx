@@ -60,15 +60,14 @@ const ViewerZoomControl = ({ viewer, zoomLevel, setZoomLevel }) => {
 
 const ZoomControlContainer = styled.div`
   position: absolute;
-  right: 10px; // Align to the right of the screen
-  bottom: 10px; // Place it near the bottom of the screen
+  right: 10px;
+  bottom: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   background-color: rgba(255, 255, 255, 0.8);
   padding: 10px;
   border-radius: 5px;
-  z-index: 10; // Ensure it's on top of other elements
 `;
 
 const SliderContainer = styled.div`

@@ -93,7 +93,8 @@ const FileInput = ({ isDarkMode, toggleDarkMode }) => {
     setLoading(true); // Start loading
     try {
       const imageUrl = await fetchSingleImage(image.id);
-      setSelectedImage({ url: imageUrl, title: image.title });
+      // console.log('aaaaa', image.id);
+      setSelectedImage({ url: imageUrl, title: image.title, id: image.id });
     } catch (error) {
       console.error('Failed to fetch image data:', error);
     } finally {

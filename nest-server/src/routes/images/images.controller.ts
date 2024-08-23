@@ -228,8 +228,16 @@ export default class ImagesController {
     status: 200,
     description: '이미지 메타데이터를 성공적으로 조회했습니다.',
   })
-  async getImageMetadata(@Param('id') id: string, @User() user: UserAfterAuth) {
-    const metadata = await this.imagesService.getImageMetadata(id, user.id);
+  async getImageMetadata(
+    @Param('id') id: string,
+    @User() user: UserAfterAuth,
+    @Query('flightHeight') flightHeight?: number,
+  ) {
+    const metadata = await this.imagesService.getImageMetadata(
+      id,
+      user.id,
+      flightHeight,
+    );
     return {
       message: 'Image metadata retrieved successfully.',
       metadata,

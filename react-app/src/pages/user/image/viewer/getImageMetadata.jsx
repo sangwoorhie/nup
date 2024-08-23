@@ -1,37 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Sidebar } from 'primereact/sidebar';
 import styled from 'styled-components';
-import { Button } from 'primereact/button';
-import { fetchImageMetadata } from '../../../../services/userServices'; // Add this import
+import { fetchImageMetadata } from '../../../../services/userServices';
 
-const ViewerTools = ({ viewer }) => {
-  const [isMetaVisible, setIsMetaVisible] = useState(false);
-  const [imageMetadata, setImageMetadata] = useState(null); // Add this state
+const MetadataContainer = ({ viewer, imageId, isVisible, onHide }) => {
+  const [imageMetadata, setImageMetadata] = useState(null);
 
-  const toggleMetaVisibility = async () => {
-    setIsMetaVisible(!isMetaVisible);
-    if (!isMetaVisible && viewer) {
+  const fetchMetadata = useCallback(async () => {
+    if (viewer && imageId && isVisible && !imageMetadata) {
       try {
-        const imageId = viewer?.world?.getItemAt(0)?.source?.imageId; // Replace with the correct way to get imageId
-        if (imageId) {
-          const metadata = await fetchImageMetadata(imageId);
-          setImageMetadata(metadata);
-        }
+        const metadata = await fetchImageMetadata(imageId);
+        setImageMetadata(metadata);
       } catch (error) {
         console.error('Failed to fetch image metadata:', error);
       }
     }
-  };
+  }, [viewer, imageId, isVisible, imageMetadata]);
+
+  useEffect(() => {
+    fetchMetadata();
+  }, [fetchMetadata]);
 
   return (
-    <ToolsContainer>
-      <Button
-        icon={`pi ${isMetaVisible ? 'pi-info-circle' : 'pi-info'}`}
-        onClick={toggleMetaVisibility}
-        tooltip='메타 데이터 표시'
-      />
-      {isMetaVisible && imageMetadata && (
-        <MetadataContainer>
-          <h4>Image Metadata</h4>
+    <Sidebar visible={isVisible} position='right' onHide={onHide}>
+      <h2>Image Metadata</h2>
+      {imageMetadata ? (
+        <StyledMetadataContainer>
           <ul>
             <li>Format: {imageMetadata.format}</li>
             <li>Width: {imageMetadata.width}px</li>
@@ -41,22 +35,15 @@ const ViewerTools = ({ viewer }) => {
             <li>Sensor Width: {imageMetadata.sensorWidth}mm</li>
             <li>Sensor Height: {imageMetadata.sensorHeight}mm</li>
           </ul>
-        </MetadataContainer>
+        </StyledMetadataContainer>
+      ) : (
+        <p>Loading metadata...</p>
       )}
-    </ToolsContainer>
+    </Sidebar>
   );
 };
 
-const ToolsContainer = styled.div`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const MetadataContainer = styled.div`
+const StyledMetadataContainer = styled.div`
   margin-top: 10px;
   padding: 10px;
   background-color: rgba(255, 255, 255, 0.9);
@@ -70,4 +57,4 @@ const MetadataContainer = styled.div`
   }
 `;
 
-export default ViewerTools;
+export default MetadataContainer;

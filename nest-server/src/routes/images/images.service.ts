@@ -536,7 +536,11 @@ export class ImagesService {
   }
 
   // 8. 단일 이미지 메타데이터 보기
-  async getImageMetadata(id: string, userId: string): Promise<any> {
+  async getImageMetadata(
+    id: string,
+    userId: string,
+    flightHeight?: number,
+  ): Promise<any> {
     const image = await this.imageRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -570,9 +574,46 @@ export class ImagesService {
         FocalLengthIn35mmFormat,
         ExifImageWidth,
         ExifImageHeight,
+        SubjectDistance,
       } = exifData.tags;
 
+      // Check if all required fields are available
+      if (
+        !FocalLength ||
+        !FocalLengthIn35mmFormat ||
+        !ExifImageWidth ||
+        !ExifImageHeight ||
+        !SubjectDistance
+      ) {
+        return {
+          id: image.id,
+          format: metadata.format,
+          width: metadata.width,
+          height: metadata.height,
+          focalLength: FocalLength,
+          focalLength35mm: FocalLengthIn35mmFormat,
+          sensorWidth: ExifImageWidth,
+          sensorHeight: ExifImageHeight,
+          gsd: null, // GSD cannot be calculated due to missing data
+          altitudeUsed: SubjectDistance || 'N/A', // 촬영거리
+        };
+      }
+
+      const width = ExifImageWidth;
+      const height = ExifImageHeight;
+      const focalLength35mm = FocalLengthIn35mmFormat; // in mm
+      const distance = flightHeight || SubjectDistance; // in meters
+
+      // Calculate the sensor diagonal in 35mm equivalent
+      const sensorDiagonal35mm = Math.sqrt(36 ** 2 + 24 ** 2); // Diagonal of a 35mm sensor (~43.27 mm)
+      const diagonalPixels = Math.sqrt(width ** 2 + height ** 2);
+
+      // GSD calculation in cm/px
+      const gsd =
+        (distance * sensorDiagonal35mm) / (diagonalPixels * focalLength35mm);
+
       return {
+        id: image.id,
         format: metadata.format,
         width: metadata.width,
         height: metadata.height,
@@ -580,6 +621,8 @@ export class ImagesService {
         focalLength35mm: FocalLengthIn35mmFormat,
         sensorWidth: ExifImageWidth,
         sensorHeight: ExifImageHeight,
+        gsd: gsd ? (gsd * 100).toFixed(4) : null, // Convert from m/px to cm/px
+        altitudeUsed: distance || 'N/A', // 촬영거리
       };
     } catch (error) {
       if (error.name === 'NoSuchKey') {

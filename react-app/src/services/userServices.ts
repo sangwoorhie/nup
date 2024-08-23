@@ -224,10 +224,10 @@ export const fetchSingleImage = async (id: string) => {
 // 이미지 메타데이터 조회
 export const fetchImageMetadata = async (id: string) => {
   try {
-    const { data } = await httpClient.get(`/images/metadata/${id}`);
-    return data.metadata;
+    const response = await httpClient.get(`/images/metadata/${id}`);
+    return response.data.metadata; // Return metadata directly
   } catch (error) {
-    console.error('Error fetching image metadata:', error);
+    console.error('Failed to fetch image metadata:', error);
     throw error;
   }
 };
@@ -246,11 +246,6 @@ export const findUseHistoryByDateRange = async (
     return response.data;
   } catch (error) {
     console.error(error);
-    // const message =
-    //   error.response?.data?.message ||
-    //   error.message ||
-    //   'Failed to fetch use history by date range';
-    // throw new Error(message);
   }
 };
 
@@ -263,10 +258,5 @@ export const getUseHistory = async (page: number, size: number) => {
     return response.data;
   } catch (error) {
     console.error(error);
-    // const message =
-    //   error.response?.data?.message ||
-    //   error.message ||
-    //   'Failed to fetch use history';
-    // throw new Error(message);
   }
 };

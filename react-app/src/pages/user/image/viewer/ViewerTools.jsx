@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Button } from 'primereact/button';
-import { fetchImageMetadata } from '../../../../services/userServices'; // Import your service
+import MetadataContainer from './getImageMetadata';
 
 const ViewerTools = ({ viewer, imageId }) => {
-  // Accept imageId as a prop
   const [isDamageVisible, setIsDamageVisible] = useState(true);
   const [isImageVisible, setIsImageVisible] = useState(true);
   const [isMetaVisible, setIsMetaVisible] = useState(false);
-  const [imageMetadata, setImageMetadata] = useState(null); // New state for storing metadata
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isMeasuring, setIsMeasuring] = useState(false);
 
@@ -23,20 +21,8 @@ const ViewerTools = ({ viewer, imageId }) => {
     }
   };
 
-  const toggleMetaVisibility = async () => {
+  const toggleMetaVisibility = () => {
     setIsMetaVisible(!isMetaVisible);
-    if (!isMetaVisible && viewer && imageId) {
-      // Check if imageId is available
-      try {
-        const metadata = await fetchImageMetadata(imageId);
-        setImageMetadata(metadata);
-        console.log('Fetched metadata:', metadata); // Debugging: Log the metadata
-      } catch (error) {
-        console.error('Failed to fetch image metadata:', error);
-      }
-    } else {
-      console.error('Image ID not found.');
-    }
   };
 
   const toggleFilterVisibility = () => {
@@ -64,20 +50,12 @@ const ViewerTools = ({ viewer, imageId }) => {
         onClick={toggleMetaVisibility}
         tooltip='메타 데이터 표시'
       />
-      {isMetaVisible && imageMetadata && (
-        <MetadataContainer>
-          <h4>Image Metadata</h4>
-          <ul>
-            <li>Format: {imageMetadata.format}</li>
-            <li>Width: {imageMetadata.width}px</li>
-            <li>Height: {imageMetadata.height}px</li>
-            <li>Focal Length: {imageMetadata.focalLength}mm</li>
-            <li>Focal Length (35mm): {imageMetadata.focalLength35mm}mm</li>
-            <li>Sensor Width: {imageMetadata.sensorWidth}mm</li>
-            <li>Sensor Height: {imageMetadata.sensorHeight}mm</li>
-          </ul>
-        </MetadataContainer>
-      )}
+      <MetadataContainer
+        viewer={viewer}
+        imageId={imageId}
+        isVisible={isMetaVisible}
+        onHide={() => setIsMetaVisible(false)}
+      />
       <Button
         icon={`pi ${isFilterVisible ? 'pi-filter-fill' : 'pi-filter'}`}
         onClick={toggleFilterVisibility}
@@ -99,20 +77,6 @@ const ToolsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-`;
-
-const MetadataContainer = styled.div`
-  margin-top: 10px;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 5px;
-  ul {
-    list-style-type: none;
-    padding: 0;
-    li {
-      margin-bottom: 5px;
-    }
-  }
 `;
 
 export default ViewerTools;
