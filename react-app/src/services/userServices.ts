@@ -232,6 +232,29 @@ export const fetchImageMetadata = async (id: string) => {
   }
 };
 
+interface UpdateData {
+  gsd?: string;
+  altitudeUsed?: number;
+}
+
+// 수치해석 변경 (단일 이미지)
+export const modifyImageMetadata = async (
+  id: string,
+  updateData: UpdateData
+) => {
+  const { data } = await httpClient.patch(`/images/metadata/${id}`, updateData);
+  return data;
+};
+
+// 수치해석 변경 (전체 이미지)
+export const modifyAllImagesMetadata = async (updateData: UpdateData) => {
+  const { data } = await httpClient.patch(
+    '/images/metadata/user/all',
+    updateData
+  );
+  return data;
+};
+
 // 날짜별 포인트 사용내역 조회
 export const findUseHistoryByDateRange = async (
   start_date: string,

@@ -575,7 +575,14 @@ export class ImagesService {
         ExifImageWidth,
         ExifImageHeight,
         SubjectDistance,
+        // Assuming these values would be extracted if available
+        // SensorWidthInMm, // e.g., could be extracted from some other source or predefined
+        // SensorHeightInMm // e.g., could be extracted from some other source or predefined
       } = exifData.tags;
+
+      // Set these values according to your known camera sensor size or extract them from EXIF if available
+      const SensorWidthInMm = 6.31; // Example value for a common camera sensor
+      const SensorHeightInMm = 4.733; // Example value for a common camera sensor
 
       // Check if all required fields are available
       if (
@@ -592,10 +599,10 @@ export class ImagesService {
           height: metadata.height,
           focalLength: FocalLength,
           focalLength35mm: FocalLengthIn35mmFormat,
-          sensorWidth: ExifImageWidth,
-          sensorHeight: ExifImageHeight,
-          gsd: null, // GSD cannot be calculated due to missing data
-          altitudeUsed: SubjectDistance || 'N/A', // 촬영거리
+          sensorWidth: SensorWidthInMm,
+          sensorHeight: SensorHeightInMm,
+          gsd: image.gsd || null, // Use modified GSD if available
+          altitudeUsed: image.altitudeUsed || SubjectDistance || 'N/A', // Use modified altitude if available
         };
       }
 
@@ -609,8 +616,11 @@ export class ImagesService {
       const diagonalPixels = Math.sqrt(width ** 2 + height ** 2);
 
       // GSD calculation in cm/px
-      const gsd =
+      const calculatedGsd =
         (distance * sensorDiagonal35mm) / (diagonalPixels * focalLength35mm);
+
+      // Use the calculated GSD unless it has been modified
+      const gsd = image.gsd ? image.gsd : (calculatedGsd * 100).toFixed(4);
 
       return {
         id: image.id,
@@ -619,10 +629,10 @@ export class ImagesService {
         height: metadata.height,
         focalLength: FocalLength,
         focalLength35mm: FocalLengthIn35mmFormat,
-        sensorWidth: ExifImageWidth,
-        sensorHeight: ExifImageHeight,
-        gsd: gsd ? (gsd * 100).toFixed(4) : null, // Convert from m/px to cm/px
-        altitudeUsed: distance || 'N/A', // 촬영거리
+        sensorWidth: SensorWidthInMm, // Return the actual sensor width in mm
+        sensorHeight: SensorHeightInMm, // Return the actual sensor height in mm
+        gsd: gsd, // Return modified or calculated GSD
+        altitudeUsed: image.altitudeUsed || distance || 'N/A', // Return modified or calculated altitudeUsed
       };
     } catch (error) {
       if (error.name === 'NoSuchKey') {
@@ -743,6 +753,90 @@ export class ImagesService {
       console.error(e.message); // Log the error message for debugging
     } finally {
       await queryRunner.release(); // Corrected
+      if (error) throw error;
+    }
+  }
+
+  // 10. 수치해석 변경 (단일 이미지)
+  async modifyImageMetadata(
+    id: string,
+    userId: string,
+    updateData: { gsd?: string; altitudeUsed?: number },
+  ): Promise<any> {
+    const image = await this.imageRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+
+    if (!image) {
+      throw new NotFoundException('이미지를 찾을 수 없습니다.');
+    }
+
+    if (image.user.id !== userId) {
+      throw new ForbiddenException(
+        '본인이 업로드한 이미지의 메타데이터만 수정할 수 있습니다.',
+      );
+    }
+
+    if (updateData.gsd) {
+      image.gsd = updateData.gsd;
+    }
+
+    if (updateData.altitudeUsed) {
+      image.altitudeUsed = updateData.altitudeUsed;
+    }
+
+    await this.imageRepository.save(image);
+
+    return this.getImageMetadata(id, userId); // Return the updated metadata
+  }
+
+  // 11. 수치해석 변경 (전체 이미지)
+  async modifyAllImagesMetadata(
+    userId: string,
+    updateData: { gsd?: string; altitudeUsed?: number },
+  ): Promise<any[]> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const images = await this.imageRepository.find({
+        where: { user: { id: userId } },
+      });
+
+      if (images.length === 0) {
+        throw new NotFoundException('사용자의 이미지를 찾을 수 없습니다.');
+      }
+
+      const updatedImages = [];
+
+      for (const image of images) {
+        if (updateData.gsd) {
+          image.gsd = updateData.gsd;
+        }
+
+        if (updateData.altitudeUsed) {
+          image.altitudeUsed = updateData.altitudeUsed;
+        }
+
+        await this.imageRepository.save(image);
+
+        const updatedMetadata = await this.getImageMetadata(image.id, userId);
+        updatedImages.push(updatedMetadata);
+      }
+
+      return updatedImages; // Return the updated metadata for all images
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      console.error('Error occurred while modifying all images metadata:', e);
+      error = e;
+      throw new InternalServerErrorException(
+        'Failed to modify all images metadata',
+      ); // Provide a meaningful error message
+    } finally {
+      await queryRunner.release();
       if (error) throw error;
     }
   }

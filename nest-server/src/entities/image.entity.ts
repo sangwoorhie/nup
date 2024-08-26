@@ -46,6 +46,16 @@ export class Image {
   @Column({ type: 'int', nullable: true })
   cost: number | null;
 
+  // GSD
+  @ApiProperty({ description: 'Ground Sampling Distance (GSD)' })
+  @Column({ type: 'varchar', nullable: true })
+  gsd: string | null;
+
+  // 촬영거리
+  @ApiProperty({ description: 'Altitude Used(촬영 거리)' })
+  @Column({ type: 'int', nullable: true })
+  altitudeUsed: number | null;
+
   // 이미지가 업로드 된 시각
   @ApiProperty({ description: '이미지가 업로드(생성) 된 시각' })
   @CreateDateColumn({ type: 'timestamp' })

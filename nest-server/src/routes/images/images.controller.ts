@@ -278,4 +278,52 @@ export default class ImagesController {
     res.setHeader('X-Tile-Url', tileUrl); // Optionally include the URL in headers
     res.send(outputBuffer); // Stream the image buffer back to the client
   }
+
+  // 10. 수치해석 변경 (단일 이미지)
+  // PATCH : localhost:3000/images/metadata/:id
+  @Patch('metadata/:id')
+  @ApiOperation({ summary: '단일 이미지의 GSD 및 Altitude(촬영거리) 수정' })
+  @ApiResponse({
+    status: 200,
+    description: '이미지 메타데이터를 성공적으로 수정했습니다.',
+  })
+  async modifyImageMetadata(
+    @Param('id') id: string,
+    @User() user: UserAfterAuth,
+    @Body() updateData: { gsd?: string; altitudeUsed?: number },
+  ) {
+    const updatedMetadata = await this.imagesService.modifyImageMetadata(
+      id,
+      user.id,
+      updateData,
+    );
+    return {
+      message: 'Image metadata updated successfully.',
+      metadata: updatedMetadata,
+    };
+  }
+
+  // 11. 수치해석 변경 (전체 이미지)
+  // PATCH : localhost:3000/images/metadata/user/all
+  @Patch('metadata/user/all')
+  @ApiOperation({
+    summary: '사용자의 모든 이미지의 GSD 및 Altitude(촬영거리) 수정',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '모든 이미지 메타데이터를 성공적으로 수정했습니다.',
+  })
+  async modifyAllImagesMetadata(
+    @User() user: UserAfterAuth,
+    @Body() updateData: { gsd?: string; altitudeUsed?: number },
+  ) {
+    const updatedImages = await this.imagesService.modifyAllImagesMetadata(
+      user.id,
+      updateData,
+    );
+    return {
+      message: 'All images metadata updated successfully.',
+      images: updatedImages,
+    };
+  }
 }
