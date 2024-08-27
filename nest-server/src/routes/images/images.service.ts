@@ -18,6 +18,7 @@ import {
   NoSuchKey,
   DeleteObjectsCommand,
   HeadObjectCommand,
+  PutObjectCommand,
 } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { Stream } from 'stream';
@@ -35,8 +36,10 @@ import * as ExifParser from 'exif-parser';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as mime from 'mime-types';
 import axios from 'axios';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
+// import mime from 'mime';
 dotenv.config();
 
 @Injectable()
@@ -651,110 +654,123 @@ export class ImagesService {
     userId: string,
     jsonData: string,
   ): Promise<{ tileUrl: string; outputBuffer: Buffer }> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const image = await this.imageRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
 
-    let error;
-    try {
-      const image = await this.imageRepository.findOne({
-        where: { id },
-        relations: ['user'],
-      });
-      if (!image) {
-        throw new NotFoundException('이미지를 찾을 수 없습니다.');
-      }
-
-      if (image.user.id !== userId) {
-        throw new ForbiddenException(
-          '본인이 업로드한 이미지에만 타일링 요청할 수 있습니다.',
-        );
-      }
-
-      const imagePath = image.image_path;
-
-      // Fetch the image from S3
-      const command = new GetObjectCommand({
-        Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'), // Extract bucket name as string
-        Key: imagePath,
-      });
-      const response = await this.s3.send(command);
-      const stream = response.Body as unknown as Readable;
-
-      // Convert stream to buffer
-      const buffer = await this.streamToBuffer(stream);
-
-      // Parse the JSON data that is already a stringified array of objects
-      const crackMapArray = JSON.parse(jsonData);
-
-      // Use sharp to draw cracks on the image
-      let sharpImage = sharp(buffer);
-
-      crackMapArray.forEach((crackMap: { DAMAGE_PATH: any[][] }) => {
-        if (
-          crackMap &&
-          crackMap.DAMAGE_PATH &&
-          Array.isArray(crackMap.DAMAGE_PATH)
-        ) {
-          crackMap.DAMAGE_PATH.forEach((path: any[]) => {
-            if (Array.isArray(path)) {
-              path.forEach((coordinate) => {
-                if (Array.isArray(coordinate) && coordinate.length === 2) {
-                  sharpImage = sharpImage.composite([
-                    {
-                      input: {
-                        create: {
-                          width: 1,
-                          height: 1,
-                          channels: 4,
-                          background: { r: 255, g: 0, b: 0, alpha: 1 }, // Red color
-                        },
-                      },
-                      top: coordinate[1],
-                      left: coordinate[0],
-                    },
-                  ]);
-                } else {
-                  throw new Error(
-                    'Unexpected JSON structure within coordinate array in DAMAGE_PATH',
-                  );
-                }
-              });
-            } else {
-              throw new Error('Unexpected JSON structure within DAMAGE_PATH');
-            }
-          });
-        } else {
-          throw new Error('Unexpected JSON structure in DAMAGE_PATH');
-        }
-      });
-
-      const outputBuffer = await sharpImage.toBuffer();
-
-      // Upload the tiled image back to S3 (with a new path or overwrite)
-      const newKey = `tiled_${imagePath}`;
-      const bucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME'); // Extract the bucket name as a string
-      await uploadBufferToS3(newKey, outputBuffer, bucketName); // Pass bucket name as a string
-
-      // Construct the S3 URL
-      const region = this.configService.get<string>('AWS_REGION');
-      const tileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${newKey}`;
-
-      // Save the tiled image URL in the database
-      image.detected_at = new Date();
-      image.tile_url = tileUrl;
-      await this.imageRepository.save(image);
-
-      await queryRunner.commitTransaction();
-      return { tileUrl, outputBuffer };
-    } catch (e) {
-      await queryRunner.rollbackTransaction();
-      error = e;
-      console.error(e.message); // Log the error message for debugging
-    } finally {
-      await queryRunner.release(); // Corrected
-      if (error) throw error;
+    if (!image) {
+      throw new NotFoundException('Image not found');
     }
+
+    if (image.user.id !== userId) {
+      throw new ForbiddenException('You can only tile your own images');
+    }
+
+    // Fetch the image from S3
+    const command = new GetObjectCommand({
+      Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+      Key: image.image_path,
+    });
+
+    const response = await this.s3.send(command);
+    const buffer = await this.streamToBuffer(response.Body as Readable);
+
+    // Parse the JSON data that contains the vector paths
+    const crackMapArray = JSON.parse(jsonData);
+
+    // Get image dimensions
+    const { width, height } = await sharp(buffer).metadata();
+
+    // Create a blank transparent overlay with the same dimensions as the original image
+    let overlay = sharp({
+      create: {
+        width: width || 50, // Fallback to 1 if width is undefined
+        height: height || 50, // Fallback to 1 if height is undefined
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 }, // Fully transparent background
+      },
+    }).png();
+
+    const drawPaths = crackMapArray.map((crackMap) => {
+      return crackMap.DAMAGE_PATH.map((path) => {
+        return path.map(([x, y]) => {
+          return {
+            input: {
+              create: {
+                width: 100,
+                height: 100,
+                channels: 4,
+                background: { r: 255, g: 0, b: 0, alpha: 1 }, // Red color for cracks
+              },
+            },
+            top: y,
+            left: x,
+          };
+        });
+      });
+    });
+
+    // Flatten the array
+    const allDrawPaths = drawPaths.flat(2);
+
+    // Apply the paths to the overlay
+    overlay = overlay.composite(allDrawPaths);
+
+    const overlayBuffer = await overlay.toBuffer();
+
+    // Apply the overlay onto the original image
+    let sharpImage = sharp(buffer).composite([
+      {
+        input: overlayBuffer,
+        top: 0,
+        left: 0,
+      },
+    ]);
+
+    const outputBuffer = await sharpImage.toBuffer();
+
+    // Upload the processed image back to S3
+    const newKey = `tiled_${image.image_path}`;
+    const bucketName = this.configService.get<string>('AWS_S3_BUCKET_NAME');
+    await this.uploadBufferToS3(newKey, outputBuffer, bucketName);
+
+    const tileUrl = `https://${bucketName}.s3.${this.configService.get<string>(
+      'AWS_REGION',
+    )}.amazonaws.com/${newKey}`;
+
+    // Save the tile URL in the database
+    image.tile_url = tileUrl;
+    await this.imageRepository.save(image);
+
+    return { tileUrl, outputBuffer };
+  }
+
+  // Helper method to convert a Readable stream to a Buffer
+  // private async streamToBuffer(stream: Readable): Promise<Buffer> {
+  //   return new Promise<Buffer>((resolve, reject) => {
+  //     const chunks: Buffer[] = [];
+  //     stream.on('data', (chunk) => chunks.push(chunk));
+  //     stream.on('end', () => resolve(Buffer.concat(chunks)));
+  //     stream.on('error', reject);
+  //   });
+  // }
+
+  private async uploadBufferToS3(
+    key: string,
+    buffer: Buffer,
+    bucketName: string,
+  ): Promise<void> {
+    const extension = key.split('.').pop();
+    const contentType = mime.lookup(extension) || 'application/octet-stream';
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    });
+    await this.s3.send(command);
   }
 
   // 10. 수치해석 변경 (단일 이미지)
