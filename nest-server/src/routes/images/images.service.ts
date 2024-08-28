@@ -685,14 +685,14 @@ export class ImagesService {
     // Create a blank transparent overlay with the same dimensions as the original image
     let overlay = sharp({
       create: {
-        width: width || 50, // Fallback to 1 if width is undefined
-        height: height || 50, // Fallback to 1 if height is undefined
+        width: width || 1, // Fallback to 1 if width is undefined
+        height: height || 1, // Fallback to 1 if height is undefined
         channels: 4,
         background: { r: 0, g: 0, b: 0, alpha: 0 }, // Fully transparent background
       },
     }).png();
 
-    const drawPaths = crackMapArray.map((crackMap) => {
+    const drawPaths = crackMapArray.map((crackMap: { DAMAGE_PATH: any[] }) => {
       return crackMap.DAMAGE_PATH.map((path) => {
         return path.map(([x, y]) => {
           return {

@@ -74,32 +74,44 @@ function initFabricJSOverlay(OpenSeadragon, { Canvas, StaticCanvas }) {
       });
 
       this._viewer.addHandler('update-viewport', () => {
-        self.resize();
-        self.resizeCanvas();
-        self.render();
+        if (self._canvasdiv && self._fabricCanvas) {
+          self.resize();
+          self.resizeCanvas();
+          self.render();
+        }
       });
 
       this._viewer.addHandler('open', () => {
-        self.resize();
-        self.resizeCanvas();
+        if (self._canvasdiv && self._fabricCanvas) {
+          self.resize();
+          self.resizeCanvas();
+        }
       });
+
       window.addEventListener('resize', () => {
-        self.resize();
-        self.resizeCanvas();
+        if (self._canvasdiv && self._fabricCanvas) {
+          self.resize();
+          self.resizeCanvas();
+        }
       });
     }
+
     canvas() {
       return this._canvas;
     }
+
     fabricCanvas() {
       return this._fabricCanvas;
     }
+
     clear() {
       this._fabricCanvas.clear();
     }
+
     render() {
       this._fabricCanvas.renderAll();
     }
+
     resize() {
       const viewerContainer = this._viewer.container;
 
@@ -126,14 +138,15 @@ function initFabricJSOverlay(OpenSeadragon, { Canvas, StaticCanvas }) {
         );
       }
     }
+
     resizeCanvas() {
       const origin = new OpenSeadragon.Point(0, 0);
       const viewportZoom = this._viewer.viewport.getZoom(true);
       const viewportToImageZoom =
         this._viewer.viewport.viewportToImageZoom(viewportZoom);
+
       this._fabricCanvas.setWidth(this._containerWidth);
       this._fabricCanvas.setHeight(this._containerHeight);
-
       this._fabricCanvas.setZoom(viewportToImageZoom);
 
       const viewportWindowPoint =
