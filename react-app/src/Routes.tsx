@@ -29,6 +29,7 @@ import FileInput from './pages/user/image/FileInput';
 import UseHistory from './pages/user/point/UseHistory';
 import IndividualUserPointUse from './pages/admin/charge/IndividualUserPointUse';
 import CorporateUserPointUse from './pages/admin/charge/CorporateUserPointUse';
+import CostSetting from './pages/admin/charge/CostSetting';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -252,7 +253,12 @@ const MainRoutes: React.FC<MainRoutesProps> = ({
         <FileInput isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       }
     />
-    {/* </Route> */}
+    <Route
+      path='/cost-setting'
+      element={
+        <CostSetting isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      }
+    />
   </Routes>
 );
 

@@ -76,7 +76,9 @@ const MainHeader = ({
           로그아웃
           <i className='pi pi-sign-out' style={{ marginLeft: '10px' }}></i>
         </LogoutButton>
-        <UserIcon src={userIcon} onClick={() => setActiveHeader('User')} />
+        <UserIconWrapper>
+          <UserIcon src={userIcon} onClick={() => setActiveHeader('User')} />
+        </UserIconWrapper>
       </UserActions>
     </Container>
   );
@@ -124,13 +126,14 @@ const UserActions = styled.div`
   align-items: center;
 `;
 
-const UserIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  background-color: #ccc;
+const UserIconWrapper = styled.div`
+  width: 35px;
+  height: 35px;
+  background-color: white;
   border-radius: 50%;
-  margin-right: 10px;
-  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   transition:
     background-color 0.3s,
     transform 0.3s;
@@ -139,6 +142,13 @@ const UserIcon = styled.div`
     background-color: #aaa;
     transform: scale(1.1);
   }
+`;
+
+const UserIcon = styled.img`
+  width: 90%;
+  height: 90%;
+  border-radius: 50%;
+  cursor: pointer;
 `;
 
 const LogoutButton = styled.button`

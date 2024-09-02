@@ -346,3 +346,31 @@ export const findCorporateUsersPaymentHistoryByDateRange = async (
   );
   return response.data;
 };
+
+// 가격 설정 조회
+export const getCostingSettings = async () => {
+  try {
+    const response = await httpClient.get('/images/admin/cost');
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch costing settings:', error);
+    throw error;
+  }
+};
+
+// 가격 설정 수정
+export const setCostingLogic = async (modifyCostReqDto: {
+  dividingNumber: number;
+  cuttingOffValue: number;
+}) => {
+  try {
+    const response = await httpClient.patch(
+      '/images/admin/cost',
+      modifyCostReqDto
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to update costing logic:', error);
+    throw error;
+  }
+};

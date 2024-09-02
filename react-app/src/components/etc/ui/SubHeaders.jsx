@@ -58,7 +58,7 @@ const SubHeaders = ({ activeHeader, userType, activeMainOption }) => {
     } else if (activeHeader === 'Ko-Detect') {
       return [
         { label: '파일 입력', path: '/file-input' },
-        { label: '나의 주문함', path: '/my-orders' },
+        // { label: '나의 주문함', path: '/my-orders' },
         { label: '분석 결과', path: '/analysis-results' },
       ];
     } else if (activeHeader === 'MY 포인트') {
@@ -84,6 +84,7 @@ const SubHeaders = ({ activeHeader, userType, activeMainOption }) => {
           { label: '사업자 회원', path: '/corporate-payments' },
           { label: '현금충전 요청', path: '/cash-charge-request' },
           { label: '환불 처리', path: '/refund-process' },
+          { label: '가격 설정', path: '/cost-setting' },
         ];
       } else if (activeHeader === '쿠폰 관리') {
         return [

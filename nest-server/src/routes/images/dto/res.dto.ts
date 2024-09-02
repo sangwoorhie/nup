@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEnum, IsBoolean, IsDate } from 'class-validator';
+import { IsString, IsEnum, IsBoolean, IsDate, IsNumber } from 'class-validator';
 import { ImageStatus } from 'src/enums/enums';
 import { Image } from 'src/entities/image.entity';
 
@@ -36,4 +36,14 @@ export class ImageResDto {
     this.created_at = image.created_at;
     this.detected_at = image.detected_at;
   }
+}
+
+export class ModifyCostResDto {
+  @ApiProperty({ description: '배율' })
+  @IsNumber()
+  readonly dividingNumber: number;
+
+  @ApiProperty({ description: '삭감액' })
+  @IsNumber()
+  readonly cuttingOffValue: number;
 }

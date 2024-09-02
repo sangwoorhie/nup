@@ -24,7 +24,7 @@ import { ConfigService } from '@nestjs/config';
 import { Stream } from 'stream';
 import { User } from 'src/entities/user.entity';
 import { PageResDto } from 'src/common/dto/res.dto';
-import { ImageResDto } from './dto/res.dto';
+import { ImageResDto, ModifyCostResDto } from './dto/res.dto';
 import { uploadBufferToS3, uploadFileToS3 } from 'src/config/s3-storage.config';
 import { createReadStream } from 'fs';
 import * as archiver from 'archiver';
@@ -39,12 +39,16 @@ import * as fs from 'fs';
 import * as mime from 'mime-types';
 import axios from 'axios';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
+import { Settings } from 'src/entities/setting.entity';
+import { ModifyCostReqDto } from './dto/req.dto';
 // import mime from 'mime';
 dotenv.config();
 
 @Injectable()
 export class ImagesService {
   private s3: S3Client;
+  private dividingNumber: number;
+  private cuttingOffValue: number;
 
   constructor(
     private dataSource: DataSource,
@@ -55,6 +59,8 @@ export class ImagesService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(PaymentRecord)
     private readonly paymentRecordRepository: Repository<PaymentRecord>,
+    @InjectRepository(Settings)
+    private readonly settingRepository: Repository<Settings>,
   ) {
     this.s3 = new S3Client({
       region: this.configService.get<string>('AWS_REGION'),
@@ -65,6 +71,7 @@ export class ImagesService {
         ),
       },
     });
+    this.loadCostingSettings();
   }
 
   // 1. 이미지 파일 업로드 (다중 파일 업로드 가능)
@@ -114,22 +121,6 @@ export class ImagesService {
       await queryRunner.release();
       if (error) throw error;
     }
-  }
-
-  // 사진 장당 계산법
-  // 사진 A => 1920x1080 픽셀 / 100 = 20,736 => 1000원 미만 절사 = 20,000원
-  // 사진 B => 3840x2160 픽셀 / 100 = 82,944 => 1000원 미만 절사 = 82,000원
-  // 사진 A + 사진 B = 20,000 + 82,000 = 102,000
-  private calculateCost(width: number, height: number): number {
-    const pixels = (width * height) / 100;
-    return Math.ceil(pixels / 1000) * 1000;
-  }
-
-  private async getImageDimensions(
-    file: Express.Multer.File,
-  ): Promise<{ width: number; height: number }> {
-    const metadata = await sharp(file.buffer).metadata();
-    return { width: metadata.width, height: metadata.height };
   }
 
   // 2. 이미지 파일 다운로드
@@ -855,5 +846,145 @@ export class ImagesService {
       await queryRunner.release();
       if (error) throw error;
     }
+  }
+
+  // 12. 이미지 가격 배율 및 삭감금액 설정 (관리자)
+  async setCostingLogic(modifyCostReqDto: ModifyCostReqDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const { dividingNumber, cuttingOffValue } = modifyCostReqDto;
+      if (
+        dividingNumber < 100 ||
+        dividingNumber > 10000 ||
+        dividingNumber % 100 !== 0
+      ) {
+        throw new BadRequestException(
+          '배율은 100의 단위로, 100 이상 10000이하이어야 합니다.',
+        );
+      }
+      if (![100, 1000, 10000, 100000]) {
+        throw new BadRequestException(
+          '삭감액은 100의 단위, 1,000의 단위, 10,000의 단위, 또는 100,000의 단위이어야 합니다.',
+        );
+      }
+
+      let settings = await this.settingRepository.findOne({ where: {} });
+      if (!settings) {
+        settings = this.settingRepository.create();
+      }
+
+      settings.dividingNumber = dividingNumber;
+      settings.cuttingOffValue = cuttingOffValue;
+      await this.settingRepository.save(settings);
+
+      this.dividingNumber = dividingNumber;
+      this.cuttingOffValue = cuttingOffValue;
+
+      return await this.recalculateCostsForAllImages();
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  private async loadCostingSettings() {
+    const settings = await this.settingRepository.findOne({
+      where: {}, // Retrieves the first available record, but this can be adjusted if needed.
+    });
+
+    if (settings) {
+      this.dividingNumber = settings.dividingNumber;
+      this.cuttingOffValue = settings.cuttingOffValue;
+    } else {
+      // Set default values if not found
+      this.dividingNumber = 100;
+      this.cuttingOffValue = 1000;
+    }
+  }
+
+  // 사진 장당 계산법
+  // 사진 A => 1920x1080 픽셀 / 100 = 20,736 => 1000원 미만 절사 = 20,000원
+  // 사진 B => 3840x2160 픽셀 / 100 = 82,944 => 1000원 미만 절사 = 82,000원
+  // 사진 A + 사진 B = 20,000 + 82,000 = 102,000
+
+  private calculateCost(width: number, height: number) {
+    const pixels = (width * height) / this.dividingNumber;
+    const cost =
+      Math.floor(pixels / this.cuttingOffValue) * this.cuttingOffValue;
+
+    if (cost <= 0) {
+      throw new BadRequestException(
+        '현재와 같이 배율과 삭감액을 설정할 경우, 0P 이하로 최종금액이 산정되는 이미지들이 있습니다. 이미지 최종 금액은 0P 이상이어야 합니다.',
+      );
+    }
+    return cost;
+  }
+
+  // private calculateCost(width: number, height: number): number {
+  //   const pixels = (width * height) / 100;
+  //   return Math.ceil(pixels / 1000) * 1000;
+  // }
+
+  private async getImageDimensions(
+    file: Express.Multer.File,
+  ): Promise<{ width: number; height: number }> {
+    const metadata = await sharp(file.buffer).metadata();
+    return { width: metadata.width, height: metadata.height };
+  }
+
+  // 가격 재설정
+  private async recalculateCostsForAllImages() {
+    const images = await this.imageRepository.find();
+    const updatedImages = [];
+    // const invalidImageIds = []; // Array to collect IDs of images with invalid costs
+
+    for (const image of images) {
+      // Retrieve the image file from S3 or your storage solution
+      const command = new GetObjectCommand({
+        Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
+        Key: image.image_path,
+      });
+
+      try {
+        const response = await this.s3.send(command);
+        const buffer = await this.streamToBuffer(response.Body as Readable);
+        const metadata = await sharp(buffer).metadata();
+
+        // Calculate cost using the image's width and height
+        const newCost = this.calculateCost(metadata.width, metadata.height);
+
+        // Update image cost if it's valid
+        image.cost = newCost;
+        updatedImages.push(image);
+      } catch (error) {
+        console.error(
+          `Failed to retrieve or process image: ${image.image_path}`,
+          error,
+        );
+        continue; // Skip to the next image if there's an error
+      }
+    }
+    return this.imageRepository.save(updatedImages);
+  }
+
+  // 13. 현재 이미지 가격 배율 및 삭감금액 조회 (관리자)
+  async getCostingSettings(): Promise<ModifyCostResDto> {
+    const settings = await this.settingRepository.findOne({ where: {} });
+
+    if (!settings) {
+      throw new InternalServerErrorException('설정이 존재하지 않습니다.');
+    }
+
+    return {
+      dividingNumber: settings.dividingNumber,
+      cuttingOffValue: settings.cuttingOffValue,
+    };
   }
 }

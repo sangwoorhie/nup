@@ -35,12 +35,16 @@ import {
   DeleteImagesReqDto,
   DetectImagesReqDto,
   DownloadImagesReqDto,
+  ModifyCostReqDto,
   ViewImagesReqDto,
 } from './dto/req.dto';
-import { ImageResDto } from './dto/res.dto';
+import { ImageResDto, ModifyCostResDto } from './dto/res.dto';
 import { PageReqDto } from 'src/common/dto/req.dto';
 import { PassThrough } from 'stream';
 import { isUUID } from 'class-validator';
+// import { UserType } from 'src/enums/enums';
+import { Usertype } from 'src/decorators/usertype.decorators';
+import { UserType } from 'src/enums/enums';
 
 @ApiTags('Images')
 @Controller('images')
@@ -325,5 +329,35 @@ export default class ImagesController {
       message: 'All images metadata updated successfully.',
       images: updatedImages,
     };
+  }
+
+  // 12. 이미지 가격 배율 및 삭감금액 설정 (관리자)
+  // PATCH : localhost:3000/images/admin/cost
+  @Patch('admin/cost')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '이미지 가격 배율 및 삭감금액 설정 (관리자)' })
+  @ApiResponse({
+    status: 200,
+    description: '가격 로직이 성공적으로 변경되었습니다.',
+  })
+  async setCostingLogic(@Body() modifyCostReqDto: ModifyCostReqDto) {
+    const result = await this.imagesService.setCostingLogic(modifyCostReqDto);
+    return {
+      message: '가격 로직이 성공적으로 변경되었습니다.',
+      updatedImages: result,
+    };
+  }
+
+  // 13. 현재 이미지 가격 배율 및 삭감금액 조회 (관리자)
+  // GET : localhost:3000/images/admin/cost
+  @Get('admin/cost')
+  @Usertype(UserType.ADMIN)
+  @ApiOperation({ summary: '이미지 가격 배율 및 삭감금액 조회 (관리자)' })
+  @ApiResponse({
+    status: 200,
+    description: '가격 로직이 성공적으로 조회되었습니다.',
+  })
+  async getCostingSettings(): Promise<ModifyCostResDto> {
+    return await this.imagesService.getCostingSettings();
   }
 }
