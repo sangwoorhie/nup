@@ -18,8 +18,8 @@ export class IpcMainHandlerController {
     private readonly imageTileHandlerService: ImageTileHandlerService,
   ) {}
 
-  @Post('app')
-  handleApp(@Body() data: any) {
-    return this.appHandlerService.handle(data);
-  }
+  // @Post('app')
+  // handleApp(@Body() data: any) {
+  //   return this.appHandlerService.handle(data);
+  // }
 }

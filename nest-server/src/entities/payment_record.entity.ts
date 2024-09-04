@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   DeleteDateColumn,
+  BeforeInsert,
 } from 'typeorm';
 import { User } from './user.entity';
 import { AiModel } from './ai_model.entity';
@@ -92,4 +93,12 @@ export class PaymentRecord {
     onDelete: 'SET NULL',
   })
   coupons: Coupon;
+
+  // Before saving the entity, convert created_at to KST
+  // @BeforeInsert()
+  // convertToKST() {
+  //   const utcNow = new Date();
+  //   const kstOffset = 9 * 60 * 60 * 1000; // KST is UTC+9
+  //   this.created_at = new Date(utcNow.getTime() + kstOffset);
+  // }
 }

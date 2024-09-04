@@ -77,6 +77,7 @@ const SubHeaders = ({ activeHeader, userType, activeMainOption }) => {
           { label: '사업자 회원', path: '/corporate-members' },
           { label: '관리자 회원', path: '/admin-members' },
           { label: 'API Key 조회', path: '/api-key-view' },
+          { label: '로그 조회', path: '/log' },
         ];
       } else if (activeHeader === '결제 관리') {
         return [

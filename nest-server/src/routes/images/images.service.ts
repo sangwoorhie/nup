@@ -41,6 +41,7 @@ import axios from 'axios';
 import { PaymentRecord } from 'src/entities/payment_record.entity';
 import { Settings } from 'src/entities/setting.entity';
 import { ModifyCostReqDto } from './dto/req.dto';
+import { spawn } from 'child_process';
 // import mime from 'mime';
 dotenv.config();
 
@@ -866,9 +867,9 @@ export class ImagesService {
           '배율은 100의 단위로, 100 이상 10000이하이어야 합니다.',
         );
       }
-      if (![100, 1000, 10000, 100000]) {
+      if (![100, 1000, 10000, 100000].includes(cuttingOffValue)) {
         throw new BadRequestException(
-          '삭감액은 100의 단위, 1,000의 단위, 10,000의 단위, 또는 100,000의 단위이어야 합니다.',
+          '절사 단위는 100의 단위, 1,000의 단위, 10,000의 단위, 또는 100,000의 단위이어야 합니다.',
         );
       }
 
@@ -916,6 +917,11 @@ export class ImagesService {
 
   private calculateCost(width: number, height: number) {
     const pixels = (width * height) / this.dividingNumber;
+    if (this.cuttingOffValue > pixels) {
+      throw new BadRequestException(
+        '절사 단위가 계산된 값보다 큽니다. 올바른 절사 단위를 설정해주세요.',
+      );
+    }
     const cost =
       Math.floor(pixels / this.cuttingOffValue) * this.cuttingOffValue;
 
@@ -986,5 +992,34 @@ export class ImagesService {
       dividingNumber: settings.dividingNumber,
       cuttingOffValue: settings.cuttingOffValue,
     };
+  }
+
+  // 14. 파이썬 스크립트 실행
+  analyzeImage(imagePath: string, outputPath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const pythonProcess = spawn('python', [
+        'path/to/crackFinder/main.py',
+        '--input',
+        imagePath,
+        '--output',
+        outputPath,
+      ]);
+
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(`stdout: ${data}`);
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`);
+      });
+
+      pythonProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve(outputPath);
+        } else {
+          reject('Analysis failed');
+        }
+      });
+    });
   }
 }

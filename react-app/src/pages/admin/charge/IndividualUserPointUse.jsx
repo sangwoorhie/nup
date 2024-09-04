@@ -120,7 +120,21 @@ const IndividualUserPointUse = ({ isDarkMode, toggleDarkMode }) => {
             <Column
               field='created_at'
               header='결제 일시'
-              body={(rowData) => rowData.created_at.split('T')[0]}
+              body={(rowData) => {
+                const date = new Date(rowData.created_at);
+                const formattedDate = `${date.getFullYear()}-${String(
+                  date.getMonth() + 1
+                ).padStart(
+                  2,
+                  '0'
+                )}-${String(date.getDate()).padStart(2, '0')} ${String(
+                  date.getHours()
+                ).padStart(
+                  2,
+                  '0'
+                )}:${String(date.getMinutes()).padStart(2, '0')}`;
+                return formattedDate;
+              }}
             />
             <Column field='username' header='사용자 이름' />
             <Column field='email' header='E-mail' />

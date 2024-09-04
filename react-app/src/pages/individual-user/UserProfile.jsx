@@ -39,6 +39,11 @@ const UserProfile = ({ isDarkMode, toggleDarkMode }) => {
     if (userType === 'individual') return '개인 회원';
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+  };
+
   return (
     <Container>
       <MainHeader
@@ -69,6 +74,8 @@ const UserProfile = ({ isDarkMode, toggleDarkMode }) => {
             value={userData.emergency_phone || '(없음)'}
             readOnly
           />
+          <Label>회원 가입일</Label>
+          <Input type='text' value={formatDate(userData.created_at)} readOnly />
         </Form>
       </Content>
       <Footer />

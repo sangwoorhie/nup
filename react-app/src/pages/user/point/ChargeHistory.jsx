@@ -90,10 +90,10 @@ const ChargeHistory = ({ isDarkMode, toggleDarkMode }) => {
     return number.toLocaleString('ko-KR');
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
-  };
+  // const formatDate = (dateString) => {
+  //   const date = new Date(dateString);
+  //   return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+  // };
 
   const chargeStatusTemplate = (rowData) => {
     const statusMap = {
@@ -171,6 +171,16 @@ const ChargeHistory = ({ isDarkMode, toggleDarkMode }) => {
     }
   };
 
+  const chargeDateTemplate = (data) => {
+    const date = new Date(data.created_at);
+    const formattedDate = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(
+      date.getHours()
+    ).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return formattedDate;
+  };
+
   return (
     <Container isDarkMode={isDarkMode}>
       <MainHeader
@@ -216,7 +226,7 @@ const ChargeHistory = ({ isDarkMode, toggleDarkMode }) => {
             <Column
               field='created_at'
               header='충전 일시'
-              body={(rowData) => formatDate(rowData.created_at)}
+              body={chargeDateTemplate}
             />
             <Column
               field='charge_status'

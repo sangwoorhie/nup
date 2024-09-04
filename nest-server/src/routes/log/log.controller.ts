@@ -16,11 +16,11 @@ export class LogController {
   // 1. 모든 로그 조회 (관리자)
   // GET : localhost:3000/log?page=1&size=20
   @Get()
+  @Usertype(UserType.ADMIN)
   @ApiOperation({ summary: '사용자의 모든 로그 조회 (관리자)' })
   @ApiGetResponse(LogResDto)
   @ApiQuery({ name: 'page', required: false, description: '페이지 번호' })
   @ApiQuery({ name: 'size', required: false, description: '페이지 크기' })
-  @Usertype(UserType.ADMIN)
   async findAllLogs(
     @Query() { page, size }: PageReqDto,
   ): Promise<PageResDto<LogResDto>> {

@@ -180,6 +180,35 @@ export const deleteRefundRequests = async (ids: string) => {
   return data;
 };
 
+// 날짜별 포인트 사용내역 조회
+export const findUseHistoryByDateRange = async (
+  start_date: string,
+  end_date: string,
+  page = 1,
+  size = 10
+) => {
+  try {
+    const response = await httpClient.get(
+      `/payment-records/use/date-range?start_date=${start_date}&end_date=${end_date}&page=${page}&size=${size}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// 포인트 사용내역 조회
+export const getUseHistory = async (page: number, size: number) => {
+  try {
+    const response = await httpClient.get(
+      `/payment-records/use?page=${page}&size=${size}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 // 이미지 목록
 export const listImages = async () => {
   const { data } = await httpClient.get('/images/list');
@@ -255,31 +284,10 @@ export const modifyAllImagesMetadata = async (updateData: UpdateData) => {
   return data;
 };
 
-// 날짜별 포인트 사용내역 조회
-export const findUseHistoryByDateRange = async (
-  start_date: string,
-  end_date: string,
-  page = 1,
-  size = 10
-) => {
-  try {
-    const response = await httpClient.get(
-      `/payment-records/use/date-range?start_date=${start_date}&end_date=${end_date}&page=${page}&size=${size}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-// 포인트 사용내역 조회
-export const getUseHistory = async (page: number, size: number) => {
-  try {
-    const response = await httpClient.get(
-      `/payment-records/use?page=${page}&size=${size}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error(error);
-  }
+// 이미지 분석 요청
+export const analyzeImage = async (imageId: string, imagePath: string) => {
+  const { data } = await httpClient.post(`/images/analyze/${imageId}`, {
+    imagePath,
+  });
+  return data;
 };

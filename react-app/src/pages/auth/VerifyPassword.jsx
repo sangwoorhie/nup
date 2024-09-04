@@ -42,6 +42,12 @@ const VerifyPassword = ({
     setPasswordVisible((prevVisible) => !prevVisible);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handlePasswordCheck();
+    }
+  };
+
   return (
     <Container>
       <MainHeader
@@ -72,6 +78,7 @@ const VerifyPassword = ({
                 type={passwordVisible ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
               <ToggleVisibilityButton
                 type='button'

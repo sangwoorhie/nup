@@ -79,10 +79,20 @@ const UseHistory = ({ isDarkMode, toggleDarkMode }) => {
     return number.toLocaleString('ko-KR');
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+  const useDateTemplate = (data) => {
+    const date = new Date(data.created_at);
+    const formattedDate = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(
+      date.getHours()
+    ).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return formattedDate;
   };
+
+  // const formatDate = (dateString) => {
+  //   const date = new Date(dateString);
+  //   return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+  // };
 
   const detectedImagesTemplate = (rowData) => {
     return `${rowData.detected_images_count}장`;
@@ -155,7 +165,7 @@ const UseHistory = ({ isDarkMode, toggleDarkMode }) => {
             <Column
               field='created_at'
               header='사용 일시'
-              body={(rowData) => formatDate(rowData.created_at)}
+              body={useDateTemplate}
             />
             <Column
               field='detected_images_count'

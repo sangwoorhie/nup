@@ -15,6 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import * as winston from 'winston';
 import * as basicAuth from 'express-basic-auth';
 import * as serveStatic from 'serve-static';
+import * as express from 'express';
 import { join } from 'path';
 import * as bodyParser from 'body-parser';
 
@@ -24,6 +25,11 @@ config();
 async function bootstrap() {
   const PORT = process.env.PORT || 3000;
   const app = await NestFactory.create(AppModule);
+
+  // Create an Express instance
+  const server = express();
+  // Enable trust proxy to retrieve correct client IPs behind proxies
+  server.set('trust proxy', true);
 
   // Set the file upload limit
   app.use(bodyParser.json({ limit: '50mb' }));

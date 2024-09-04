@@ -64,8 +64,13 @@ export class CouponTemplatesService {
         where: { id: userId },
       });
 
+      // Ensure expiration_date is set to 23:59:59 on the given date
+      const adjustedExpirationDate = new Date(expiration_date);
+      adjustedExpirationDate.setHours(23, 59, 59, 999);
+
       const couponTemplate = queryRunner.manager.create(CouponTemplate, {
         ...createCouponReqDto,
+        expiration_date: adjustedExpirationDate, // Use adjusted expiration date
         user,
       });
       await queryRunner.manager.save(couponTemplate);
@@ -74,7 +79,7 @@ export class CouponTemplatesService {
       const coupons = couponCodes.map((code) => {
         return queryRunner.manager.create(Coupon, {
           code,
-          expiration_date,
+          expiration_date: adjustedExpirationDate, // Use adjusted expiration date
           point,
           coupon_template: couponTemplate,
         } as DeepPartial<Coupon>);

@@ -374,3 +374,8 @@ export const setCostingLogic = async (modifyCostReqDto: {
     throw error;
   }
 };
+
+// 관리자 로그 조회
+export const getLogs = async (page: number, size: number) => {
+  return await httpClient.get(`/log?page=${page}&size=${size}`);
+};

@@ -85,9 +85,19 @@ const RefundHistory = ({ isDarkMode, toggleDarkMode }) => {
     setRows(event.rows);
   };
 
-  const formatDate = (dateString) => {
+  // const formatDate = (dateString) => {
+  //   const date = new Date(dateString);
+  //   return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+  // };
+
+  const refundDateTemplate = (dateString) => {
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
   };
 
   const refundStatusTemplate = (rowData) => {
@@ -218,7 +228,7 @@ const RefundHistory = ({ isDarkMode, toggleDarkMode }) => {
             <Column
               field='requested_at'
               header='환불 요청 일시'
-              body={(rowData) => formatDate(rowData.requested_at)}
+              body={(rowData) => refundDateTemplate(rowData.requested_at)}
             />
             <Column
               field='is_refunded'

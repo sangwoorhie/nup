@@ -50,7 +50,7 @@ export class IndiSignUpReqDto {
   @IsNotEmpty()
   readonly phone: string;
 
-  @ApiProperty({ required: false, description: '비상연락처' })
+  @ApiProperty({ required: false, description: '비상 연락처' })
   @IsString()
   @IsOptional()
   readonly emergency_phone?: string;
@@ -127,7 +127,7 @@ export class CorpSignUpReqDto {
   @IsNotEmpty()
   readonly phone: string;
 
-  @ApiProperty({ required: false, description: '비상연락처' })
+  @ApiProperty({ required: false, description: '비상 연락처' })
   @IsString()
   @IsOptional()
   readonly emergency_phone?: string;

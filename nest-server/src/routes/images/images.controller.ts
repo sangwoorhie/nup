@@ -30,6 +30,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { Image } from 'src/entities/image.entity';
+import { spawn } from 'child_process';
 import { Response } from 'express';
 import {
   DeleteImagesReqDto,
@@ -359,5 +360,44 @@ export default class ImagesController {
   })
   async getCostingSettings(): Promise<ModifyCostResDto> {
     return await this.imagesService.getCostingSettings();
+  }
+
+  // 14. 파이썬 스크립트 실행
+  // POST : localhost:3000/images/analyze/:id
+  @Post('analyze/:id')
+  @ApiOperation({ summary: '파이썬 스크립트 실행' })
+  async analyzeImage(
+    @Param('id') id: string,
+    @Body('imagePath') imagePath: string,
+    @Res() res: Response,
+  ) {
+    // 파이썬 스크립트 실행
+    const pythonProcess = spawn('python', [
+      'path/to/crackFinder/main.py',
+      '--input',
+      imagePath,
+      '--output',
+      'path/to/output',
+    ]);
+
+    pythonProcess.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        // 성공적으로 완료된 경우
+        res.status(200).send({
+          message: 'Analysis complete',
+          resultPath: `path/to/output/${id}`,
+        });
+      } else {
+        res.status(500).send({ message: 'Analysis failed' });
+      }
+    });
   }
 }

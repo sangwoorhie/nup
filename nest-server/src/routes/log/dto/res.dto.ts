@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class LogResDto {
   @ApiProperty({ description: '유저 접속일시' })
@@ -14,7 +14,11 @@ export class LogResDto {
   @IsString()
   readonly userAgent: string;
 
-  // @ApiProperty({ description: '유저' })
-  // @IsString()
-  // readonly user: string;
+  @ApiProperty({ description: '회원 E-mail' })
+  @IsEmail()
+  readonly userEmail: string;
+
+  @ApiProperty({ description: '회원 유형' })
+  @IsString()
+  readonly userType: string;
 }

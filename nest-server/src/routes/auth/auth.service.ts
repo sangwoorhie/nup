@@ -233,7 +233,8 @@ export class AuthService {
     const refreshToken = this.generateRefreshToken(user.id);
     await this.createRefreshTokenUsingUser(user.id, refreshToken);
 
-    await this.logUserAccess(user, request.ip, request.headers['user-agent']);
+    const clientIp = this.getClientIp(request);
+    await this.logUserAccess(user, clientIp, request.headers['user-agent']);
 
     return {
       accessToken: this.generateAccessToken(user.id),
@@ -279,7 +280,8 @@ export class AuthService {
       // Token Usage 업데이트
       await this.updateTokenUsage(user);
 
-      await this.logUserAccess(user, request.ip, request.headers['user-agent']);
+      const clientIp = this.getClientIp(request);
+      await this.logUserAccess(user, clientIp, request.headers['user-agent']);
 
       await queryRunner.commitTransaction();
       return {
@@ -298,12 +300,40 @@ export class AuthService {
 
   // User Log 저장
   private async logUserAccess(user: User, ip: string, userAgent: string) {
+    // Get current date and time in UTC
+    const utcNow = new Date();
+
+    // Convert UTC time to Korean Standard Time (KST)
+    // const kstOffset = 9 * 60; // KST is UTC+9
+    // const kstNow = new Date(utcNow.getTime() + kstOffset * 60000);
+
     const log = this.logRepository.create({
       user: user,
       ip: ip,
       userAgent: userAgent,
+      loginTimestamp: utcNow,
     });
+
     await this.logRepository.save(log);
+  }
+
+  // 유저 IP 추출
+  private getClientIp(request: Request): string {
+    const forwarded = request.headers['x-forwarded-for'];
+    let ip = '';
+
+    if (typeof forwarded === 'string') {
+      ip = forwarded.split(',')[0].trim();
+    } else {
+      ip = request.socket.remoteAddress || request.ip;
+    }
+
+    // Handle IPv6 addresses and convert them to IPv4 if needed
+    if (ip === '::1' || ip === '::ffff:127.0.0.1') {
+      ip = '127.0.0.1'; // Localhost IPv4 address
+    }
+
+    return ip;
   }
 
   // 토큰 사용량 저장

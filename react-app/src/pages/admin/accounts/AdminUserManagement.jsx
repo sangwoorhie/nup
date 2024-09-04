@@ -88,7 +88,7 @@ const AdminUserManagement = ({ isDarkMode, toggleDarkMode }) => {
               <th>E-mail</th>
               <th>이름</th>
               <th>휴대전화</th>
-              <th>비상연락처</th>
+              <th>비상 연락처</th>
               <th>회원 가입일자</th>
             </tr>
           </thead>

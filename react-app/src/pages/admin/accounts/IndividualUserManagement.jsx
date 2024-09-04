@@ -365,7 +365,7 @@ const IndividualUserManagement = ({ isDarkMode, toggleDarkMode }) => {
               <th>E-mail</th>
               <th>이름</th>
               <th>휴대전화</th>
-              <th>비상연락처</th>
+              <th>비상 연락처</th>
               <th>포인트 충전 내역</th>
               <th>포인트 사용 내역</th>
               <th>잔여 포인트</th>

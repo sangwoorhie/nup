@@ -92,16 +92,17 @@ const CostSetting = ({ isDarkMode, toggleDarkMode }) => {
           </LoadingOverlay>
         )}
         <ContentWrapper isDarkMode={isDarkMode}>
-          <Title>로직 변경</Title>
-          <Explanation>
+          <Title isDarkMode={isDarkMode}>로직 변경</Title>
+          <Explanation isDarkMode={isDarkMode}>
             이미지 파일의 장당 포인트 가격 설정 로직은 다음과 같은 방식으로
             이루어집니다. 이미지 파일의 가격이 너무 높거나 너무 낮은 경우, 가격
             설정에서 배율 또는 절사 단위를 변경함으로써 조절할 수 있습니다.
-            하지만 가격 설정 변경으로 인해 단일 이미지 파일의 최종 금액이
-            0포인트 이하로 설정될 수는 없습니다.
+            하지만 절사 단위가 배율 계산된 값보다 크게 설정될 수는 없으며, 가격
+            설정 변경으로 인해 단일 이미지 파일의 최종 금액이 0포인트 이하로
+            설정될 수는 없습니다.
           </Explanation>
-          <CalculationLogic>
-            <Logic>
+          <CalculationLogic isDarkMode={isDarkMode}>
+            <Logic isDarkMode={isDarkMode}>
               <strong>사진 가로길이</strong> x <strong>세로길이(pixel)</strong>{' '}
               ÷ <strong>배율</strong> = <strong>결과값</strong> -{' '}
               <strong>절사 단위 </strong> = <strong>최종 금액</strong>
@@ -112,38 +113,62 @@ const CostSetting = ({ isDarkMode, toggleDarkMode }) => {
               300, ... 10000)
             </p>
             <p>
+              - 배율로 나눈 값이 소수점으로 나오는 경우에는 소수점 버림 처리
+              합니다.
+            </p>
+            <p>
               - 절사 단위는 100, 1,000, 10,000, 100,000P 단위로만 절사
               가능합니다.
             </p>
             <br />
-            <br />
             <p>
-              예1 ) 배율이 100, 절사 단위가 1,000P인 경우.
+              예1 ) 배율이 10, 절사 단위가 100P인 경우.
               <br />
-              A 사진 = 1920x1080(pixel) ÷ 100(배율) = 20,736 - 1,000P 미만 절사
-              = 20,000P
-              <br />B 사진 = 3840x2160(pixel) ÷ 100(배율) = 82,944 - 1,000P 미만
-              절사 = 82,000P
+              사진 A = 247x342(pixel) ÷ 10(배율) = 8,447 - 100P 미만 절사 =
+              8,400P
+              <br />
+              사진 B = 757x310(pixel) ÷ 10(배율) = 23,467 - 100P 미만 절사 =
+              23,400P
             </p>
             <br />
+            <p>
+              예2 ) 배율이 100, 절사 단위가 1,000P인 경우.
+              <br />
+              사진 C = 1920x1080(pixel) ÷ 100(배율) = 20,736 - 1,000P 미만 절사
+              = 20,000P
+              <br />
+              사진 D = 3840x2160(pixel) ÷ 100(배율) = 82,944 - 1,000P 미만 절사
+              = 82,000P
+            </p>
             <br />
             <p>
-              예2 ) 배율이 1000, 절사 단위가 10,000P인 경우.
+              예3 ) 배율이 1000, 절사 단위가 10,000P인 경우.
               <br />
-              A 사진 = 8000x6000(pixel) ÷ 1000(배율) = 48,000 - 10,000P 미만
+              사진 E = 8000x6000(pixel) ÷ 1000(배율) = 48,000 - 10,000P 미만
               절사 = 40,000P
-              <br />B 사진 = 7000x3000(pixel) ÷ 1000(배율) = 21,000 - 10,000P
-              미만 절사 = 20,000P
+              <br />
+              사진 F = 7000x3000(pixel) ÷ 1000(배율) = 21,000 - 10,000P 미만
+              절사 = 20,000P
             </p>
           </CalculationLogic>
           <FormGroup>
-            <Label>현재 배율</Label>
-            <Input type='text' value={formatNumber(dividingNumber)} readOnly />
-            <Label>현재 절사 단위</Label>
-            <Input type='text' value={formatNumber(cuttingOffValue)} readOnly />
+            <Label isDarkMode={isDarkMode}>현재 배율</Label>
+            <Input
+              type='text'
+              value={formatNumber(dividingNumber)}
+              readOnly
+              isDarkMode={isDarkMode}
+            />
+            <Label isDarkMode={isDarkMode}>현재 절사 단위</Label>
+            <Input
+              type='text'
+              value={formatNumber(cuttingOffValue)}
+              readOnly
+              isDarkMode={isDarkMode}
+            />
           </FormGroup>
           <FormGroup>
-            <Label>변경 배율</Label>
+            <Label isDarkMode={isDarkMode}>변경 배율</Label>
             <Input
               type='number'
               value={newDividingNumber}
@@ -161,11 +186,13 @@ const CostSetting = ({ isDarkMode, toggleDarkMode }) => {
               step={100}
               min={100}
               max={10000}
+              isDarkMode={isDarkMode}
             />
-            <Label>변경 절사 단위</Label>
+            <Label isDarkMode={isDarkMode}>변경 절사 단위</Label>
             <Select
               value={newCuttingOffValue}
               onChange={(e) => setNewCuttingOffValue(Number(e.target.value))}
+              isDarkMode={isDarkMode}
             >
               <option value={100}>100</option>
               <option value={1000}>1,000</option>
@@ -324,6 +351,7 @@ const Select = styled.select`
   color: ${({ isDarkMode }) =>
     isDarkMode ? '#fff' : '#000'}; // Adjust select text color in dark mode
 `;
+
 const ButtonWrapper = styled.div`
   display: flex;
   justify-content: space-between;
@@ -379,11 +407,15 @@ const Logic = styled.div`
   font-size: 18px;
   margin-bottom: 20px;
   text-decoration: underline;
-  color: #0056b3; // Set the color for the text
+  color: ${({ isDarkMode }) =>
+    isDarkMode ? '#fff' : '#0056b3'}; // Ensure text color is white in dark mode
 
   strong {
-    color: #0056b3; // Ensure that strong tags also have the same color
-    font-weight: bold; // Maintain the bold effect
+    color: ${({ isDarkMode }) =>
+      isDarkMode
+        ? '#fff'
+        : '#0056b3'}; // Ensure strong tags also have white color in dark mode
+    font-weight: bold;
   }
 `;
 

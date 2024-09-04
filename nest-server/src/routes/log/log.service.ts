@@ -17,12 +17,21 @@ export class LogService {
     page: number,
     size: number,
   ): Promise<PageResDto<LogResDto>> {
-    const [logs, total] = await this.logRepository.findAndCount({
-      skip: (page - 1) * size,
-      take: size,
-      select: ['loginTimestamp', 'ip', 'userAgent'],
-      order: { loginTimestamp: 'DESC' },
-    });
+    const [logs, total] = await this.logRepository
+      .createQueryBuilder('log')
+      .leftJoinAndSelect('log.user', 'user')
+      .select([
+        'log.id',
+        'log.loginTimestamp',
+        'log.ip',
+        'log.userAgent',
+        'user.email',
+        'user.user_type',
+      ])
+      .skip((page - 1) * size)
+      .take(size)
+      .orderBy('log.loginTimestamp', 'DESC')
+      .getManyAndCount();
 
     return {
       page,
@@ -32,7 +41,8 @@ export class LogService {
         loginTimestamp: log.loginTimestamp,
         ip: log.ip,
         userAgent: log.userAgent,
-        // user: log.user,
+        userEmail: log.user?.email ?? null, // Safe navigation in case user is null
+        userType: log.user.user_type,
       })),
     };
   }

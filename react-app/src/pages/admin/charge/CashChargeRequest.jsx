@@ -104,7 +104,13 @@ const CashChargeRequest = ({ isDarkMode, toggleDarkMode }) => {
   };
 
   const chargeDateTemplate = (data) => {
-    return new Date(data.created_at).toISOString().split('T')[0];
+    const date = new Date(data.created_at);
+    const formattedDate = `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(
+      date.getHours()
+    ).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return formattedDate;
   };
 
   const handleConfirm = async () => {

@@ -57,8 +57,8 @@ export class User {
   @Column({ type: 'varchar', nullable: false })
   phone: string;
 
-  // 비상연락처
-  @ApiProperty({ description: '비상연락처' })
+  // 비상 연락처
+  @ApiProperty({ description: '비상 연락처' })
   @Column({ type: 'varchar', nullable: true })
   emergency_phone: string;
 

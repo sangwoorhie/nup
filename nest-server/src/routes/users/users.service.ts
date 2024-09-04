@@ -60,6 +60,7 @@ export class UsersService {
         'phone',
         'emergency_phone',
         'profile_image',
+        'created_at',
       ],
     });
     if (!user) {

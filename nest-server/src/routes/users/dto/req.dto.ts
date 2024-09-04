@@ -67,7 +67,7 @@ export class UpdateIndiUserReqDto {
   @IsNotEmpty()
   phone: string;
 
-  @ApiProperty({ required: false, description: '비상연락처' })
+  @ApiProperty({ required: false, description: '비상 연락처' })
   @IsString()
   @IsOptional()
   emergency_phone?: string;
@@ -90,7 +90,7 @@ export class UpdateCorpUserReqDto {
   @IsNotEmpty()
   phone: string;
 
-  @ApiProperty({ required: false, description: '비상연락처' })
+  @ApiProperty({ required: false, description: '비상 연락처' })
   @IsString()
   @IsOptional()
   emergency_phone?: string;

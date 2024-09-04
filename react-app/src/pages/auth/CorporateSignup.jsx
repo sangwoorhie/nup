@@ -368,15 +368,27 @@ const CorporateSignup = () => {
                             onChange={handleEmailProviderChange}
                           >
                             <option value='@naver.com'>@naver.com</option>
+                            <option value='@chol.com'>@chol.com</option>
                             <option value='@gmail.com'>@gmail.com</option>
                             <option value='@daum.net'>@daum.net</option>
                             <option value='@hanmail.net'>@hanmail.net</option>
                             <option value='@kakao.com'>@kakao.com</option>
                             <option value='@nate.com'>@nate.com</option>
+                            <option value='@yahoo.com'>@yahoo.com</option>
                             <option value='@yahoo.co.kr'>@yahoo.co.kr</option>
                             <option value='@hotmail.com'>@hotmail.com</option>
                             <option value='@icloud.com'>@icloud.com</option>
                             <option value='@outlook.com'>@outlook.com</option>
+                            <option value='@dreamwiz.com'>@dreamwiz.com</option>
+                            <option value='@empal.com'>@empal.com</option>
+                            <option value='@freechal.com'>@freechal.com</option>
+                            <option value='@hanafos.com'>@hanafos.com</option>
+                            <option value='@hanmir.com'>@hanmir.com</option>
+                            <option value='@hitel.net'>@hitel.net</option>
+                            <option value='@korea.com'>@korea.com</option>
+                            <option value='@lycos.co.kr'>@lycos.co.kr</option>
+                            <option value='@netian.com'>@netian.com</option>
+                            <option value='@paran.com'>@paran.com</option>
                             <option value='@komapper.ai'>@komapper.ai</option>
                             <option value='직접입력'>직접입력</option>
                           </Select>
@@ -530,7 +542,7 @@ const CorporateSignup = () => {
                 <Row>
                   <Cell>
                     <OptionalIndicator>▶</OptionalIndicator>
-                    <Label htmlFor='emergencyPhone'>비상연락처</Label>
+                    <Label htmlFor='emergencyPhone'>비상 연락처</Label>
                     <InputWrapper>
                       <Input
                         id='emergencyPhone'

@@ -64,9 +64,18 @@ const LoginPage = () => {
     <Container>
       <Overlay>
         <LogoWrapper>
-          <Logo>Ko</Logo>
-          <Logo>Mapper</Logo>
-          <Logo>AI</Logo>
+          <Logo>
+            <span className='highlight'>K</span>
+            <span className='normal'>o</span>
+          </Logo>
+          <Logo>
+            <span className='highlight'>M</span>
+            <span className='normal'>apper</span>
+          </Logo>
+          <Logo>
+            <span className='highlight'>A</span>
+            <span className='normal'>I</span>
+          </Logo>
           <Tagline>"We Make the World Digital Twins"</Tagline>
         </LogoWrapper>
         <FormWrapper>
@@ -182,74 +191,84 @@ const LoginPage = () => {
 
 const Container = styled.div`
   width: 100%;
-  height: 100vh;
+  height: 100vh; /* Ensure consistent height */
   background-image: url(${backgroundImage});
   background-size: cover;
   background-position: center;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 `;
 
 const Overlay = styled.div`
   background-color: rgba(255, 255, 255, 0.8);
   padding: 20px;
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  height: 60%;
+  height: auto;
   width: 90%;
   max-width: 1200px;
+  min-height: 60%; /* Adjust as necessary */
+  box-sizing: border-box;
+  overflow: hidden;
 `;
 
 const LogoWrapper = styled.div`
   text-align: left;
+  flex: 1;
+`;
+
+const FormWrapper = styled.div`
+  flex: 1;
+  max-width: 500px;
+  height: 55vh;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
 `;
 
 const Logo = styled.h1`
-  font-size: 64px;
+  font-size: 4rem;
   margin: 0;
   color: #1a1a1a;
-  &:nth-child(1) {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+  .highlight {
     color: #0056b3;
   }
-  &:nth-child(2) {
+
+  .normal {
     color: #000000;
-  }
-  &:nth-child(3) {
-    color: #0056b3;
   }
 `;
 
 const Tagline = styled.p`
-  font-size: 24px;
+  font-size: 1.5rem;
   margin: 10px 0 0 0;
   color: #0056b3;
-`;
-
-const FormWrapper = styled.div`
-  width: 100%;
-  height: 90%;
-  max-width: 500px;
-  padding: 20px;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 `;
 
 const Title = styled.h2`
-  font-size: 36px;
+  font-size: 2rem;
   margin-bottom: 10px;
   color: #0056b3;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
 `;
 
 const SubTitle = styled.h3`
-  font-size: 18px;
+  font-size: 1.2rem;
   margin-bottom: 20px;
   color: #1a1a1a;
 `;
 
 const Description = styled.p`
-  font-size: 14px;
+  font-size: 1rem;
   color: #1a1a1a;
   margin-bottom: 20px;
 `;
@@ -265,7 +284,7 @@ const ResetPasswordForm = styled.div`
 `;
 
 const Label = styled.label`
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: bold;
   color: #1a1a1a;
   margin-top: 10px;
@@ -278,7 +297,6 @@ const Input = styled.input`
   border-radius: 5px;
   width: 100%;
   box-sizing: border-box;
-  position: relative;
 `;
 
 const InputWrapper = styled.div`

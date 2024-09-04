@@ -30,6 +30,7 @@ import UseHistory from './pages/user/point/UseHistory';
 import IndividualUserPointUse from './pages/admin/charge/IndividualUserPointUse';
 import CorporateUserPointUse from './pages/admin/charge/CorporateUserPointUse';
 import CostSetting from './pages/admin/charge/CostSetting';
+import Log from './pages/admin/accounts/Log';
 // import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
 // import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
@@ -258,6 +259,10 @@ const MainRoutes: React.FC<MainRoutesProps> = ({
       element={
         <CostSetting isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       }
+    />
+    <Route
+      path='/log'
+      element={<Log isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />}
     />
   </Routes>
 );
