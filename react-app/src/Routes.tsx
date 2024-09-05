@@ -31,8 +31,6 @@ import IndividualUserPointUse from './pages/admin/charge/IndividualUserPointUse'
 import CorporateUserPointUse from './pages/admin/charge/CorporateUserPointUse';
 import CostSetting from './pages/admin/charge/CostSetting';
 import Log from './pages/admin/accounts/Log';
-// import PrivateRoutes from './components/routeRestriction/PrivateRoutes';
-// import PublicRoutes from './components/routeRestriction/PublicRoutes';
 
 interface MainRoutesProps {
   isDarkMode: boolean;
@@ -44,15 +42,12 @@ const MainRoutes: React.FC<MainRoutesProps> = ({
   toggleDarkMode,
 }) => (
   <Routes>
-    {/* <Route element={<PublicRoutes />}> */}
     <Route path='/' element={<LoginPage />} />
     <Route path='/login' element={<LoginPage />} />
     <Route path='/signup' element={<SignupPage />} />
     <Route path='/individual-signup' element={<IndividualSignup />} />
     <Route path='/corporate-signup' element={<CorporateSignup />} />
-    {/* </Route> */}
 
-    {/* <Route element={<PrivateRoutes />}> */}
     <Route
       path='/user-profile'
       element={

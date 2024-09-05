@@ -4,7 +4,10 @@ import Modal from 'react-modal';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import '../src/css/index.css';
+
+const clientId = process.env.GOOGLE_CLIENT_ID || '';
 
 Modal.setAppElement('#root');
 
@@ -14,9 +17,11 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <GoogleOAuthProvider clientId={clientId}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   </React.StrictMode>
 );
 

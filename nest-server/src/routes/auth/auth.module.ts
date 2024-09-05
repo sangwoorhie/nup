@@ -16,6 +16,7 @@ import { TokenUsage } from 'src/entities/token_usage.entity';
 import { ApiKeys } from 'src/entities/api_key.entity';
 import { Log } from 'src/entities/log.entity';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { GoogleStrategy } from './jwt/google.strategy';
 import { MulterModule } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import { diskStorage } from 'multer';
@@ -23,7 +24,7 @@ import { diskStorage } from 'multer';
 @Module({
   imports: [
     UsersModule,
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'google' }),
     UsersModule,
     MailerModule,
     JwtModule.registerAsync({
@@ -69,6 +70,7 @@ import { diskStorage } from 'multer';
   providers: [
     AuthService,
     JwtStrategy,
+    GoogleStrategy,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

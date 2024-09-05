@@ -443,7 +443,7 @@ export class AuthService {
     }
   }
 
-  // 8. 회원가입시 이메일로 인증번호 전송 (5분 시간제한)
+  // 9. 회원가입시 이메일로 인증번호 전송 (5분 시간제한)
   async sendAuthenticationNumber(email: string): Promise<{ message: string }> {
     const user = await this.usersService.findOneByEmail(email);
     if (user) throw new BadRequestException('동일한 이메일이 이미 존재합니다');
@@ -466,7 +466,7 @@ export class AuthService {
     return { message: '인증번호가 이메일로 전송되었습니다.' };
   }
 
-  // 9. 회원가입시 이메일로 전송된 인증번호 확인 (5분 시간제한)
+  // 10. 회원가입시 이메일로 전송된 인증번호 확인 (5분 시간제한)
   async verifyAuthenticationNumber({
     email,
     authNumber,
@@ -492,7 +492,199 @@ export class AuthService {
     return { message: '인증번호가 확인되었습니다.' };
   }
 
-  // 이메일과 이름으로 유저 찾기
+  // 11. 구글 소셜로그인
+  async googleLogin(req: any) {
+    if (!req.user) {
+      throw new UnauthorizedException('Google 로그인에 실패했습니다.');
+    }
+
+    const { email, firstName, lastName, picture } = req.user;
+
+    // 사용자가 이미 존재하는지 확인
+    const user = await this.usersService.findOneByEmail(email);
+    let isNewUser = false;
+    let refreshToken: string | undefined;
+
+    // 사용자가 없으면 새로 생성
+    if (!user) {
+      const newUser = new User();
+      newUser.email = email;
+      newUser.username = `${firstName} ${lastName}`;
+      newUser.profile_image = picture;
+      newUser.user_type = UserType.INDIVIDUAL; // 기본적으로 개인회원으로 처리
+
+      // 새 사용자 저장
+      await this.usersService.saveUser(newUser);
+      isNewUser = true; // 새 사용자임을 표시
+
+      // 액세스 토큰 생성
+      const accessToken = this.generateAccessToken(newUser.id);
+
+      return {
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          username: newUser.username,
+          accessToken,
+        },
+        isNewUser, // 새 사용자인지 여부
+        userType: newUser.user_type,
+      };
+    }
+
+    // 기존 사용자는 데이터베이스에 접근하지 않고, 바로 토큰 반환
+    if (!isNewUser) {
+      const existingRefreshToken = await this.refreshTokenRepository.findOne({
+        where: { user: { id: user.id } },
+      });
+      refreshToken = existingRefreshToken
+        ? existingRefreshToken.token
+        : undefined;
+
+      const accessToken = this.generateAccessToken(user.id);
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          accessToken,
+        },
+        refreshToken, // 기존 refreshToken 반환
+        isNewUser,
+        userType: user.user_type,
+      };
+    }
+  }
+
+  // 12. 구글 소셜로그인 - 개인 회원가입
+  async completeIndiSignUp(userId: string, indiSignUpReqDto: IndiSignUpReqDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.usersService.findOneById(userId);
+      if (!user) {
+        throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      }
+
+      // 추가 정보 업데이트
+      const { phone, emergency_phone, profile_image } = indiSignUpReqDto;
+
+      user.phone = phone;
+      user.emergency_phone = emergency_phone;
+      user.profile_image = profile_image;
+
+      // 업데이트된 유저 정보 저장
+      await queryRunner.manager.save(User, user);
+
+      const accessToken = this.generateAccessToken(user.id);
+      const refreshToken = this.generateRefreshToken(user.id);
+      const refreshTokenEntity = queryRunner.manager.create(RefreshToken, {
+        user: { id: user.id },
+        token: refreshToken,
+      });
+      await queryRunner.manager.save(RefreshToken, refreshTokenEntity);
+      await queryRunner.commitTransaction();
+
+      return {
+        id: user.id,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+      throw e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // 13. 구글 소셜로그인 - 사업자 회원가입
+  async completeCorpSignUp(userId: string, corpSignUpReqDto: CorpSignUpReqDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.usersService.findOneById(userId);
+      if (!user) {
+        throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      }
+
+      const {
+        corporate_type,
+        phone,
+        emergency_phone,
+        corporate_name,
+        business_type,
+        business_conditions,
+        business_registration_number,
+        address,
+        profile_image,
+        business_license,
+      } = corpSignUpReqDto;
+
+      // User 엔티티 생성
+      const userEntity = new User();
+      userEntity.user_type = UserType.CORPORATE;
+      userEntity.phone = phone;
+      userEntity.emergency_phone = emergency_phone;
+      userEntity.profile_image = profile_image;
+
+      // User 엔티티 저장
+      const savedUser = await queryRunner.manager.save(User, userEntity);
+
+      // Corporate 엔티티 생성 및 정보 저장
+      const corporateEntity = new Corporate();
+      corporateEntity.corporate_type = corporate_type;
+      corporateEntity.corporate_name = corporate_name;
+      corporateEntity.business_type = business_type;
+      corporateEntity.business_conditions = business_conditions;
+      corporateEntity.business_registration_number =
+        business_registration_number;
+      corporateEntity.address = address;
+      corporateEntity.business_license = business_license;
+      corporateEntity.user = savedUser;
+
+      // Corporate 정보 저장
+      const savedCorporate = await queryRunner.manager.save(
+        Corporate,
+        corporateEntity,
+      );
+
+      // RefreshToken 생성 및 저장
+      const accessToken = this.generateAccessToken(savedUser.id);
+      const refreshToken = this.generateRefreshToken(savedUser.id);
+      const refreshTokenEntity = queryRunner.manager.create(RefreshToken, {
+        user: { id: savedUser.id },
+        token: refreshToken,
+      });
+      await queryRunner.manager.save(RefreshToken, refreshTokenEntity);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        id: savedUser.id,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+      throw e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // * 이메일과 이름으로 유저 찾기
   async findOneByEmailandName(
     email: string,
     username: string,
@@ -500,18 +692,18 @@ export class AuthService {
     return await this.usersService.findOneByEmailandName(email, username);
   }
 
-  // 비밀번호 재설정
+  // * 비밀번호 재설정
   async updateUser(user: User): Promise<User> {
     return this.usersService.updateUser(user);
   }
 
-  // 액세스 토큰 생성
+  // * 액세스 토큰 생성
   private generateAccessToken(userId: string) {
     const payload = { sub: userId, tokenType: 'access' };
     return this.jwtService.sign(payload, { expiresIn: '1d' });
   }
 
-  // 리프레시 토큰 생성
+  // * 리프레시 토큰 생성
   private generateRefreshToken(userId: string) {
     const payload = { sub: userId, tokenType: 'refresh' };
     return this.jwtService.sign(payload, { expiresIn: '30d' });
@@ -544,7 +736,7 @@ export class AuthService {
     await this.refreshTokenRepository.save(refreshTokenEntity);
   }
 
-  // 유저 유효성 검사
+  // * 유저 유효성 검사
   private async validateUser(email: string, password: string): Promise<User> {
     const user = await this.usersService.findOneByEmail(email);
     if (!user) throw new UnauthorizedException();

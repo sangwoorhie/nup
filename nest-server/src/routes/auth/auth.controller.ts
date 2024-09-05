@@ -5,12 +5,15 @@ import {
   Delete,
   Get,
   Headers,
+  Param,
   Post,
   Query,
   Req,
+  Res,
   UnauthorizedException,
   UploadedFile,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -56,6 +59,9 @@ import {
 import { CheckEmailReqDto } from '../users/dto/req.dto';
 import { multerOptions } from 'src/common/multer.options';
 import { readFileSync } from 'fs';
+import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
+import { UserType } from 'src/enums/enums';
 
 @ApiTags('Auth')
 @ApiExtraModels(
@@ -262,6 +268,60 @@ export class AuthController {
     return await this.authService.verifyAuthenticationNumber(
       verifyAuthNumberDto,
     );
+  }
+
+  // 11. 구글 소셜로그인
+  @Get('google')
+  @Public()
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req: any) {}
+
+  // 구글 소셜로그인 후 콜백 처리
+  @Get('google/callback')
+  @Public()
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
+    const { user, isNewUser, userType, refreshToken } =
+      await this.authService.googleLogin(req);
+
+    // 새로운 사용자이므로, 회원가입 추가 정보 입력 페이지로 리디렉션
+    if (isNewUser) {
+      if (userType === UserType.INDIVIDUAL) {
+        return res.redirect(`/signup1/${user.id}`);
+      } else if (userType === UserType.CORPORATE) {
+        return res.redirect(`/signup2/${user.id}`);
+      }
+      return res.json({ id: user.id, accessToken: user.accessToken });
+    }
+
+    // 기존 사용자라면 로그인 성공 처리
+    return res.json({
+      id: user.id,
+      accessToken: user.accessToken,
+      refreshToken: refreshToken,
+    });
+  }
+
+  // 12. 구글 소셜로그인 - 개인 회원가입
+  @Post('signup1/:userId')
+  @Public()
+  async completeIndiSignUp(
+    @Param('userId') userId: string,
+    @Body() indiSignUpReqDto: IndiSignUpReqDto,
+  ) {
+    // 기존 사용자의 추가 정보 업데이트
+    await this.authService.completeIndiSignUp(userId, indiSignUpReqDto);
+  }
+
+  // 13. 구글 소셜로그인 - 사업자 회원가입
+  @Post('signup2/:userId')
+  @Public()
+  async completeCorpSignUp(
+    @Param('userId') userId: string,
+    @Body() corpSignUpReqDto: CorpSignUpReqDto,
+  ) {
+    // 기존 사용자의 추가 정보 업데이트
+    await this.authService.completeCorpSignUp(userId, corpSignUpReqDto);
   }
 }
 

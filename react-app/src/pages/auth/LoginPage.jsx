@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+// import NaverLogin from 'react-naver-login';
 import {
   login,
   loginWithApiKey,
@@ -7,6 +9,7 @@ import {
 } from '../../services/authServices';
 import styled from 'styled-components';
 import backgroundImage from '../../assets/img/background_img.jpg';
+import UserSignupModal from '../../components/etc/modals/UserSignupModal';
 
 const LoginPage = () => {
   const [isAPIKeyLogin, setIsAPIKeyLogin] = useState(false);
@@ -16,6 +19,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [username, setUsername] = useState('');
+  const [showSignupModal, setShowSignupModal] = useState(false); // New state for modal visibility
   const navigate = useNavigate();
 
   const handleSignUpClick = (e) => {
@@ -60,6 +64,23 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleSuccess = (response) => {
+    console.log('Google Login Success:', response);
+  };
+
+  const handleGoogleFailure = (response) => {
+    console.log('Google Login Failed:', response);
+  };
+
+  const handleNaverLogin = () => {
+    console.log('Naver Login Clicked');
+    setShowSignupModal(true); // Open the signup modal when Naver login is clicked
+  };
+
+  const handleModalClose = () => {
+    setShowSignupModal(false); // Function to close the modal
+  };
+
   return (
     <Container>
       <Overlay>
@@ -87,10 +108,6 @@ const LoginPage = () => {
                 귀하의 계정과 연결된 E-mail 주소와 이름을 입력하면 임시
                 비밀번호를 발급하여 보내드립니다. 로그인 후 비밀번호를 변경해
                 주세요.
-                <br />
-                <br />
-                Reset Password 버튼을 누른 뒤, 잠시 시간이 소요되니 알림 창이
-                나올 때까지 기다려 주세요.
               </Description>
               <Label htmlFor='email'>E-mail</Label>
               <Input
@@ -169,6 +186,22 @@ const LoginPage = () => {
                       </ToggleVisibilityButton>
                     </InputWrapper>
                     <Button onClick={handleSignIn}>Sign In</Button>
+                    <LoginButtonWrapper>
+                      <GoogleLoginButtonWrapper>
+                        <GoogleLogin
+                          onSuccess={handleGoogleSuccess}
+                          onFailure={handleGoogleFailure}
+                          buttonText='Sign in with Google'
+                        />
+                      </GoogleLoginButtonWrapper>
+                      <NaverLoginButtonWrapper onClick={handleNaverLogin}>
+                        <img
+                          src='naver_login.png' // 네이버 로그인 이미지 경로로 변경 필요
+                          alt='Naver Login'
+                        />
+                      </NaverLoginButtonWrapper>
+                    </LoginButtonWrapper>
+                    <br />
                     <LinkWrapper>
                       <Link onClick={() => setIsAPIKeyLogin(true)}>
                         API-Key 로그인
@@ -185,6 +218,7 @@ const LoginPage = () => {
           )}
         </FormWrapper>
       </Overlay>
+      {showSignupModal && <UserSignupModal onClose={handleModalClose} />}
     </Container>
   );
 };
@@ -335,6 +369,28 @@ const Link = styled.span`
   &:hover {
     text-decoration: underline;
   }
+`;
+
+const LoginButtonWrapper = styled.div`
+  display: flex;
+  width: 100%;
+`;
+
+const GoogleLoginButtonWrapper = styled.div`
+  flex: 1;
+  margin-right: 10px;
+`;
+
+const NaverLoginButtonWrapper = styled.div`
+  flex: 1;
+  margin-left: 10px;
+  background-color: #03c75a;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
 `;
 
 export default LoginPage;
