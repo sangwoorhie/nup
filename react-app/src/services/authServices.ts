@@ -168,3 +168,32 @@ export const verifyAuthNumber = async (email: string, authNumber: string) => {
 export const sendAuthNumber = async (email: string) => {
   return await httpClient.post('/auth/send-auth-number', { email });
 };
+
+// 구글 로그인
+export const handleGoogleLogin = async (
+  credential: string,
+  navigate: NavigateFunction
+) => {
+  try {
+    const { data } = await httpClient.post('/auth/google/login', {
+      credential,
+    });
+
+    if (data.isNewUser) {
+      return { isNewUser: true, userId: data.id, userType: data.userType };
+    }
+
+    // Store tokens
+    storeAccessTokenToLocal(data.accessToken);
+    storeRefreshTokenToLocal(data.refreshToken);
+    localStorage.setItem('userType', data.userType);
+    localStorage.setItem('userEmail', data.email);
+
+    alert('Login successful');
+    navigate('/user-profile');
+    return { isNewUser: false };
+  } catch (error) {
+    console.error('Google login failed:', error);
+    throw new Error('Google login failed.');
+  }
+};

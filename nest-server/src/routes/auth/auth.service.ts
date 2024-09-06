@@ -495,66 +495,39 @@ export class AuthService {
   // 11. 구글 소셜로그인
   async googleLogin(req: any) {
     if (!req.user) {
-      throw new UnauthorizedException('Google 로그인에 실패했습니다.');
+      throw new UnauthorizedException('Google login failed.');
     }
 
     const { email, firstName, lastName, picture } = req.user;
 
-    // 사용자가 이미 존재하는지 확인
-    const user = await this.usersService.findOneByEmail(email);
+    let user = await this.usersService.findOneByEmail(email);
     let isNewUser = false;
-    let refreshToken: string | undefined;
+    let accessToken: string;
+    let refreshToken: string;
 
-    // 사용자가 없으면 새로 생성
+    // If the user does not exist, create a new user
     if (!user) {
-      const newUser = new User();
-      newUser.email = email;
-      newUser.username = `${firstName} ${lastName}`;
-      newUser.profile_image = picture;
-      newUser.user_type = UserType.INDIVIDUAL; // 기본적으로 개인회원으로 처리
+      isNewUser = true;
+      user = new User();
+      user.email = email;
+      user.username = `${firstName} ${lastName}`;
+      user.profile_image = picture;
+      user.user_type = UserType.INDIVIDUAL; // Default to individual user
 
-      // 새 사용자 저장
-      await this.usersService.saveUser(newUser);
-      isNewUser = true; // 새 사용자임을 표시
-
-      // 액세스 토큰 생성
-      const accessToken = this.generateAccessToken(newUser.id);
-
-      return {
-        user: {
-          id: newUser.id,
-          email: newUser.email,
-          username: newUser.username,
-          accessToken,
-        },
-        isNewUser, // 새 사용자인지 여부
-        userType: newUser.user_type,
-      };
+      await this.usersService.saveUser(user);
     }
 
-    // 기존 사용자는 데이터베이스에 접근하지 않고, 바로 토큰 반환
-    if (!isNewUser) {
-      const existingRefreshToken = await this.refreshTokenRepository.findOne({
-        where: { user: { id: user.id } },
-      });
-      refreshToken = existingRefreshToken
-        ? existingRefreshToken.token
-        : undefined;
+    // Generate access and refresh tokens
+    accessToken = this.generateAccessToken(user.id);
+    refreshToken = this.generateRefreshToken(user.id);
 
-      const accessToken = this.generateAccessToken(user.id);
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          accessToken,
-        },
-        refreshToken, // 기존 refreshToken 반환
-        isNewUser,
-        userType: user.user_type,
-      };
-    }
+    return {
+      user,
+      isNewUser,
+      userType: user.user_type,
+      accessToken,
+      refreshToken,
+    };
   }
 
   // 12. 구글 소셜로그인 - 개인 회원가입

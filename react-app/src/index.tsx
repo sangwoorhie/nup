@@ -7,7 +7,10 @@ import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import '../src/css/index.css';
 
-const clientId = process.env.GOOGLE_CLIENT_ID || '';
+const clientId =
+  process.env.REACT_APP_GOOGLE_CLIENT_ID ||
+  '241423246465-os81hqcaic1hm462tutnm0j37qp2a0js.apps.googleusercontent.com';
+console.log('clientId', clientId);
 
 Modal.setAppElement('#root');
 

@@ -281,25 +281,24 @@ export class AuthController {
   @Public()
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
-    const { user, isNewUser, userType, refreshToken } =
+    const { user, isNewUser, userType, accessToken, refreshToken } =
       await this.authService.googleLogin(req);
 
-    // 새로운 사용자이므로, 회원가입 추가 정보 입력 페이지로 리디렉션
+    // If it's a new user, redirect to the signup page depending on user type
     if (isNewUser) {
       if (userType === UserType.INDIVIDUAL) {
         return res.redirect(`/signup1/${user.id}`);
       } else if (userType === UserType.CORPORATE) {
         return res.redirect(`/signup2/${user.id}`);
       }
-      return res.json({ id: user.id, accessToken: user.accessToken });
+    } else {
+      // If the user is already registered, just return tokens
+      return res.json({
+        id: user.id,
+        accessToken,
+        refreshToken,
+      });
     }
-
-    // 기존 사용자라면 로그인 성공 처리
-    return res.json({
-      id: user.id,
-      accessToken: user.accessToken,
-      refreshToken: refreshToken,
-    });
   }
 
   // 12. 구글 소셜로그인 - 개인 회원가입

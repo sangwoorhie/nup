@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-// import NaverLogin from 'react-naver-login';
 import {
   login,
   loginWithApiKey,
   resetPassword,
+  handleGoogleLogin,
 } from '../../services/authServices';
 import styled from 'styled-components';
 import backgroundImage from '../../assets/img/background_img.jpg';
@@ -20,6 +20,8 @@ const LoginPage = () => {
   const [apiKey, setApiKey] = useState('');
   const [username, setUsername] = useState('');
   const [showSignupModal, setShowSignupModal] = useState(false); // New state for modal visibility
+  const [userType, setUserType] = useState(null); // New state for user type
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
 
   const handleSignUpClick = (e) => {
@@ -64,17 +66,31 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleSuccess = (response) => {
-    console.log('Google Login Success:', response);
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const { isNewUser, userId, userType } = await handleGoogleLogin(
+        credentialResponse.credential,
+        navigate
+      );
+      if (isNewUser) {
+        setUserId(userId);
+        setUserType(userType);
+        setShowSignupModal(true);
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      alert('Google login failed. Please try again.');
+    }
   };
 
-  const handleGoogleFailure = (response) => {
-    console.log('Google Login Failed:', response);
+  const handleGoogleFailure = (error) => {
+    console.error('Google login failed:', error);
+    alert('Google login failed. Please try again.');
   };
 
   const handleNaverLogin = () => {
     console.log('Naver Login Clicked');
-    setShowSignupModal(true); // Open the signup modal when Naver login is clicked
+    // setShowSignupModal(true); // Open the signup modal when Naver login is clicked
   };
 
   const handleModalClose = () => {
@@ -189,10 +205,18 @@ const LoginPage = () => {
                     <LoginButtonWrapper>
                       <GoogleLoginButtonWrapper>
                         <GoogleLogin
+                          clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
                           onSuccess={handleGoogleSuccess}
                           onFailure={handleGoogleFailure}
-                          buttonText='Sign in with Google'
+                          cookiePolicy={'single_host_origin'}
                         />
+                        {showSignupModal && (
+                          <UserSignupModal
+                            onClose={() => setShowSignupModal(false)}
+                            userId={userId}
+                            userType={userType}
+                          />
+                        )}
                       </GoogleLoginButtonWrapper>
                       <NaverLoginButtonWrapper onClick={handleNaverLogin}>
                         <img

@@ -20,6 +20,8 @@
     "noUnusedParameters": true, // Report errors on unused parameters
     "incremental": true, // Enable incremental compilation by reading/writing information from prior compilations to a file on disk
     "noFallthroughCasesInSwitch": true // Report errors for fallthrough cases in switch statement
+    // "typeRoots": ["./src/types", "./node_modules/@types"],
+    // "types": ["next-auth"]
   },
   "include": [
     "src/**/*" // *** The files TypeScript should type check ***
