@@ -23,7 +23,7 @@ dotenv.config();
 config();
 
 async function bootstrap() {
-  const PORT = process.env.PORT || 3000;
+  const PORT = 3001; // process.env.PORT || 3000;
   const app = await NestFactory.create(AppModule);
 
   // Create an Express instance
@@ -44,7 +44,7 @@ async function bootstrap() {
       'http://192.168.0.5:3000',
       'http://172.21.144.1:3000',
     ],
-    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE'],
     credentials: true,
   });
 

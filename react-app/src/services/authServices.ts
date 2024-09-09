@@ -9,6 +9,8 @@ import {
   UserLoginPayloadType,
   ApiKeyLoginPayloadType,
   ResetPasswordPayloadType,
+  IndiSignUpPayloadType,
+  CorpSignUpPayloadType,
 } from '../types';
 
 // 개인 회원가입
@@ -175,15 +177,16 @@ export const handleGoogleLogin = async (
   navigate: NavigateFunction
 ) => {
   try {
-    const { data } = await httpClient.post('/auth/google/login', {
+    const { data } = await httpClient.post('/auth/google/callback', {
       credential,
-    });
+    }); // POST request with the credential
 
     if (data.isNewUser) {
-      return { isNewUser: true, userId: data.id, userType: data.userType };
+      // Navigate to sign-up modal if new user
+      return { isNewUser: true, userId: data.userId, userType: data.userType };
     }
 
-    // Store tokens
+    // Store tokens for an existing user
     storeAccessTokenToLocal(data.accessToken);
     storeRefreshTokenToLocal(data.refreshToken);
     localStorage.setItem('userType', data.userType);
@@ -195,5 +198,41 @@ export const handleGoogleLogin = async (
   } catch (error) {
     console.error('Google login failed:', error);
     throw new Error('Google login failed.');
+  }
+};
+
+// 구글 소셜로그인 개인 회원가입
+export const handleIndiSignUp = async (
+  userId: string,
+  indiSignUpData: IndiSignUpPayloadType
+) => {
+  try {
+    const { data } = await httpClient.post(
+      `/auth/signup1/${userId}`,
+      indiSignUpData
+    );
+    alert(data.message);
+    // Optionally, navigate to user profile or login
+  } catch (error) {
+    console.error('Individual signup failed:', error);
+    throw new Error('Individual signup failed.');
+  }
+};
+
+// 구글 소셜로그인 사업자 회원가입
+export const handleCorpSignUp = async (
+  userId: string,
+  corpSignUpData: CorpSignUpPayloadType
+) => {
+  try {
+    const { data } = await httpClient.post(
+      `/auth/signup2/${userId}`,
+      corpSignUpData
+    );
+    alert(data.message);
+    // Optionally, navigate to user profile or login
+  } catch (error) {
+    console.error('Corporate signup failed:', error);
+    throw new Error('Corporate signup failed.');
   }
 };

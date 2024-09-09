@@ -272,32 +272,48 @@ export class AuthController {
 
   // 11. 구글 소셜로그인
   @Get('google')
-  @Public()
   @UseGuards(AuthGuard('google'))
-  async googleAuth(@Req() req: any) {}
+  @Public()
+  async googleAuth(@Req() req: any) {
+    // The Google OAuth flow will be triggered by this route
+  }
 
   // 구글 소셜로그인 후 콜백 처리
-  @Get('google/callback')
+  @Post('google/callback')
   @Public()
-  @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Req() req: any, @Res() res: Response) {
-    const { user, isNewUser, userType, accessToken, refreshToken } =
-      await this.authService.googleLogin(req);
+  async googleAuthCallback(
+    @Body('credential') credential: string,
+    @Res() res: Response,
+  ) {
+    try {
+      // Verify the Google credential
+      const googleUser =
+        await this.authService.verifyGoogleCredential(credential);
 
-    // If it's a new user, redirect to the signup page depending on user type
-    if (isNewUser) {
-      if (userType === UserType.INDIVIDUAL) {
-        return res.redirect(`/signup1/${user.id}`);
-      } else if (userType === UserType.CORPORATE) {
-        return res.redirect(`/signup2/${user.id}`);
+      // Process the user in your system
+      const { user, isNewUser, userType, accessToken, refreshToken } =
+        await this.authService.googleLogin(googleUser);
+
+      // If it's a new user, redirect to the signup page depending on user type
+      if (isNewUser) {
+        return res.json({
+          isNewUser: true,
+          userId: user.id,
+          userType: userType,
+        });
+      } else {
+        // If the user is already registered, just return tokens
+        return res.json({
+          id: user.id,
+          accessToken,
+          refreshToken,
+          email: user.email,
+          userType: user.user_type,
+        });
       }
-    } else {
-      // If the user is already registered, just return tokens
-      return res.json({
-        id: user.id,
-        accessToken,
-        refreshToken,
-      });
+    } catch (error) {
+      console.error('Error in googleAuthCallback:', error);
+      return res.status(400).json({ message: 'Google authentication failed.' });
     }
   }
 
@@ -310,6 +326,7 @@ export class AuthController {
   ) {
     // 기존 사용자의 추가 정보 업데이트
     await this.authService.completeIndiSignUp(userId, indiSignUpReqDto);
+    return { message: '개인 회원가입이 완료되었습니다.' };
   }
 
   // 13. 구글 소셜로그인 - 사업자 회원가입
@@ -321,6 +338,7 @@ export class AuthController {
   ) {
     // 기존 사용자의 추가 정보 업데이트
     await this.authService.completeCorpSignUp(userId, corpSignUpReqDto);
+    return { message: '사업자 회원가입이 완료되었습니다.' };
   }
 }
 

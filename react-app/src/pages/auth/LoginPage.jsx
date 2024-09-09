@@ -68,14 +68,19 @@ const LoginPage = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const { isNewUser, userId, userType } = await handleGoogleLogin(
+      const response = await handleGoogleLogin(
         credentialResponse.credential,
         navigate
-      );
+      ); // Passing credential to the service
+      const { isNewUser, userId, userType } = response;
+
       if (isNewUser) {
         setUserId(userId);
         setUserType(userType);
-        setShowSignupModal(true);
+        setShowSignupModal(true); // Open modal for new user signup
+      } else {
+        alert('Logged in successfully');
+        navigate('/user-profile');
       }
     } catch (error) {
       console.error('Google login error:', error);
@@ -83,14 +88,9 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleFailure = (error) => {
-    console.error('Google login failed:', error);
-    alert('Google login failed. Please try again.');
-  };
-
   const handleNaverLogin = () => {
     console.log('Naver Login Clicked');
-    // setShowSignupModal(true); // Open the signup modal when Naver login is clicked
+    setShowSignupModal(true); // Open the signup modal when Naver login is clicked
   };
 
   const handleModalClose = () => {
@@ -205,24 +205,24 @@ const LoginPage = () => {
                     <LoginButtonWrapper>
                       <GoogleLoginButtonWrapper>
                         <GoogleLogin
-                          clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
                           onSuccess={handleGoogleSuccess}
-                          onFailure={handleGoogleFailure}
-                          cookiePolicy={'single_host_origin'}
+                          onFailure={(error) =>
+                            console.error('Google login failed:', error)
+                          }
                         />
                         {showSignupModal && (
                           <UserSignupModal
-                            onClose={() => setShowSignupModal(false)}
+                            onClose={handleModalClose}
                             userId={userId}
                             userType={userType}
                           />
                         )}
                       </GoogleLoginButtonWrapper>
                       <NaverLoginButtonWrapper onClick={handleNaverLogin}>
-                        <img
+                        {/* <img
                           src='naver_login.png' // 네이버 로그인 이미지 경로로 변경 필요
                           alt='Naver Login'
-                        />
+                        /> */}
                       </NaverLoginButtonWrapper>
                     </LoginButtonWrapper>
                     <br />

@@ -786,16 +786,14 @@ export class UsersService {
   }
 
   // * 구글 소셜로그인 회원 가입
-  async saveUser(user: User): Promise<User> {
-    // const existingUser = await this.findOneByEmail(user.email);
-
-    // if (existingUser) {
-    //   Object.assign(existingUser, user);
-    //   return this.userRepository.save(existingUser);
-    // }
-
-    // 사용자가 존재하지 않으면 새로 생성
-    return this.userRepository.save(user);
+  async saveUser(email: string, name: string): Promise<User> {
+    const newUser = this.userRepository.create({
+      email: email,
+      username: name,
+      phone: '',
+      password: null,
+    });
+    return this.userRepository.save(newUser);
   }
 
   // * 이메일로 회원찾기

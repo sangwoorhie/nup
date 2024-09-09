@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import axios from 'axios';
 import corporateIcon from '../../../assets/img/corporate.png';
 import individualIcon from '../../../assets/img/individual.png';
 import { RadioButton } from 'primereact/radiobutton';
 import AddressModal from './AddressModal';
+import {
+  handleIndiSignUp,
+  handleCorpSignUp,
+} from '../../../services/authServices';
 
-const UserSignupModal = ({ onClose }) => {
+const UserSignupModal = ({ onClose, userId }) => {
   const [step, setStep] = useState(1);
   const [userType, setUserType] = useState(null);
   const [memberType, setMemberType] = useState('기업회원');
@@ -14,14 +17,13 @@ const UserSignupModal = ({ onClose }) => {
     termsAccepted: false,
     privacyAccepted: false,
     marketingAccepted: false,
-    allAccepted: false, // For the 전체 약관에 동의합니다 checkbox
+    allAccepted: false,
   });
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     profileImage: null,
     emergencyContact: '',
-    // Corporate-specific fields
     corporateName: '',
     businessType: '',
     businessConditions: '',
@@ -83,11 +85,22 @@ const UserSignupModal = ({ onClose }) => {
     setIsAddressPopupVisible(false);
   };
 
+  // Utility function to check required fields
+  const areRequiredFieldsFilled = () => {
+    return formData.name && formData.phone;
+  };
+
   const goToNextStep = () => {
     if (step === 2 && (!terms.termsAccepted || !terms.privacyAccepted)) {
       setAlertMessage('모든 필수 약관에 동의해주세요.');
       return;
     }
+
+    if (step === 3 && !areRequiredFieldsFilled()) {
+      alert('모든 필수 입력사항을 입력해 주세요.');
+      return;
+    }
+
     setAlertMessage('');
     setStep(step + 1);
   };
@@ -97,40 +110,37 @@ const UserSignupModal = ({ onClose }) => {
   };
 
   const submitSignup = async () => {
-    const apiUrl =
-      userType === 'individual'
-        ? '/api/completeIndiSignUp'
-        : '/api/completeCorpSignUp';
-
-    const data = new FormData();
-    data.append('name', formData.name);
-    data.append('phone', formData.phone);
-    if (profileImage) {
-      data.append('profileImage', profileImage);
+    if (!areRequiredFieldsFilled()) {
+      alert('모든 필수 입력사항을 입력해 주세요.');
+      return;
     }
-    data.append('emergencyContact', formData.emergencyContact);
 
-    // Corporate-specific data
-    if (userType === 'corporate') {
-      data.append('corporateName', formData.corporateName);
-      data.append('businessType', formData.businessType);
-      data.append('businessConditions', formData.businessConditions);
-      data.append(
-        'businessRegistrationNumber',
-        formData.businessRegistrationNumber
-      );
-      data.append('address', `${formData.address} ${formData.detailedAddress}`);
-      if (businessLicense) {
-        data.append('businessLicense', formData.businessLicense);
-      }
-    }
+    const signupData = {
+      username: formData.name,
+      phone: formData.phone,
+      emergency_phone: formData.emergencyContact,
+      profile_image: formData.profileImage,
+    };
 
     try {
-      await axios.post(apiUrl, data);
+      if (userType === 'individual') {
+        await handleIndiSignUp(userId, signupData);
+      } else if (userType === 'corporate') {
+        const corpSignupData = {
+          ...signupData,
+          corporate_name: formData.corporateName,
+          business_type: formData.businessType,
+          business_conditions: formData.businessConditions,
+          business_registration_number: formData.businessRegistrationNumber,
+          address: formData.address,
+          business_license: formData.businessLicense,
+        };
+        await handleCorpSignUp(userId, corpSignupData);
+      }
       alert('회원가입 완료');
       onClose();
     } catch (error) {
-      console.error('Error in signup:', error);
+      console.error('Signup failed:', error);
       setAlertMessage('회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
     }
   };
@@ -145,11 +155,9 @@ const UserSignupModal = ({ onClose }) => {
               ? '회원 유형 선택'
               : step === 2
                 ? '약관 동의'
-                : step === 3
-                  ? userType === 'corporate'
-                    ? '회원 정보 입력'
-                    : '회원가입 완료'
-                  : '사업자 정보 입력'}
+                : step === 3 && userType === 'corporate'
+                  ? '회원 정보 입력'
+                  : '회원가입 완료'}
           </Title>
         </ModalHeader>
 
@@ -262,6 +270,7 @@ const UserSignupModal = ({ onClose }) => {
                 <Input
                   id='profileImage'
                   type='file'
+                  value={profileImage}
                   onChange={(e) => setProfileImage(e.target.files[0])}
                 />
               </Row>
@@ -367,6 +376,7 @@ const UserSignupModal = ({ onClose }) => {
                 <Input
                   id='businessLicense'
                   type='file'
+                  value={businessLicense}
                   onChange={(e) => setBusinessLicense(e.target.files[0])}
                 />
               </Row>
@@ -413,9 +423,10 @@ const UserSignupModal = ({ onClose }) => {
             )}
             {step === 3 && userType === 'corporate' ? (
               <Button onClick={() => setStep(4)}>다음</Button>
-            ) : (
-              step === 4 && <Button onClick={submitSignup}>회원가입</Button>
-            )}
+            ) : (step === 4 && userType === 'corporate') ||
+              (step === 3 && userType === 'individual') ? (
+              <Button onClick={submitSignup}>회원가입</Button>
+            ) : null}
           </ButtonContainer>
         </ModalFooter>
 
@@ -528,7 +539,7 @@ const TermsContainer = styled.div`
 
 const CheckboxLabel = styled.label`
   display: block;
-  margin-top: 10px; /* Ensures checkbox is spaced below the terms */
+  margin-top: 10px;
   font-size: 14px;
 `;
 
@@ -542,7 +553,7 @@ const Row = styled.div`
 const Label = styled.label`
   margin-right: 10px;
   flex: 1;
-  white-space: nowrap; /* Ensures label stays on a single line */
+  white-space: nowrap;
 `;
 
 const Input = styled.input`
@@ -609,7 +620,7 @@ const RadioButtonContainer = styled.div`
 
 const RadioButtonLabel = styled.label`
   margin-left: 8px;
-  white-space: nowrap; /* Ensures radio button labels stay on a single line */
+  white-space: nowrap;
 `;
 
 const CheckButton = styled.button`

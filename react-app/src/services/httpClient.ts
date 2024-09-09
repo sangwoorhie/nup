@@ -2,10 +2,11 @@ import axios from 'axios';
 import { handleRefreshToken, logout } from './authServices';
 
 const httpClient = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'http://localhost:3001',
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable credentials
 });
 
 httpClient.interceptors.request.use(

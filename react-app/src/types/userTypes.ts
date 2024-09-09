@@ -53,3 +53,28 @@ export interface ResetPasswordPayloadType {
   email: string;
   username: string;
 }
+
+// 구글 소셜로그인 개인회원 회원가입
+export type IndiSignUpPayloadType = {
+  username: string;
+  phone: string;
+  emergency_phone?: string;
+  profile_image?: string;
+};
+
+// 구글 소셜로그인 사업자회원 회원가입
+export type CorpSignUpPayloadType = {
+  username: string;
+  phone: string;
+  emergency_phone?: string;
+  profile_image?: string;
+  corporate_type: any;
+  department?: string;
+  position?: string;
+  corporate_name: string;
+  business_type: string;
+  business_conditions: string;
+  business_registration_number: number;
+  address: string;
+  business_license: string;
+};

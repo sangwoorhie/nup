@@ -44,7 +44,7 @@ export class User {
 
   // 비밀번호
   @ApiProperty({ description: '비밀번호' })
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   password: string;
 
   // 회원 이름
