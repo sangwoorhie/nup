@@ -9,8 +9,8 @@ import {
   UserLoginPayloadType,
   ApiKeyLoginPayloadType,
   ResetPasswordPayloadType,
-  IndiSignUpPayloadType,
-  CorpSignUpPayloadType,
+  // IndiSignUpPayloadType,
+  // CorpSignUpPayloadType,
 } from '../types';
 
 // 개인 회원가입
@@ -181,7 +181,7 @@ export const handleGoogleLogin = async (
       credential,
     }); // POST request with the credential
 
-    if (data.isNewUser) {
+    if (data.isNewUser || !data.userType) {
       // Navigate to sign-up modal if new user
       return { isNewUser: true, userId: data.userId, userType: data.userType };
     }
@@ -204,35 +204,69 @@ export const handleGoogleLogin = async (
 // 구글 소셜로그인 개인 회원가입
 export const handleIndiSignUp = async (
   userId: string,
-  indiSignUpData: IndiSignUpPayloadType
+  indiSignUpData: FormData
 ) => {
   try {
     const { data } = await httpClient.post(
-      `/auth/signup1/${userId}`,
-      indiSignUpData
+      `/auth/google/signup1/${userId}`,
+      indiSignUpData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
-    alert(data.message);
-    // Optionally, navigate to user profile or login
-  } catch (error) {
-    console.error('Individual signup failed:', error);
-    throw new Error('Individual signup failed.');
+    return data;
+  } catch (error: any) {
+    console.error('Individual signup error:', error.response || error);
+    if (error.response) {
+      throw new Error(
+        `Individual signup failed: ${error.response.data.message || error.response.statusText}`
+      );
+    } else if (error.request) {
+      throw new Error(
+        'Individual signup failed: No response received from server'
+      );
+    } else {
+      throw new Error(`Individual signup failed: ${error.message}`);
+    }
   }
 };
 
 // 구글 소셜로그인 사업자 회원가입
 export const handleCorpSignUp = async (
   userId: string,
-  corpSignUpData: CorpSignUpPayloadType
+  corpSignUpData: FormData
 ) => {
   try {
+    console.log('Sending corporate signup data to server:');
+    corpSignUpData.forEach((value, key) => {
+      console.log(`${key}: ${value}`);
+    });
+
     const { data } = await httpClient.post(
-      `/auth/signup2/${userId}`,
-      corpSignUpData
+      `/auth/google/signup2/${userId}`,
+      corpSignUpData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
-    alert(data.message);
-    // Optionally, navigate to user profile or login
-  } catch (error) {
-    console.error('Corporate signup failed:', error);
-    throw new Error('Corporate signup failed.');
+    console.log('Server response:', data);
+    return data;
+  } catch (error: any) {
+    console.error('Corporate signup error:', error.response || error);
+    if (error.response) {
+      throw new Error(
+        `Corporate signup failed: ${error.response.data.message || error.response.statusText}`
+      );
+    } else if (error.request) {
+      throw new Error(
+        'Corporate signup failed: No response received from server'
+      );
+    } else {
+      throw new Error(`Corporate signup failed: ${error.message}`);
+    }
   }
 };

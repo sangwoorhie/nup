@@ -44,7 +44,7 @@ async function bootstrap() {
       'http://192.168.0.5:3000',
       'http://172.21.144.1:3000',
     ],
-    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE'],
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
 

@@ -9,6 +9,8 @@ import {
 import {
   ApiKeySignInReqDto,
   CorpSignUpReqDto,
+  GoogleCorpSignUpReqDto,
+  GoogleIndiSignUpReqDto,
   IndiSignUpReqDto,
   SignInReqDto,
   VerifyAuthNumberDto,
@@ -102,6 +104,7 @@ export class AuthService {
         emergency_phone,
         profile_image,
       });
+      userEntity.is_signup_completed = true;
       await queryRunner.manager.save(userEntity);
 
       const accessToken = this.generateAccessToken(userEntity.id);
@@ -180,6 +183,7 @@ export class AuthService {
       userEntity.phone = phone;
       userEntity.emergency_phone = emergency_phone;
       userEntity.profile_image = profile_image;
+      userEntity.is_signup_completed = true;
 
       // User 엔티티 저장
       const savedUser = await queryRunner.manager.save(User, userEntity);
@@ -535,65 +539,34 @@ export class AuthService {
     let refreshToken: string | null = null;
 
     if (!user) {
-      // New user: create a temporary user or flag for further signup
+      // New user: create a temporary user
       isNewUser = true;
       user = await this.usersService.saveUser(email, name);
       userType = null; // To be set via signup modal
+    } else if (!user.is_signup_completed) {
+      // Existing user but signup not completed
+      isNewUser = true;
+      userType = null;
     } else {
       // Existing user: generate tokens
       const userId = user.id;
       accessToken = this.generateAccessToken(userId);
       refreshToken = this.generateRefreshToken(userId);
-      userType = user.user_type; // Adjust based on your user model
+      userType = user.user_type;
     }
-
-    if (isNewUser) {
-      return { user, isNewUser, userType };
-    } else {
-      return { user, isNewUser, userType, accessToken, refreshToken };
-    }
+    return { user, isNewUser, userType, accessToken, refreshToken };
+    // if (isNewUser) {
+    //   return { user, isNewUser, userType };
+    // } else {
+    //   return { user, isNewUser, userType, accessToken, refreshToken };
+    // }
   }
 
-  // async googleLogin(req: any) {
-  //   if (!req.user) {
-  //     throw new UnauthorizedException('Google login failed.');
-  //   }
-
-  //   const { email, firstName, lastName, picture } = req.user;
-
-  //   let user = await this.usersService.findOneByEmail(email);
-  //   let isNewUser = false;
-  //   let accessToken: string;
-  //   let refreshToken: string;
-
-  //   // If the user does not exist, create a new user
-  //   if (!user) {
-  //     isNewUser = true;
-  //     user = new User();
-  //     user.email = email;
-  //     user.username = `${firstName} ${lastName}`;
-  //     user.profile_image = picture;
-  //     user.user_type = UserType.INDIVIDUAL;
-  //     1; // Default to individual user
-
-  //     await this.usersService.saveUser(user);
-  //   }
-
-  //   // Generate access and refresh tokens
-  //   accessToken = this.generateAccessToken(user.id);
-  //   refreshToken = this.generateRefreshToken(user.id);
-
-  //   return {
-  //     user,
-  //     isNewUser,
-  //     userType: user.user_type,
-  //     accessToken,
-  //     refreshToken,
-  //   };
-  // }
-
   // 12. 구글 소셜로그인 - 개인 회원가입
-  async completeIndiSignUp(userId: string, indiSignUpReqDto: IndiSignUpReqDto) {
+  async completeIndiSignUp(
+    userId: string,
+    googleIndiSignUpReqDto: GoogleIndiSignUpReqDto,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -606,11 +579,15 @@ export class AuthService {
       }
 
       // 추가 정보 업데이트
-      const { phone, emergency_phone, profile_image } = indiSignUpReqDto;
+      const { phone, emergency_phone, profile_image, username } =
+        googleIndiSignUpReqDto;
 
+      user.user_type = UserType.INDIVIDUAL;
+      user.username = username;
       user.phone = phone;
       user.emergency_phone = emergency_phone;
       user.profile_image = profile_image;
+      user.is_signup_completed = true;
 
       // 업데이트된 유저 정보 저장
       await queryRunner.manager.save(User, user);
@@ -640,7 +617,10 @@ export class AuthService {
   }
 
   // 13. 구글 소셜로그인 - 사업자 회원가입
-  async completeCorpSignUp(userId: string, corpSignUpReqDto: CorpSignUpReqDto) {
+  async completeCorpSignUp(
+    userId: string,
+    googleCorpSignUpReqDto: GoogleCorpSignUpReqDto,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -653,27 +633,29 @@ export class AuthService {
       }
 
       const {
-        corporate_type,
+        username,
         phone,
         emergency_phone,
+        profile_image,
+        corporate_type,
         corporate_name,
         business_type,
         business_conditions,
         business_registration_number,
         address,
-        profile_image,
         business_license,
-      } = corpSignUpReqDto;
+      } = googleCorpSignUpReqDto;
 
-      // User 엔티티 생성
-      const userEntity = new User();
-      userEntity.user_type = UserType.CORPORATE;
-      userEntity.phone = phone;
-      userEntity.emergency_phone = emergency_phone;
-      userEntity.profile_image = profile_image;
+      // User 추가 정보 업데이트
+      user.user_type = UserType.CORPORATE;
+      user.username = username;
+      user.phone = phone;
+      user.emergency_phone = emergency_phone;
+      user.profile_image = profile_image;
+      user.is_signup_completed = true;
 
-      // User 엔티티 저장
-      const savedUser = await queryRunner.manager.save(User, userEntity);
+      // 업데이트된 유저 정보 저장
+      const savedUser = await queryRunner.manager.save(User, user);
 
       // Corporate 엔티티 생성 및 정보 저장
       const corporateEntity = new Corporate();

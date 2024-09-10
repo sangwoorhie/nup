@@ -92,6 +92,11 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   banned_reason: string;
 
+  // 회원가입 완료 여부 (소셜계정 회원용)
+  @ApiProperty({ description: '회원가입 완료 여부 (소셜계정 회원용)' })
+  @Column({ type: 'boolean', default: false })
+  is_signup_completed: boolean;
+
   // 유저 생성 시각
   @ApiProperty({ description: '유저 생성시각' })
   @CreateDateColumn({ type: 'timestamp' })

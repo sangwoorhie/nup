@@ -71,15 +71,16 @@ const LoginPage = () => {
       const response = await handleGoogleLogin(
         credentialResponse.credential,
         navigate
-      ); // Passing credential to the service
+      );
+      console.log('Google Login Response:', response);
       const { isNewUser, userId, userType } = response;
 
-      if (isNewUser) {
+      if (isNewUser || !userType) {
         setUserId(userId);
         setUserType(userType);
         setShowSignupModal(true); // Open modal for new user signup
       } else {
-        alert('Logged in successfully');
+        alert('로그인 되었습니다.');
         navigate('/user-profile');
       }
     } catch (error) {
@@ -242,7 +243,9 @@ const LoginPage = () => {
           )}
         </FormWrapper>
       </Overlay>
-      {showSignupModal && <UserSignupModal onClose={handleModalClose} />}
+      {showSignupModal && (
+        <UserSignupModal onClose={handleModalClose} userId={userId} />
+      )}
     </Container>
   );
 };

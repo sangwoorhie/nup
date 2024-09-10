@@ -235,3 +235,95 @@ export class SendAuthNumberDto {
   @IsEmail()
   email: string;
 }
+
+// 구글 소셜로그인 개인 회원가입 요청 DTO
+export class GoogleIndiSignUpReqDto {
+  @ApiProperty({ required: true, description: '회원이름' })
+  @IsString()
+  @IsNotEmpty()
+  readonly username: string;
+
+  @ApiProperty({ required: true, description: '연락처' })
+  @IsString()
+  @IsNotEmpty()
+  readonly phone: string;
+
+  @ApiProperty({ required: false, description: '비상 연락처' })
+  @IsString()
+  @IsOptional()
+  readonly emergency_phone?: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: false,
+    description: '프로필 이미지 (base64 encoded)',
+  })
+  @IsOptional()
+  profile_image?: string;
+}
+
+// 구글 소셜로그인 사업자 회원가입 요청 DTO
+export class GoogleCorpSignUpReqDto {
+  @ApiProperty({ required: true, description: '회원이름' })
+  @IsString()
+  @IsNotEmpty()
+  readonly username: string;
+
+  @ApiProperty({ required: true, description: '연락처' })
+  @IsString()
+  @IsNotEmpty()
+  readonly phone: string;
+
+  @ApiProperty({ required: false, description: '비상 연락처' })
+  @IsString()
+  @IsOptional()
+  readonly emergency_phone?: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: false,
+    description: '프로필 이미지 (base64 encoded)',
+  })
+  @IsOptional()
+  profile_image?: string;
+
+  @ApiProperty({ required: true, description: '사업자 유형' })
+  @IsEnum(CorporateType, {
+    message: '사업자 유형은 "business" 또는 "organization" 이어야 합니다.',
+  })
+  readonly corporate_type: CorporateType;
+
+  @ApiProperty({ required: true, description: '기업 명' })
+  @IsString()
+  @IsNotEmpty()
+  readonly corporate_name: string;
+
+  @ApiProperty({ required: true, description: '업종 명' })
+  @IsString()
+  @IsNotEmpty()
+  readonly business_type: string;
+
+  @ApiProperty({ required: true, description: '업태 명' })
+  @IsString()
+  @IsNotEmpty()
+  readonly business_conditions: string;
+
+  @ApiProperty({ required: true, description: '사업자 등록번호' })
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  readonly business_registration_number: number;
+
+  @ApiProperty({ required: true, description: '주소' })
+  @IsString()
+  @IsNotEmpty()
+  readonly address: string;
+
+  @ApiProperty({
+    type: 'string',
+    required: true,
+    description: '사업자 등록증 사본 (base64 encoded)',
+  })
+  @IsOptional()
+  business_license?: string;
+}

@@ -1,5 +1,6 @@
 import { UsersService } from './../users/users.service';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -39,6 +40,8 @@ import {
   SendAuthNumberDto,
   ImageReqDto,
   BusinessLicenseReqDto,
+  GoogleIndiSignUpReqDto,
+  GoogleCorpSignUpReqDto,
 } from './dto/req.dto';
 import {
   CorpSignUpResDto,
@@ -293,13 +296,13 @@ export class AuthController {
       // Process the user in your system
       const { user, isNewUser, userType, accessToken, refreshToken } =
         await this.authService.googleLogin(googleUser);
-
+      // console.log('user', user);
       // If it's a new user, redirect to the signup page depending on user type
-      if (isNewUser) {
+      if (isNewUser || !userType) {
         return res.json({
           isNewUser: true,
           userId: user.id,
-          userType: userType,
+          userType: null,
         });
       } else {
         // If the user is already registered, just return tokens
@@ -318,38 +321,92 @@ export class AuthController {
   }
 
   // 12. 구글 소셜로그인 - 개인 회원가입
-  @Post('signup1/:userId')
+  @Post('google/signup1/:userId')
   @Public()
+  @UseInterceptors(FileInterceptor('profile_image', multerOptions))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '구글 회원가입 (개인회원)' })
+  @ApiBody({ type: GoogleIndiSignUpReqDto })
   async completeIndiSignUp(
     @Param('userId') userId: string,
-    @Body() indiSignUpReqDto: IndiSignUpReqDto,
+    @Body() googleIndiSignUpReqDto: GoogleIndiSignUpReqDto,
+    @UploadedFile() profileImage: Express.Multer.File,
   ) {
+    const base64Image = readFileSync(profileImage.path).toString('base64');
+    googleIndiSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
     // 기존 사용자의 추가 정보 업데이트
-    await this.authService.completeIndiSignUp(userId, indiSignUpReqDto);
+    await this.authService.completeIndiSignUp(userId, googleIndiSignUpReqDto);
     return { message: '개인 회원가입이 완료되었습니다.' };
   }
 
   // 13. 구글 소셜로그인 - 사업자 회원가입
-  @Post('signup2/:userId')
+  @Post('google/signup2/:userId')
   @Public()
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'profile_image', maxCount: 1 },
+        { name: 'business_license', maxCount: 1 },
+      ],
+      multerOptions,
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '구글 회원가입 (사업자회원)' })
   async completeCorpSignUp(
     @Param('userId') userId: string,
-    @Body() corpSignUpReqDto: CorpSignUpReqDto,
+    @Body() googleCorpSignUpReqDto: GoogleCorpSignUpReqDto,
+    @UploadedFiles()
+    files: {
+      profile_image?: Express.Multer.File[];
+      business_license?: Express.Multer.File[];
+    },
   ) {
-    // 기존 사용자의 추가 정보 업데이트
-    await this.authService.completeCorpSignUp(userId, corpSignUpReqDto);
-    return { message: '사업자 회원가입이 완료되었습니다.' };
-  }
-}
+    console.log('Received data:', googleCorpSignUpReqDto);
+    console.log('Received files:', files);
 
-// 이미지 업로드
-// POST : localhost:3000/auth/upload-single
-// @Post('upload-single')
-// @Public()
-// @UseInterceptors(FileInterceptor('profile_image'))
-// uploadFile(@UploadedFile() profile_image: Express.Multer.File) {
-//   console.log(profile_image);
-// }
+    const profileImage = files.profile_image?.[0];
+    const businessLicense = files.business_license?.[0];
+
+    if (profileImage) {
+      const base64Image = readFileSync(profileImage.path).toString('base64');
+      googleCorpSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
+    }
+    if (businessLicense) {
+      const base64License = readFileSync(businessLicense.path).toString(
+        'base64',
+      );
+      googleCorpSignUpReqDto.business_license = `data:${businessLicense.mimetype};base64,${base64License}`;
+    }
+
+    try {
+      // 기존 사용자의 추가 정보 업데이트
+      const result = await this.authService.completeCorpSignUp(
+        userId,
+        googleCorpSignUpReqDto,
+      );
+      return { message: '사업자 회원가입이 완료되었습니다.', ...result };
+    } catch (error) {
+      console.error('Error in completeCorpSignUp:', error);
+      throw new BadRequestException(error.message);
+    }
+  }
+  // 14. 네이버 소셜로그인
+  @Get('naver')
+  @UseGuards(AuthGuard('naver'))
+  @Public()
+  async naverAuth(@Req() req: any) {
+    // The Google OAuth flow will be triggered by this route
+  }
+
+  // 네이버 소셜로그인 후 콜백 처리
+  @Post('naver/callback')
+  @Public()
+  async naverAuthCallback(
+    @Body('credential') credential: string,
+    @Res() res: Response,
+  ) {}
+}
 
 // 스웨거 상 인증을 거쳐야 함
 // @ApiBearerAuth()

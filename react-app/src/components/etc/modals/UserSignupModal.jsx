@@ -22,24 +22,17 @@ const UserSignupModal = ({ onClose, userId }) => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    profileImage: null,
     emergencyContact: '',
     corporateName: '',
     businessType: '',
     businessConditions: '',
     businessRegistrationNumber: '',
-    businessLicense: null,
     address: '',
     detailedAddress: '',
   });
+
   const [alertMessage, setAlertMessage] = useState('');
-  const [corporateName, setCorporateName] = useState('');
-  const [businessType, setBusinessType] = useState('');
-  const [businessConditions, setBusinessConditions] = useState('');
-  const [businessRegistrationNumber, setBusinessRegistrationNumber] =
-    useState('');
   const [businessLicense, setBusinessLicense] = useState(null);
-  const [address, setAddress] = useState('');
   const [isAddressPopupVisible, setIsAddressPopupVisible] = useState(false);
   const [detailedAddress, setDetailedAddress] = useState('');
   const [profileImage, setProfileImage] = useState(null);
@@ -81,12 +74,23 @@ const UserSignupModal = ({ onClose, userId }) => {
   };
 
   const handleAddressSelect = (data) => {
-    setAddress(data.address);
+    // setAddress(data.address);
     setIsAddressPopupVisible(false);
   };
 
   // Utility function to check required fields
   const areRequiredFieldsFilled = () => {
+    if (userType === 'corporate') {
+      return (
+        formData.name &&
+        formData.phone &&
+        formData.corporateName &&
+        formData.businessType &&
+        formData.businessConditions &&
+        formData.businessRegistrationNumber &&
+        formData.address
+      );
+    }
     return formData.name && formData.phone;
   };
 
@@ -109,39 +113,77 @@ const UserSignupModal = ({ onClose, userId }) => {
     setStep(step - 1);
   };
 
+  if (!userId) {
+    console.error('userId is undefined');
+    alert('User ID is not defined.');
+    return;
+  }
+
   const submitSignup = async () => {
     if (!areRequiredFieldsFilled()) {
       alert('모든 필수 입력사항을 입력해 주세요.');
       return;
     }
 
-    const signupData = {
-      username: formData.name,
-      phone: formData.phone,
-      emergency_phone: formData.emergencyContact,
-      profile_image: formData.profileImage,
-    };
+    const signupData = new FormData();
+    signupData.append('username', formData.name);
+    signupData.append('phone', formData.phone);
+    signupData.append('emergency_phone', formData.emergencyContact);
+
+    if (profileImage) {
+      signupData.append('profile_image', profileImage);
+    }
+
+    if (userType === 'corporate') {
+      signupData.append(
+        'corporate_type',
+        memberType === '기업회원' ? 'business' : 'organization'
+      );
+      signupData.append('corporate_name', formData.corporateName);
+      signupData.append('business_type', formData.businessType);
+      signupData.append('business_conditions', formData.businessConditions);
+      signupData.append(
+        'business_registration_number',
+        formData.businessRegistrationNumber
+      );
+      signupData.append(
+        'address',
+        `${formData.address} ${detailedAddress}`.trim()
+      );
+
+      if (businessLicense) {
+        signupData.append('business_license', businessLicense);
+      }
+    }
+
+    // Log the data being sent to the server
+    console.log('Signup Data:');
+    for (let [key, value] of signupData.entries()) {
+      console.log(`${key}: ${value}`);
+    }
 
     try {
+      let response;
       if (userType === 'individual') {
-        await handleIndiSignUp(userId, signupData);
+        response = await handleIndiSignUp(userId, signupData);
       } else if (userType === 'corporate') {
-        const corpSignupData = {
-          ...signupData,
-          corporate_name: formData.corporateName,
-          business_type: formData.businessType,
-          business_conditions: formData.businessConditions,
-          business_registration_number: formData.businessRegistrationNumber,
-          address: formData.address,
-          business_license: formData.businessLicense,
-        };
-        await handleCorpSignUp(userId, corpSignupData);
+        response = await handleCorpSignUp(userId, signupData);
       }
-      alert('회원가입 완료');
+      console.log('Server response:', response);
+      alert(response.message || '회원가입이 완료되었습니다.');
       onClose();
     } catch (error) {
       console.error('Signup failed:', error);
-      setAlertMessage('회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      if (error.response) {
+        console.error('Server error response:', error.response.data);
+        alert(
+          `회원가입 중 오류가 발생했습니다: ${error.response.data.message || error.response.statusText}`
+        );
+      } else if (error.request) {
+        alert('서버로부터 응답이 없습니다. 네트워크 연결을 확인해주세요.');
+      } else {
+        alert(`회원가입 중 오류가 발생했습니다: ${error.message}`);
+      }
     }
   };
 
@@ -270,7 +312,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='profileImage'
                   type='file'
-                  value={profileImage}
+                  // value={profileImage}
                   onChange={(e) => setProfileImage(e.target.files[0])}
                 />
               </Row>
@@ -324,8 +366,10 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='corporateName'
                   type='text'
-                  value={corporateName}
-                  onChange={(e) => setCorporateName(e.target.value)}
+                  value={formData.corporateName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, corporateName: e.target.value })
+                  }
                   required
                 />
               </Row>
@@ -335,8 +379,10 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='businessType'
                   type='text'
-                  value={businessType}
-                  onChange={(e) => setBusinessType(e.target.value)}
+                  value={formData.businessType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, businessType: e.target.value })
+                  }
                   required
                 />
               </Row>
@@ -348,8 +394,13 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='businessConditions'
                   type='text'
-                  value={businessConditions}
-                  onChange={(e) => setBusinessConditions(e.target.value)}
+                  value={formData.businessConditions}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      businessConditions: e.target.value,
+                    })
+                  }
                   required
                 />
               </Row>
@@ -361,9 +412,12 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='businessRegistrationNumber'
                   type='text'
-                  value={businessRegistrationNumber}
+                  value={formData.businessRegistrationNumber}
                   onChange={(e) =>
-                    setBusinessRegistrationNumber(e.target.value)
+                    setFormData({
+                      ...formData,
+                      businessRegistrationNumber: e.target.value,
+                    })
                   }
                   required
                 />
@@ -376,7 +430,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='businessLicense'
                   type='file'
-                  value={businessLicense}
+                  // value={businessLicense}
                   onChange={(e) => setBusinessLicense(e.target.files[0])}
                 />
               </Row>
@@ -388,8 +442,10 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='address'
                   type='text'
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
                   required
                 />
                 <CheckButton
