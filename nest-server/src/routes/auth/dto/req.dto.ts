@@ -236,8 +236,8 @@ export class SendAuthNumberDto {
   email: string;
 }
 
-// 구글 소셜로그인 개인 회원가입 요청 DTO
-export class GoogleIndiSignUpReqDto {
+// 네이버, 구글 소셜로그인 개인 회원가입 요청 DTO
+export class SocialIndiSignUpReqDto {
   @ApiProperty({ required: true, description: '회원이름' })
   @IsString()
   @IsNotEmpty()
@@ -262,8 +262,8 @@ export class GoogleIndiSignUpReqDto {
   profile_image?: string;
 }
 
-// 구글 소셜로그인 사업자 회원가입 요청 DTO
-export class GoogleCorpSignUpReqDto {
+// 네이버, 구글 소셜로그인 사업자 회원가입 요청 DTO
+export class SocialCorpSignUpReqDto {
   @ApiProperty({ required: true, description: '회원이름' })
   @IsString()
   @IsNotEmpty()

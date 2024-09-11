@@ -9,10 +9,10 @@ import {
 import {
   ApiKeySignInReqDto,
   CorpSignUpReqDto,
-  GoogleCorpSignUpReqDto,
-  GoogleIndiSignUpReqDto,
   IndiSignUpReqDto,
   SignInReqDto,
+  SocialCorpSignUpReqDto,
+  SocialIndiSignUpReqDto,
   VerifyAuthNumberDto,
 } from './dto/req.dto';
 import { validateOrReject } from 'class-validator';
@@ -31,6 +31,7 @@ import { Request } from 'express';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
+import axios from 'axios';
 import { createTransporter } from 'src/config/mailer.config';
 import { OAuth2Client } from 'google-auth-library';
 
@@ -562,10 +563,10 @@ export class AuthService {
     // }
   }
 
-  // 12. 구글 소셜로그인 - 개인 회원가입
+  // 12. 네이버, 구글 소셜로그인 - 개인 회원가입
   async completeIndiSignUp(
     userId: string,
-    googleIndiSignUpReqDto: GoogleIndiSignUpReqDto,
+    socialIndiSignUpReqDto: SocialIndiSignUpReqDto,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -580,7 +581,7 @@ export class AuthService {
 
       // 추가 정보 업데이트
       const { phone, emergency_phone, profile_image, username } =
-        googleIndiSignUpReqDto;
+        socialIndiSignUpReqDto;
 
       user.user_type = UserType.INDIVIDUAL;
       user.username = username;
@@ -616,10 +617,10 @@ export class AuthService {
     }
   }
 
-  // 13. 구글 소셜로그인 - 사업자 회원가입
+  // 13. 네이버, 구글 소셜로그인 - 사업자 회원가입
   async completeCorpSignUp(
     userId: string,
-    googleCorpSignUpReqDto: GoogleCorpSignUpReqDto,
+    socialCorpSignUpReqDto: SocialCorpSignUpReqDto,
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -644,7 +645,7 @@ export class AuthService {
         business_registration_number,
         address,
         business_license,
-      } = googleCorpSignUpReqDto;
+      } = socialCorpSignUpReqDto;
 
       // User 추가 정보 업데이트
       user.user_type = UserType.CORPORATE;
@@ -699,6 +700,60 @@ export class AuthService {
       await queryRunner.release();
       if (error) throw error;
     }
+  }
+
+  // * 네이버 계정 확인
+  async getNaverUserInfo(code: string, state: string) {
+    const tokenResponse = await axios.get(
+      'https://nid.naver.com/oauth2.0/token',
+      {
+        params: {
+          grant_type: 'authorization_code',
+          client_id: process.env.NAVER_CLIENT_ID,
+          client_secret: process.env.NAVER_CLIENT_SECRET,
+          code,
+          state,
+        },
+      },
+    );
+
+    const { access_token } = tokenResponse.data;
+
+    const userInfoResponse = await axios.get(
+      'https://openapi.naver.com/v1/nid/me',
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+      },
+    );
+
+    return userInfoResponse.data.response;
+  }
+
+  // 14. 네이버 소셜로그인
+  async naverLogin(naverUser: any) {
+    const { email, name } = naverUser;
+
+    let user = await this.usersService.findOneByEmail(email);
+
+    let isNewUser = false;
+    let userType: UserType | null = null;
+    let accessToken: string | null = null;
+    let refreshToken: string | null = null;
+
+    if (!user) {
+      isNewUser = true;
+      user = await this.usersService.saveUser(email, name);
+      userType = null;
+    } else if (!user.is_signup_completed) {
+      isNewUser = true;
+      userType = null;
+    } else {
+      const userId = user.id;
+      accessToken = this.generateAccessToken(userId);
+      refreshToken = this.generateRefreshToken(userId);
+      userType = user.user_type;
+    }
+    return { user, isNewUser, userType, accessToken, refreshToken };
   }
 
   // * 이메일과 이름으로 유저 찾기

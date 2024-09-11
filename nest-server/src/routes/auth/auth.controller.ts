@@ -40,8 +40,8 @@ import {
   SendAuthNumberDto,
   ImageReqDto,
   BusinessLicenseReqDto,
-  GoogleIndiSignUpReqDto,
-  GoogleCorpSignUpReqDto,
+  SocialIndiSignUpReqDto,
+  SocialCorpSignUpReqDto,
 } from './dto/req.dto';
 import {
   CorpSignUpResDto,
@@ -326,16 +326,16 @@ export class AuthController {
   @UseInterceptors(FileInterceptor('profile_image', multerOptions))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: '구글 회원가입 (개인회원)' })
-  @ApiBody({ type: GoogleIndiSignUpReqDto })
+  @ApiBody({ type: SocialIndiSignUpReqDto })
   async completeIndiSignUp(
     @Param('userId') userId: string,
-    @Body() googleIndiSignUpReqDto: GoogleIndiSignUpReqDto,
+    @Body() socialIndiSignUpReqDto: SocialIndiSignUpReqDto,
     @UploadedFile() profileImage: Express.Multer.File,
   ) {
     const base64Image = readFileSync(profileImage.path).toString('base64');
-    googleIndiSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
+    socialIndiSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
     // 기존 사용자의 추가 정보 업데이트
-    await this.authService.completeIndiSignUp(userId, googleIndiSignUpReqDto);
+    await this.authService.completeIndiSignUp(userId, socialIndiSignUpReqDto);
     return { message: '개인 회원가입이 완료되었습니다.' };
   }
 
@@ -355,14 +355,14 @@ export class AuthController {
   @ApiOperation({ summary: '구글 회원가입 (사업자회원)' })
   async completeCorpSignUp(
     @Param('userId') userId: string,
-    @Body() googleCorpSignUpReqDto: GoogleCorpSignUpReqDto,
+    @Body() socialCorpSignUpReqDto: SocialCorpSignUpReqDto,
     @UploadedFiles()
     files: {
       profile_image?: Express.Multer.File[];
       business_license?: Express.Multer.File[];
     },
   ) {
-    console.log('Received data:', googleCorpSignUpReqDto);
+    console.log('Received data:', socialCorpSignUpReqDto);
     console.log('Received files:', files);
 
     const profileImage = files.profile_image?.[0];
@@ -370,20 +370,20 @@ export class AuthController {
 
     if (profileImage) {
       const base64Image = readFileSync(profileImage.path).toString('base64');
-      googleCorpSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
+      socialCorpSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
     }
     if (businessLicense) {
       const base64License = readFileSync(businessLicense.path).toString(
         'base64',
       );
-      googleCorpSignUpReqDto.business_license = `data:${businessLicense.mimetype};base64,${base64License}`;
+      socialCorpSignUpReqDto.business_license = `data:${businessLicense.mimetype};base64,${base64License}`;
     }
 
     try {
       // 기존 사용자의 추가 정보 업데이트
       const result = await this.authService.completeCorpSignUp(
         userId,
-        googleCorpSignUpReqDto,
+        socialCorpSignUpReqDto,
       );
       return { message: '사업자 회원가입이 완료되었습니다.', ...result };
     } catch (error) {
@@ -391,21 +391,112 @@ export class AuthController {
       throw new BadRequestException(error.message);
     }
   }
+
   // 14. 네이버 소셜로그인
   @Get('naver')
   @UseGuards(AuthGuard('naver'))
   @Public()
   async naverAuth(@Req() req: any) {
-    // The Google OAuth flow will be triggered by this route
+    // The Naver OAuth flow will be triggered by this route
   }
 
   // 네이버 소셜로그인 후 콜백 처리
-  @Post('naver/callback')
+  @Get('naver/callback')
   @Public()
+  @ApiOperation({ summary: '네이버 로그인' })
   async naverAuthCallback(
-    @Body('credential') credential: string,
+    @Query('code') code: string,
+    @Query('state') state: string,
     @Res() res: Response,
-  ) {}
+  ) {
+    try {
+      const naverUser = await this.authService.getNaverUserInfo(code, state);
+      const { user, isNewUser, userType, accessToken, refreshToken } =
+        await this.authService.naverLogin(naverUser);
+
+      if (isNewUser || !userType) {
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/login?isNewUser=true&userId=${user.id}`,
+        );
+      } else {
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/login?accessToken=${accessToken}&refreshToken=${refreshToken}&email=${user.email}&userType=${user.user_type}`,
+        );
+      }
+    } catch (error) {
+      console.error('Error in naverAuthCallback:', error);
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=naver_login_failed`,
+      );
+    }
+  }
+
+  // 15. 네이버 소셜로그인 - 개인 회원가입
+  @Post('naver/signup1/:userId')
+  @Public()
+  @UseInterceptors(FileInterceptor('profile_image', multerOptions))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '네이버 회원가입 (개인회원)' })
+  @ApiBody({ type: SocialIndiSignUpReqDto })
+  async completeNaverIndiSignUp(
+    @Param('userId') userId: string,
+    @Body() socialIndiSignUpReqDto: SocialIndiSignUpReqDto,
+    @UploadedFile() profileImage: Express.Multer.File,
+  ) {
+    const base64Image = readFileSync(profileImage.path).toString('base64');
+    socialIndiSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
+    await this.authService.completeIndiSignUp(userId, socialIndiSignUpReqDto);
+    return { message: '개인 회원가입이 완료되었습니다.' };
+  }
+
+  // 16. 네이버 소셜로그인 - 사업자 회원가입
+  @Post('naver/signup2/:userId')
+  @Public()
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'profile_image', maxCount: 1 },
+        { name: 'business_license', maxCount: 1 },
+      ],
+      multerOptions,
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: '네이버 회원가입 (사업자회원)' })
+  async completeNaverCorpSignUp(
+    @Param('userId') userId: string,
+    @Body() socialCorpSignUpReqDto: SocialCorpSignUpReqDto,
+    @UploadedFiles()
+    files: {
+      profile_image?: Express.Multer.File[];
+      business_license?: Express.Multer.File[];
+    },
+  ) {
+    const profileImage = files.profile_image?.[0];
+    const businessLicense = files.business_license?.[0];
+
+    if (profileImage) {
+      const base64Image = readFileSync(profileImage.path).toString('base64');
+      socialCorpSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
+    }
+    if (businessLicense) {
+      const base64License = readFileSync(businessLicense.path).toString(
+        'base64',
+      );
+      socialCorpSignUpReqDto.business_license = `data:${businessLicense.mimetype};base64,${base64License}`;
+    }
+
+    try {
+      const result = await this.authService.completeCorpSignUp(
+        userId,
+        socialCorpSignUpReqDto,
+      );
+      return { message: '사업자 회원가입이 완료되었습니다.', ...result };
+    } catch (error) {
+      console.error('Error in completeNaverCorpSignUp:', error);
+      throw new BadRequestException(error.message);
+    }
+  }
 }
 
 // 스웨거 상 인증을 거쳐야 함

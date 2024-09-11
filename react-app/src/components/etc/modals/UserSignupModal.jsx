@@ -44,15 +44,23 @@ const UserSignupModal = ({ onClose, userId }) => {
 
   const handleTermsChange = (e) => {
     const { name, checked } = e.target;
-    setTerms((prev) => ({ ...prev, [name]: checked }));
-    if (name === 'allAccepted') {
-      setTerms((prev) => ({
-        termsAccepted: checked,
-        privacyAccepted: checked,
-        marketingAccepted: checked,
-        allAccepted: checked,
-      }));
-    }
+    setTerms((prev) => {
+      const updatedTerms = { ...prev, [name]: checked };
+      if (name === 'allAccepted') {
+        return {
+          termsAccepted: checked,
+          privacyAccepted: checked,
+          marketingAccepted: checked,
+          allAccepted: checked,
+        };
+      }
+      const allAccepted =
+        updatedTerms.termsAccepted &&
+        updatedTerms.privacyAccepted &&
+        updatedTerms.marketingAccepted;
+
+      return { ...updatedTerms, allAccepted };
+    });
   };
 
   const renderLabel = (label) => {
@@ -74,11 +82,9 @@ const UserSignupModal = ({ onClose, userId }) => {
   };
 
   const handleAddressSelect = (data) => {
-    // setAddress(data.address);
     setIsAddressPopupVisible(false);
   };
 
-  // Utility function to check required fields
   const areRequiredFieldsFilled = () => {
     if (userType === 'corporate') {
       return (
@@ -88,7 +94,8 @@ const UserSignupModal = ({ onClose, userId }) => {
         formData.businessType &&
         formData.businessConditions &&
         formData.businessRegistrationNumber &&
-        formData.address
+        formData.address &&
+        businessLicense
       );
     }
     return formData.name && formData.phone;
@@ -100,9 +107,11 @@ const UserSignupModal = ({ onClose, userId }) => {
       return;
     }
 
-    if (step === 3 && !areRequiredFieldsFilled()) {
-      alert('모든 필수 입력사항을 입력해 주세요.');
-      return;
+    if (step === 3 && userType === 'corporate') {
+      if (!formData.name || !formData.phone) {
+        alert('이름과 휴대전화는 필수 입력 사항입니다.');
+        return;
+      }
     }
 
     setAlertMessage('');
@@ -112,12 +121,6 @@ const UserSignupModal = ({ onClose, userId }) => {
   const goToPreviousStep = () => {
     setStep(step - 1);
   };
-
-  if (!userId) {
-    console.error('userId is undefined');
-    alert('User ID is not defined.');
-    return;
-  }
 
   const submitSignup = async () => {
     if (!areRequiredFieldsFilled()) {
@@ -156,12 +159,6 @@ const UserSignupModal = ({ onClose, userId }) => {
       }
     }
 
-    // Log the data being sent to the server
-    console.log('Signup Data:');
-    for (let [key, value] of signupData.entries()) {
-      console.log(`${key}: ${value}`);
-    }
-
     try {
       let response;
       if (userType === 'individual') {
@@ -169,13 +166,10 @@ const UserSignupModal = ({ onClose, userId }) => {
       } else if (userType === 'corporate') {
         response = await handleCorpSignUp(userId, signupData);
       }
-      console.log('Server response:', response);
       alert(response.message || '회원가입이 완료되었습니다.');
       onClose();
     } catch (error) {
-      console.error('Signup failed:', error);
       if (error.response) {
-        console.error('Server error response:', error.response.data);
         alert(
           `회원가입 중 오류가 발생했습니다: ${error.response.data.message || error.response.statusText}`
         );
@@ -185,6 +179,37 @@ const UserSignupModal = ({ onClose, userId }) => {
         alert(`회원가입 중 오류가 발생했습니다: ${error.message}`);
       }
     }
+  };
+
+  const getPlaceholder = (label) => {
+    if (memberType === '기업회원') {
+      switch (label) {
+        case 'corporateName':
+          return '기업명을 입력해주세요.';
+        case 'businessType':
+          return '업종명을 입력해주세요.';
+        case 'businessConditions':
+          return '업태명을 입력해주세요.';
+        case 'businessRegistrationNumber':
+          return '사업자 등록번호를 입력해주세요.';
+        default:
+          return '';
+      }
+    } else if (memberType === '기관회원') {
+      switch (label) {
+        case 'corporateName':
+          return '기관명을 입력해주세요.';
+        case 'businessType':
+          return '기관 유형을 입력해주세요.';
+        case 'businessConditions':
+          return '기관 세부유형을 입력해주세요.';
+        case 'businessRegistrationNumber':
+          return '기관 고유번호를 입력해주세요.';
+        default:
+          return '';
+      }
+    }
+    return '';
   };
 
   return (
@@ -205,16 +230,27 @@ const UserSignupModal = ({ onClose, userId }) => {
 
         <ModalContent>
           {step === 1 && (
-            <OptionContainer>
-              <Option onClick={() => handleUserTypeSelection('individual')}>
-                <Icon src={individualIcon} alt='개인 회원가입' />
-                <OptionTitle>개인 회원가입</OptionTitle>
-              </Option>
-              <Option onClick={() => handleUserTypeSelection('corporate')}>
-                <Icon src={corporateIcon} alt='사업자 회원가입' />
-                <OptionTitle>사업자 회원가입</OptionTitle>
-              </Option>
-            </OptionContainer>
+            <>
+              <OptionContainer>
+                <Option onClick={() => handleUserTypeSelection('individual')}>
+                  <Icon src={individualIcon} alt='개인 회원가입' />
+                  <OptionTitle>개인 회원가입</OptionTitle>
+                </Option>
+                <Option onClick={() => handleUserTypeSelection('corporate')}>
+                  <Icon src={corporateIcon} alt='사업자 회원가입' />
+                  <OptionTitle>사업자 회원가입</OptionTitle>
+                </Option>
+              </OptionContainer>
+              <p
+                style={{
+                  textAlign: 'center',
+                  marginTop: '150px',
+                  fontSize: '14px',
+                }}
+              >
+                회원가입 후 서비스를 이용하실 수 있습니다.
+              </p>
+            </>
           )}
 
           {step === 2 && (
@@ -222,7 +258,7 @@ const UserSignupModal = ({ onClose, userId }) => {
               <TermsSection>
                 <TermsTitle>I. KO-MAPPER AI 이용 약관</TermsTitle>
                 <TermsContainer>
-                  {/* This is where you will display your actual terms content */}
+                  {/* Display your terms content here */}
                 </TermsContainer>
                 <CheckboxLabel>
                   <input
@@ -238,7 +274,7 @@ const UserSignupModal = ({ onClose, userId }) => {
               <TermsSection>
                 <TermsTitle>II. 개인정보 수집 및 이용</TermsTitle>
                 <TermsContainer>
-                  {/* This is where you will display your actual privacy policy content */}
+                  {/* Display privacy policy content here */}
                 </TermsContainer>
                 <CheckboxLabel>
                   <input
@@ -254,7 +290,7 @@ const UserSignupModal = ({ onClose, userId }) => {
               <TermsSection>
                 <TermsTitle>III. 개인정보 마케팅 활용</TermsTitle>
                 <TermsContainer>
-                  {/* This is where you will display your actual marketing usage terms */}
+                  {/* Display marketing usage terms here */}
                 </TermsContainer>
                 <CheckboxLabel>
                   <input
@@ -292,6 +328,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                   type='text'
                   name='name'
                   value={formData.name}
+                  placeholder='실제 본명을 입력해주세요.'
                   onChange={handleInputChange}
                   required
                 />
@@ -302,6 +339,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   type='tel'
                   name='phone'
+                  placeholder='연락처를 입력해주세요.'
                   value={formData.phone}
                   onChange={handleInputChange}
                   required
@@ -312,7 +350,6 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='profileImage'
                   type='file'
-                  // value={profileImage}
                   onChange={(e) => setProfileImage(e.target.files[0])}
                 />
               </Row>
@@ -321,6 +358,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   type='tel'
                   name='emergencyContact'
+                  placeholder='비상 연락처를 입력해주세요.'
                   value={formData.emergencyContact}
                   onChange={handleInputChange}
                 />
@@ -360,6 +398,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                   </RadioButtonLabel>
                 </RadioButtonContainer>
               </RadioButtonGroup>
+
               <Row>
                 <RequiredIndicator>▶</RequiredIndicator>
                 <Label htmlFor='corporateName'>{renderLabel('기업명')}</Label>
@@ -370,6 +409,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, corporateName: e.target.value })
                   }
+                  placeholder={getPlaceholder('corporateName')}
                   required
                 />
               </Row>
@@ -383,6 +423,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                   onChange={(e) =>
                     setFormData({ ...formData, businessType: e.target.value })
                   }
+                  placeholder={getPlaceholder('businessType')}
                   required
                 />
               </Row>
@@ -401,6 +442,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                       businessConditions: e.target.value,
                     })
                   }
+                  placeholder={getPlaceholder('businessConditions')}
                   required
                 />
               </Row>
@@ -419,6 +461,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                       businessRegistrationNumber: e.target.value,
                     })
                   }
+                  placeholder={getPlaceholder('businessRegistrationNumber')}
                   required
                 />
               </Row>
@@ -430,15 +473,12 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <Input
                   id='businessLicense'
                   type='file'
-                  // value={businessLicense}
                   onChange={(e) => setBusinessLicense(e.target.files[0])}
                 />
               </Row>
               <Row>
                 <RequiredIndicator>▶</RequiredIndicator>
                 <Label htmlFor='address'>{renderLabel('주소')}</Label>
-              </Row>
-              <Row>
                 <Input
                   id='address'
                   type='text'
@@ -461,7 +501,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                   type='text'
                   value={detailedAddress}
                   onChange={(e) => setDetailedAddress(e.target.value)}
-                  placeholder='상세 주소를 입력하세요.'
+                  placeholder='상세 주소를 입력해주세요.'
                   required
                 />
               </Row>
@@ -517,9 +557,9 @@ const ModalContainer = styled.div`
   flex-direction: column;
   justify-content: space-between;
   border-radius: 10px;
-  width: 400px;
+  width: 450px;
   max-width: 90%;
-  height: 600px;
+  height: 650px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
@@ -556,23 +596,41 @@ const OptionContainer = styled.div`
   margin-top: 180px;
 `;
 
-const Option = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  text-align: center;
-`;
-
 const OptionTitle = styled.span`
   color: #007bff;
   font-size: 16px;
+  transition:
+    color 0.2s ease-in-out,
+    font-weight 0.2s ease-in-out; /* Smooth transition */
 `;
 
 const Icon = styled.img`
   width: 50px;
   height: 50px;
   margin-bottom: 10px;
+  transition: transform 0.2s ease-in-out; /* Smooth transition */
+`;
+
+const Option = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:hover ${Icon} {
+    transform: scale(1.1);
+  }
+
+  &:hover ${OptionTitle} {
+    color: #0056b3; /* Change color on hover */
+    font-weight: bold; /* Make text bold */
+  }
 `;
 
 const TermsSection = styled.div`

@@ -5,12 +5,9 @@ import {
   storeRefreshTokenToLocal,
 } from './tokenStorage';
 import {
-  // UserRegisterPayloadType,
   UserLoginPayloadType,
   ApiKeyLoginPayloadType,
   ResetPasswordPayloadType,
-  // IndiSignUpPayloadType,
-  // CorpSignUpPayloadType,
 } from '../types';
 
 // 개인 회원가입
@@ -268,5 +265,29 @@ export const handleCorpSignUp = async (
     } else {
       throw new Error(`Corporate signup failed: ${error.message}`);
     }
+  }
+};
+
+// 네이버 소셜 로그인
+export const handleNaverLogin = async (
+  naverUser: any
+  // navigate: NavigateFunction
+) => {
+  try {
+    const { data } = await httpClient.post('/auth/naver/login', naverUser);
+
+    if (data.isNewUser || !data.userType) {
+      return { isNewUser: true, userId: data.userId, userType: data.userType };
+    }
+
+    storeAccessTokenToLocal(data.accessToken);
+    storeRefreshTokenToLocal(data.refreshToken);
+    localStorage.setItem('userType', data.userType);
+    localStorage.setItem('userEmail', data.email);
+
+    return { isNewUser: false, ...data };
+  } catch (error) {
+    console.error('Naver login failed:', error);
+    throw new Error('Naver login failed.');
   }
 };

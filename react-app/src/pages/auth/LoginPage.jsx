@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'; // useCallback
+import { useNavigate, useLocation } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
+import NaverLogin from 'react-naver-login';
 import {
   login,
   loginWithApiKey,
   resetPassword,
   handleGoogleLogin,
+  handleNaverLogin,
 } from '../../services/authServices';
 import styled from 'styled-components';
 import backgroundImage from '../../assets/img/background_img.jpg';
 import UserSignupModal from '../../components/etc/modals/UserSignupModal';
+import {
+  storeAccessTokenToLocal,
+  storeRefreshTokenToLocal,
+} from '../../services/tokenStorage';
+// import { v4 as uuidv4 } from 'uuid';
 
 const LoginPage = () => {
   const [isAPIKeyLogin, setIsAPIKeyLogin] = useState(false);
@@ -19,10 +26,76 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [username, setUsername] = useState('');
-  const [showSignupModal, setShowSignupModal] = useState(false); // New state for modal visibility
-  const [userType, setUserType] = useState(null); // New state for user type
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [userType, setUserType] = useState(null);
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // const handleNaverLoginCallback = useCallback(
+  //   async (code, state) => {
+  //     try {
+  //       const response = await handleNaverLogin(code, state, navigate);
+  //       console.log('Naver login response:', response);
+  //       if (response.isNewUser) {
+  //         setUserId(response.userId);
+  //         setUserType(response.userType);
+  //         setShowSignupModal(true);
+  //       } else {
+  //         alert('로그인 되었습니다.');
+  //         navigate('/user-profile');
+  //       }
+  //     } catch (error) {
+  //       console.error('Naver login failed', error);
+  //       alert('네이버 로그인에 실패했습니다.');
+  //     }
+  //   },
+  //   [navigate]
+  // );
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const isNewUser = urlParams.get('isNewUser');
+    const userId = urlParams.get('userId');
+    const accessToken = urlParams.get('accessToken');
+    const refreshToken = urlParams.get('refreshToken');
+    const email = urlParams.get('email');
+    const userType = urlParams.get('userType');
+    const error = urlParams.get('error');
+
+    if (isNewUser === 'true' && userId) {
+      setUserId(userId);
+      setShowSignupModal(true);
+    } else if (accessToken && refreshToken) {
+      // Store tokens and user info
+      storeAccessTokenToLocal(accessToken);
+      storeRefreshTokenToLocal(refreshToken);
+      localStorage.setItem('userType', userType);
+      localStorage.setItem('userEmail', email);
+      alert('네이버 로그인 성공');
+      navigate('/user-profile');
+    } else if (error) {
+      alert('네이버 로그인 실패');
+    }
+  }, [location, navigate]);
+
+  const handleNaverLoginSuccess = async (naverUser) => {
+    try {
+      const response = await handleNaverLogin(naverUser);
+      console.log('Naver login response:', response);
+      if (response.isNewUser) {
+        setUserId(response.userId);
+        setUserType(response.userType);
+        setShowSignupModal(true);
+      } else {
+        alert('로그인 되었습니다.');
+        navigate('/user-profile');
+      }
+    } catch (error) {
+      console.error('Naver login failed', error);
+      alert('네이버 로그인에 실패했습니다.');
+    }
+  };
 
   const handleSignUpClick = (e) => {
     navigate('/signup');
@@ -78,7 +151,7 @@ const LoginPage = () => {
       if (isNewUser || !userType) {
         setUserId(userId);
         setUserType(userType);
-        setShowSignupModal(true); // Open modal for new user signup
+        setShowSignupModal(true);
       } else {
         alert('로그인 되었습니다.');
         navigate('/user-profile');
@@ -89,13 +162,21 @@ const LoginPage = () => {
     }
   };
 
-  const handleNaverLogin = () => {
-    console.log('Naver Login Clicked');
-    setShowSignupModal(true); // Open the signup modal when Naver login is clicked
-  };
+  // const generateRandomState = () => {
+  //   return uuidv4().replace(/-/g, '').substring(0, 11);
+  // };
+
+  // const handleNaverLoginClick = () => {
+  //   const state = generateRandomState();
+  //   const redirectUri = encodeURIComponent(
+  //     process.env.REACT_APP_NAVER_REDIRECT_URI
+  //   );
+  //   const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${process.env.REACT_APP_NAVER_CLIENT_ID}&redirect_uri=${redirectUri}&state=${state}`;
+  //   window.location.href = naverLoginUrl;
+  // };
 
   const handleModalClose = () => {
-    setShowSignupModal(false); // Function to close the modal
+    setShowSignupModal(false);
   };
 
   return (
@@ -219,11 +300,16 @@ const LoginPage = () => {
                           />
                         )}
                       </GoogleLoginButtonWrapper>
-                      <NaverLoginButtonWrapper onClick={handleNaverLogin}>
-                        {/* <img
-                          src='naver_login.png' // 네이버 로그인 이미지 경로로 변경 필요
-                          alt='Naver Login'
-                        /> */}
+                      <NaverLoginButtonWrapper>
+                        <NaverLogin
+                          clientId={process.env.REACT_APP_NAVER_CLIENT_ID}
+                          callbackUrl={process.env.REACT_APP_NAVER_REDIRECT_URI}
+                          render={(props) => (
+                            <div onClick={props.onClick}>네이버 로그인</div>
+                          )}
+                          onSuccess={handleNaverLoginSuccess}
+                          onFailure={(result) => console.error(result)}
+                        />
                       </NaverLoginButtonWrapper>
                     </LoginButtonWrapper>
                     <br />
@@ -252,7 +338,7 @@ const LoginPage = () => {
 
 const Container = styled.div`
   width: 100%;
-  height: 100vh; /* Ensure consistent height */
+  height: 100vh;
   background-image: url(${backgroundImage});
   background-size: cover;
   background-position: center;
@@ -272,7 +358,7 @@ const Overlay = styled.div`
   height: auto;
   width: 90%;
   max-width: 1200px;
-  min-height: 60%; /* Adjust as necessary */
+  min-height: 60%;
   box-sizing: border-box;
   overflow: hidden;
 `;
@@ -418,6 +504,9 @@ const NaverLoginButtonWrapper = styled.div`
   cursor: pointer;
   border-radius: 5px;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 export default LoginPage;
