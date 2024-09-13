@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
-  constructor(private configService: ConfigService) {
+  constructor(configService: ConfigService) {
     super({
       clientID: configService.get('NAVER_CLIENT_ID'),
       clientSecret: configService.get('NAVER_CLIENT_SECRET'),
@@ -18,11 +18,12 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
     refreshToken: string,
     profile: any,
     done: Function,
-  ) {
-    const { email, name } = profile._json;
+  ): Promise<any> {
+    const { id, emails, name } = profile;
     const user = {
-      email,
-      name,
+      email: emails[0],
+      name: name,
+      naverId: id,
       accessToken,
     };
     done(null, user);

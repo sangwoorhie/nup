@@ -17,10 +17,10 @@ import { ApiKeys } from 'src/entities/api_key.entity';
 import { Log } from 'src/entities/log.entity';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { GoogleStrategy } from './jwt/google.strategy';
-import { NaverStrategy } from './jwt/naver.strategy';
 import { MulterModule } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import { diskStorage } from 'multer';
+import { NaverStrategy } from './jwt/naver.strategy';
 
 @Module({
   imports: [

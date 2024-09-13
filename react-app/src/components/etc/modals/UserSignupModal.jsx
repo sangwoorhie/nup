@@ -212,10 +212,19 @@ const UserSignupModal = ({ onClose, userId }) => {
     return '';
   };
 
+  const handleClose = () => {
+    const confirmClose = window.confirm(
+      '입력하신 정보는 저장되지 않습니다. 회원가입을 취소하시겠습니까?'
+    );
+    if (confirmClose) {
+      onClose();
+    }
+  };
+
   return (
     <ModalOverlay>
       <ModalContainer>
-        <CloseButton onClick={onClose}>×</CloseButton>
+        <CloseButton onClick={handleClose}>×</CloseButton>
         <ModalHeader>
           <Title>
             {step === 1
@@ -259,6 +268,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <TermsTitle>I. KO-MAPPER AI 이용 약관</TermsTitle>
                 <TermsContainer>
                   {/* Display your terms content here */}
+                  이용 약관이 들어갈 곳입니다.
                 </TermsContainer>
                 <CheckboxLabel>
                   <input
@@ -275,6 +285,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <TermsTitle>II. 개인정보 수집 및 이용</TermsTitle>
                 <TermsContainer>
                   {/* Display privacy policy content here */}
+                  이용 약관이 들어갈 곳입니다.
                 </TermsContainer>
                 <CheckboxLabel>
                   <input
@@ -291,6 +302,7 @@ const UserSignupModal = ({ onClose, userId }) => {
                 <TermsTitle>III. 개인정보 마케팅 활용</TermsTitle>
                 <TermsContainer>
                   {/* Display marketing usage terms here */}
+                  이용 약관이 들어갈 곳입니다.
                 </TermsContainer>
                 <CheckboxLabel>
                   <input

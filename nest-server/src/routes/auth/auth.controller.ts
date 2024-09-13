@@ -284,6 +284,7 @@ export class AuthController {
   // 구글 소셜로그인 후 콜백 처리
   @Post('google/callback')
   @Public()
+  @ApiOperation({ summary: '구글 로그인' })
   async googleAuthCallback(
     @Body('credential') credential: string,
     @Res() res: Response,
@@ -397,37 +398,40 @@ export class AuthController {
   @UseGuards(AuthGuard('naver'))
   @Public()
   async naverAuth(@Req() req: any) {
-    // The Naver OAuth flow will be triggered by this route
+    // 네이버 OAuth 흐름이 이 경로에서 시작됩니다.
   }
 
   // 네이버 소셜로그인 후 콜백 처리
-  @Get('naver/callback')
+  @Post('naver/callback')
   @Public()
   @ApiOperation({ summary: '네이버 로그인' })
-  async naverAuthCallback(
-    @Query('code') code: string,
-    @Query('state') state: string,
-    @Res() res: Response,
-  ) {
+  async naverAuthCallback(@Body('token') token: string, @Res() res: Response) {
     try {
-      const naverUser = await this.authService.getNaverUserInfo(code, state);
+      // 네이버 액세스 토큰 검증
+      const naverUser = await this.authService.verifyNaverToken(token);
+
+      // 사용자 처리
       const { user, isNewUser, userType, accessToken, refreshToken } =
         await this.authService.naverLogin(naverUser);
 
       if (isNewUser || !userType) {
-        return res.redirect(
-          `${process.env.FRONTEND_URL}/login?isNewUser=true&userId=${user.id}`,
-        );
+        return res.json({
+          isNewUser: true,
+          userId: user.id,
+          userType: null,
+        });
       } else {
-        return res.redirect(
-          `${process.env.FRONTEND_URL}/login?accessToken=${accessToken}&refreshToken=${refreshToken}&email=${user.email}&userType=${user.user_type}`,
-        );
+        return res.json({
+          id: user.id,
+          accessToken,
+          refreshToken,
+          email: user.email,
+          userType: user.user_type,
+        });
       }
     } catch (error) {
       console.error('Error in naverAuthCallback:', error);
-      return res.redirect(
-        `${process.env.FRONTEND_URL}/login?error=naver_login_failed`,
-      );
+      return res.status(400).json({ message: 'Naver authentication failed.' });
     }
   }
 
@@ -445,7 +449,10 @@ export class AuthController {
   ) {
     const base64Image = readFileSync(profileImage.path).toString('base64');
     socialIndiSignUpReqDto.profile_image = `data:${profileImage.mimetype};base64,${base64Image}`;
-    await this.authService.completeIndiSignUp(userId, socialIndiSignUpReqDto);
+    await this.authService.completeNaverIndiSignUp(
+      userId,
+      socialIndiSignUpReqDto,
+    );
     return { message: '개인 회원가입이 완료되었습니다.' };
   }
 
@@ -487,11 +494,11 @@ export class AuthController {
     }
 
     try {
-      const result = await this.authService.completeCorpSignUp(
+      await this.authService.completeNaverCorpSignUp(
         userId,
         socialCorpSignUpReqDto,
       );
-      return { message: '사업자 회원가입이 완료되었습니다.', ...result };
+      return { message: '사업자 회원가입이 완료되었습니다.' };
     } catch (error) {
       console.error('Error in completeNaverCorpSignUp:', error);
       throw new BadRequestException(error.message);

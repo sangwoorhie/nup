@@ -281,7 +281,9 @@ const CorporateSignup = () => {
             <TermsContainer>
               <Section>
                 <h3>I. KO-MAPPER AI 이용 약관</h3>
-                <Terms>{/* Terms content here */}</Terms>
+                <Terms>
+                  {/* Terms content here */}이용 약관이 들어갈 곳입니다.
+                </Terms>
                 <Checkbox
                   type='checkbox'
                   checked={termsAccepted}
@@ -291,7 +293,9 @@ const CorporateSignup = () => {
               </Section>
               <Section>
                 <h3>II. 개인정보 수집 및 이용</h3>
-                <Terms>{/* Privacy content here */}</Terms>
+                <Terms>
+                  {/* Privacy content here */}이용 약관이 들어갈 곳입니다.
+                </Terms>
                 <Checkbox
                   type='checkbox'
                   checked={privacyAccepted}
@@ -303,7 +307,9 @@ const CorporateSignup = () => {
               </Section>
               <Section>
                 <h3>III. 개인정보 마케팅 활용</h3>
-                <Terms>{/* Marketing content here */}</Terms>
+                <Terms>
+                  {/* Marketing content here */}이용 약관이 들어갈 곳입니다.
+                </Terms>
                 <Checkbox
                   type='checkbox'
                   checked={marketingAccepted}

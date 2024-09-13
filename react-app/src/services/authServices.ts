@@ -268,26 +268,94 @@ export const handleCorpSignUp = async (
   }
 };
 
-// 네이버 소셜 로그인
-export const handleNaverLogin = async (
-  naverUser: any
-  // navigate: NavigateFunction
-) => {
+// 네이버 로그인
+export const handleNaverLogin = async ({ code, state }, navigate) => {
   try {
-    const { data } = await httpClient.post('/auth/naver/login', naverUser);
+    const { data } = await httpClient.post('/auth/naver/callback', {
+      code,
+      state,
+    });
 
     if (data.isNewUser || !data.userType) {
-      return { isNewUser: true, userId: data.userId, userType: data.userType };
+      // 추가 정보 입력을 위한 처리
+      // ...
+    } else {
+      // 기존 사용자 토큰 저장
+      storeAccessTokenToLocal(data.accessToken);
+      storeRefreshTokenToLocal(data.refreshToken);
+      localStorage.setItem('userType', data.userType);
+      localStorage.setItem('userEmail', data.email);
+
+      alert('로그인 되었습니다.');
+      navigate('/user-profile');
     }
-
-    storeAccessTokenToLocal(data.accessToken);
-    storeRefreshTokenToLocal(data.refreshToken);
-    localStorage.setItem('userType', data.userType);
-    localStorage.setItem('userEmail', data.email);
-
-    return { isNewUser: false, ...data };
   } catch (error) {
     console.error('Naver login failed:', error);
-    throw new Error('Naver login failed.');
+    alert('네이버 로그인에 실패하였습니다. 다시 시도해주세요.');
+    navigate('/login');
+  }
+};
+
+// 네이버 개인회원가입
+export const handleNaverIndiSignUp = async (
+  userId: string,
+  indiSignUpData: FormData
+) => {
+  try {
+    const { data } = await httpClient.post(
+      `/auth/naver/signup1/${userId}`,
+      indiSignUpData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    console.error('Individual signup error:', error.response || error);
+    if (error.response) {
+      throw new Error(
+        `Individual signup failed: ${error.response.data.message || error.response.statusText}`
+      );
+    } else if (error.request) {
+      throw new Error(
+        'Individual signup failed: No response received from server'
+      );
+    } else {
+      throw new Error(`Individual signup failed: ${error.message}`);
+    }
+  }
+};
+
+// 네이버 사업자 회원가입
+export const handleNaverCorpSignUp = async (
+  userId: string,
+  corpSignUpData: FormData
+) => {
+  try {
+    const { data } = await httpClient.post(
+      `/auth/naver/signup2/${userId}`,
+      corpSignUpData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    console.error('Corporate signup error:', error.response || error);
+    if (error.response) {
+      throw new Error(
+        `Corporate signup failed: ${error.response.data.message || error.response.statusText}`
+      );
+    } else if (error.request) {
+      throw new Error(
+        'Corporate signup failed: No response received from server'
+      );
+    } else {
+      throw new Error(`Corporate signup failed: ${error.message}`);
+    }
   }
 };

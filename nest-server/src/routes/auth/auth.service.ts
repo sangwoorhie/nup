@@ -563,7 +563,7 @@ export class AuthService {
     // }
   }
 
-  // 12. 네이버, 구글 소셜로그인 - 개인 회원가입
+  // 12. 구글 소셜로그인 - 개인 회원가입
   async completeIndiSignUp(
     userId: string,
     socialIndiSignUpReqDto: SocialIndiSignUpReqDto,
@@ -617,7 +617,7 @@ export class AuthService {
     }
   }
 
-  // 13. 네이버, 구글 소셜로그인 - 사업자 회원가입
+  // 13. 구글 소셜로그인 - 사업자 회원가입
   async completeCorpSignUp(
     userId: string,
     socialCorpSignUpReqDto: SocialCorpSignUpReqDto,
@@ -702,36 +702,26 @@ export class AuthService {
     }
   }
 
-  // * 네이버 계정 확인
-  async getNaverUserInfo(code: string, state: string) {
-    const tokenResponse = await axios.get(
-      'https://nid.naver.com/oauth2.0/token',
-      {
-        params: {
-          grant_type: 'authorization_code',
-          client_id: process.env.NAVER_CLIENT_ID,
-          client_secret: process.env.NAVER_CLIENT_SECRET,
-          code,
-          state,
+  // * 네이버 액세스 토큰 검증
+  async verifyNaverToken(token: string) {
+    const url = 'https://openapi.naver.com/v1/nid/me';
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      },
-    );
-
-    const { access_token } = tokenResponse.data;
-
-    const userInfoResponse = await axios.get(
-      'https://openapi.naver.com/v1/nid/me',
-      {
-        headers: { Authorization: `Bearer ${access_token}` },
-      },
-    );
-
-    return userInfoResponse.data.response;
+      });
+      const naverUser = response.data.response;
+      return naverUser;
+    } catch (error) {
+      throw new Error('Invalid Naver token');
+    }
   }
 
   // 14. 네이버 소셜로그인
   async naverLogin(naverUser: any) {
-    const { email, name } = naverUser;
+    const email = naverUser.email;
+    const name = naverUser.name;
 
     let user = await this.usersService.findOneByEmail(email);
 
@@ -754,6 +744,135 @@ export class AuthService {
       userType = user.user_type;
     }
     return { user, isNewUser, userType, accessToken, refreshToken };
+  }
+
+  // 15. 네이버 소셜로그인 - 개인 회원가입
+  async completeNaverIndiSignUp(
+    userId: string,
+    socialIndiSignUpReqDto: SocialIndiSignUpReqDto,
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.usersService.findOneById(userId);
+      if (!user) {
+        throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      }
+
+      const { phone, emergency_phone, profile_image, username } =
+        socialIndiSignUpReqDto;
+
+      user.user_type = UserType.INDIVIDUAL;
+      user.username = username;
+      user.phone = phone;
+      user.emergency_phone = emergency_phone;
+      user.profile_image = profile_image;
+      user.is_signup_completed = true;
+
+      await queryRunner.manager.save(User, user);
+
+      const accessToken = this.generateAccessToken(user.id);
+      const refreshToken = this.generateRefreshToken(user.id);
+      const refreshTokenEntity = queryRunner.manager.create(RefreshToken, {
+        user: { id: user.id },
+        token: refreshToken,
+      });
+      await queryRunner.manager.save(RefreshToken, refreshTokenEntity);
+      await queryRunner.commitTransaction();
+
+      return {
+        id: user.id,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+      throw e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
+  }
+
+  // 16. 네이버 소셜로그인 - 사업자 회원가입
+  async completeNaverCorpSignUp(
+    userId: string,
+    socialCorpSignUpReqDto: SocialCorpSignUpReqDto,
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let error;
+    try {
+      const user = await this.usersService.findOneById(userId);
+      if (!user) {
+        throw new NotFoundException('사용자를 찾을 수 없습니다.');
+      }
+
+      const {
+        username,
+        phone,
+        emergency_phone,
+        profile_image,
+        corporate_type,
+        corporate_name,
+        business_type,
+        business_conditions,
+        business_registration_number,
+        address,
+        business_license,
+      } = socialCorpSignUpReqDto;
+
+      user.user_type = UserType.CORPORATE;
+      user.username = username;
+      user.phone = phone;
+      user.emergency_phone = emergency_phone;
+      user.profile_image = profile_image;
+      user.is_signup_completed = true;
+
+      const savedUser = await queryRunner.manager.save(User, user);
+
+      const corporateEntity = new Corporate();
+      corporateEntity.corporate_type = corporate_type;
+      corporateEntity.corporate_name = corporate_name;
+      corporateEntity.business_type = business_type;
+      corporateEntity.business_conditions = business_conditions;
+      corporateEntity.business_registration_number =
+        business_registration_number;
+      corporateEntity.address = address;
+      corporateEntity.business_license = business_license;
+      corporateEntity.user = savedUser;
+
+      await queryRunner.manager.save(Corporate, corporateEntity);
+
+      const accessToken = this.generateAccessToken(savedUser.id);
+      const refreshToken = this.generateRefreshToken(savedUser.id);
+      const refreshTokenEntity = queryRunner.manager.create(RefreshToken, {
+        user: { id: savedUser.id },
+        token: refreshToken,
+      });
+      await queryRunner.manager.save(RefreshToken, refreshTokenEntity);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        id: savedUser.id,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      error = e;
+      throw e;
+    } finally {
+      await queryRunner.release();
+      if (error) throw error;
+    }
   }
 
   // * 이메일과 이름으로 유저 찾기

@@ -18,6 +18,7 @@ import * as serveStatic from 'serve-static';
 import * as express from 'express';
 import { join } from 'path';
 import * as bodyParser from 'body-parser';
+import * as session from 'express-session';
 
 dotenv.config();
 config();
@@ -49,7 +50,15 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.use('/uploads', serveStatic(join(__dirname, '../uploads')));
+  app.use(
+    '/uploads',
+    serveStatic(join(__dirname, '../uploads')),
+    session({
+      secret: 'your-secret-key',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
 
   // Swagger
   const config = new DocumentBuilder()

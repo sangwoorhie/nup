@@ -23,7 +23,6 @@ import { config } from 'dotenv';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { IpcModule } from './routes/ipc/ipc.module';
 config();
 
 @Module({
@@ -88,7 +87,6 @@ config();
         },
       },
     }),
-    IpcModule,
   ],
   controllers: [AppController],
   providers: [AppService, Logger],

@@ -1,0 +1,25 @@
+# Docker 이미지 빌드
+cd nest-server / docker build . -t nest-server
+
+# 도커 이미지 생성 확인
+docker images
+
+# View a summary of image vulnerabilities and recommendations
+docker scout quickview
+
+# View vulnerabilities
+docker scout cves local://nest-server:latest
+
+# View base image update recommendations
+docker scout recommendations local://nest-server:latest
+
+# Include policy results in your quickview by supplying an organization
+docker scout quickview local://nest-server:latest --org <organization>
+
+# 컨테이너 실행
+docker container run -d -p 3001:3001 nest-server
+
+# 컨테이너 실행후 상태확인
+docker ps
+
+https://www.youtube.com/watch?v=Tw7dU-9AkmU
